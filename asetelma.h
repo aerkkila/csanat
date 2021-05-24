@@ -1,4 +1,5 @@
 #include <tekstigraf.h>
+#include <SDL2/SDL_pixels.h>
 
 extern const int ikkuna_x0;
 extern const int ikkuna_y0;
@@ -11,10 +12,13 @@ extern int ikkuna_y;
 extern int ikkuna_w;
 extern int ikkuna_h;
 
+extern SDL_Color tv;
+
 extern const unsigned uniaika;
 extern const unsigned maxpit_suote;
 
 extern tekstiolio_s suoteol;
+extern tekstiolio_s annetutol;
 
 void asetelma();
 void tuhoa_asetelma();

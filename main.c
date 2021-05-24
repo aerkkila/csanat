@@ -28,6 +28,10 @@ int main(int argc, char** argv) {
   asetelma();
   /*komennot komentoriviltä tähän*/
 
+  SDL_SetRenderDrawColor(rend, tv.r, tv.g, tv.b, tv.a);
+  SDL_RenderClear(rend);
+  SDL_RenderPresent(rend);
+  
   kaunnista();
 
   tuhoa_asetelma();

@@ -8,10 +8,12 @@
 
 void paivita();
 void laita_suote();
+void laita_annetut();
 void komento(char* suote);
 void pyyhi(char* suote);
 
 unsigned laitot;
+strlista* annetut=NULL;
 extern SDL_Renderer* rend;
 
 void kaunnista() {
@@ -32,8 +34,10 @@ void kaunnista() {
 	switch(tapaht.key.keysym.sym) {
 	case SDLK_RETURN:
 	case SDLK_KP_ENTER:
+	  _strlisaa_kopioiden(annetutol.lista, suote);
 	  komento(suote);
 	  suote[0] = '\0';
+	  laita_annetut();
 	  laita_suote();
 	  break;
 	case SDLK_BACKSPACE:
@@ -50,9 +54,14 @@ void kaunnista() {
 }
 
 #define SUOTE 0x01
+#define ANNETUT 0x02
 
 inline void __attribute__((always_inline)) laita_suote() {
   laitot |= SUOTE;
+}
+
+inline void __attribute__((always_inline)) laita_annetut() {
+  laitot |= ANNETUT;
 }
 
 #define PYYHI(olio) SDL_RenderFillRect(rend, olio.toteutuma)
@@ -60,12 +69,18 @@ inline void __attribute__((always_inline)) laita_suote() {
 inline void __attribute__((always_inline)) paivita() {
   if(!laitot)
     return;
-  SDL_SetRenderDrawColor(rend, 0,0,0,255);
+  SDL_SetRenderDrawColor(rend, tv.r, tv.g, tv.b, tv.a);
   if(laitot & SUOTE)
     PYYHI(suoteol);
+  if(laitot & ANNETUT)
+    PYYHI(annetutol);
   if(laitot & SUOTE) {
     laita_teksti_ttf(&suoteol, rend);
     laitot &= ~SUOTE;
+  }
+  if(laitot & ANNETUT) {
+    laita_alle(&suoteol, 0, annetutol.lista->seur, &annetutol, rend);
+    laitot &= ~ANNETUT;
   }
   SDL_RenderPresent(rend);
 }
