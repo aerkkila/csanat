@@ -7,6 +7,7 @@
 
 SDL_Window *ikkuna;
 SDL_Renderer *rend;
+char* tmpc;
 
 void kaunnista();
 
@@ -28,12 +29,14 @@ int main(int argc, char** argv) {
   asetelma();
   /*komennot komentoriviltä tähän*/
 
+  tmpc = malloc(maxpit_suote);
   SDL_SetRenderDrawColor(rend, tv.r, tv.g, tv.b, tv.a);
   SDL_RenderClear(rend);
   SDL_RenderPresent(rend);
   
   kaunnista();
 
+  free(tmpc);
   tuhoa_asetelma();
   SDL_DestroyRenderer(rend);
   SDL_DestroyWindow(ikkuna);

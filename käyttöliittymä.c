@@ -9,8 +9,16 @@
 void paivita();
 void laita_suote();
 void laita_annetut();
+void laita_viesti();
 void komento(char* suote);
 void pyyhi(char* suote);
+
+#define SUOTE   0x01
+#define ANNETUT 0x02
+#define VIESTI  0x04
+#define KAIKKIL 0x07
+
+#define laita(joku) laitot |= joku
 
 unsigned laitot;
 strlista* annetut=NULL;
@@ -28,7 +36,7 @@ void kaunnista() {
 	return;
       case SDL_TEXTINPUT:
 	strcat(suote, tapaht.text.text);
-	laita_suote();
+	laita(SUOTE);
 	break;
       case SDL_KEYDOWN:
 	switch(tapaht.key.keysym.sym) {
@@ -37,12 +45,11 @@ void kaunnista() {
 	  _strlisaa_kopioiden(annetutol.lista, suote);
 	  komento(suote);
 	  suote[0] = '\0';
-	  laita_annetut();
-	  laita_suote();
+	  laita(KAIKKIL);
 	  break;
 	case SDLK_BACKSPACE:
 	  pyyhi(suote);
-	  laita_suote();
+	  laita(SUOTE);
 	  break;
 	}
 	break; //keydown
@@ -51,17 +58,6 @@ void kaunnista() {
     paivita();
     SDL_Delay(1);
   } //while 1
-}
-
-#define SUOTE 0x01
-#define ANNETUT 0x02
-
-inline void __attribute__((always_inline)) laita_suote() {
-  laitot |= SUOTE;
-}
-
-inline void __attribute__((always_inline)) laita_annetut() {
-  laitot |= ANNETUT;
 }
 
 #define PYYHI(olio) SDL_RenderFillRect(rend, olio.toteutuma)
@@ -74,6 +70,8 @@ inline void __attribute__((always_inline)) paivita() {
     PYYHI(suoteol);
   if(laitot & ANNETUT)
     PYYHI(annetutol);
+  if(laitot & VIESTI)
+    PYYHI(viestiol);
   if(laitot & SUOTE) {
     laita_teksti_ttf(&suoteol, rend);
     laitot &= ~SUOTE;
@@ -81,6 +79,10 @@ inline void __attribute__((always_inline)) paivita() {
   if(laitot & ANNETUT) {
     laita_alle(&suoteol, 0, annetutol.lista->seur, &annetutol, rend);
     laitot &= ~ANNETUT;
+  }
+  if(laitot & VIESTI) {
+    laita_tekstilista(viestiol.lista, viestiol.lopusta, &viestiol, rend);
+    laitot &= ~VIESTI;
   }
   SDL_RenderPresent(rend);
 }

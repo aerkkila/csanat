@@ -17,8 +17,11 @@ extern SDL_Color tv;
 extern const unsigned uniaika;
 extern const unsigned maxpit_suote;
 
+extern const char kotihak[];
+
 extern tekstiolio_s suoteol;
 extern tekstiolio_s annetutol;
+extern tekstiolio_s viestiol;
 
 void asetelma();
 void tuhoa_asetelma();
