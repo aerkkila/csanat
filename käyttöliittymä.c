@@ -1,42 +1,50 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdarg.h>
 #include <SDL2/SDL.h>
 #include <strlista.h>
 #include <tekstigraf.h>
 #include "asetelma.h"
 
 void paivita();
-void laita_suote();
-void laita_annetut();
-void laita_viesti();
-void komento(char* suote);
+void komento(const char* restrict suote);
 void pyyhi(char* suote);
 
-#define SUOTE   0x01
-#define ANNETUT 0x02
-#define VIESTI  0x04
-#define KAIKKIL 0x07
+enum laitot_enum {
+  kysymys_enum,
+  suote_enum,
+  kysynta_enum,
+  annetut_enum,
+  viesti_enum,
+  laitot_enum_pituus //lukuarvo kertoo pituuden
+};
 
-#define laita(joku) laitot |= joku
+const unsigned kaikkilaitot =  0xffff;
+#define laita(jotain) (laitot |= (1u << jotain ## _enum))
 
 unsigned laitot;
 strlista* annetut=NULL;
 extern SDL_Renderer* rend;
 
 void kaunnista() {
+  /*testi*/
+  kysyntaol.lista = _yalkuun(_strlistaksi("joo;ei;1;2;54алудв", ";"));
+  kysyntaol.lista = _yloppuun(_yjatka_taakse(kysyntaol.lista));
+  kysymysol.teksti = kysyntaol.lista->str;
   SDL_Event tapaht;
   SDL_StartTextInput();
-  laitot=0x00;
+  laitot=kaikkilaitot;
   char* const suote = suoteol.teksti;
   while(1) {
     while(SDL_PollEvent(&tapaht)) {
       switch(tapaht.type) {
       case SDL_QUIT:
+	_strpoista_kaikki(_yalkuun(kysyntaol.lista));
 	return;
       case SDL_TEXTINPUT:
 	strcat(suote, tapaht.text.text);
-	laita(SUOTE);
+	laita(suote);
 	break;
       case SDL_KEYDOWN:
 	switch(tapaht.key.keysym.sym) {
@@ -45,47 +53,94 @@ void kaunnista() {
 	  _strlisaa_kopioiden(annetutol.lista, suote);
 	  komento(suote);
 	  suote[0] = '\0';
-	  laita(KAIKKIL);
+	  laitot = kaikkilaitot;
 	  break;
 	case SDLK_BACKSPACE:
 	  pyyhi(suote);
-	  laita(SUOTE);
+	  laita(suote);
 	  break;
 	}
 	break; //keydown
+      case SDL_WINDOWEVENT:
+	switch(tapaht.window.event) {
+	case SDL_WINDOWEVENT_RESIZED:
+	  ikkuna_w = tapaht.window.data1;
+	  ikkuna_h = tapaht.window.data1;
+	  laitot = kaikkilaitot;
+	  break;
+	}
+	break;
       } //tapaht.type
     } //pollEvent
     paivita();
-    SDL_Delay(1);
+    SDL_Delay(uniaika);
   } //while 1
 }
 
-#define PYYHI(olio) SDL_RenderFillRect(rend, olio.toteutuma)
+void laita_ttuurit(int n, ...) {
+  tekstiolio_s* ol;
+  ylista* tex;
+  ylista* osa;
+  ylista* tot;
+  va_list ap;
+  va_start(ap, n);
+  for(int i=0; i<n; i++) {
+    ol = va_arg(ap, tekstiolio_s*);
+    tex = ol->ttuurit;
+    osa = ol->osat;
+    tot = ol->totmat;
+    while(osa) {
+      SDL_RenderCopy(rend, tex->p, osa->p, tot->p);
+      tex=tex->edel;
+      osa=osa->edel;
+      tot=tot->edel;
+    }
+  }
+  va_end(ap);
+}
+
+#define CASE(a) case a ## _enum
 
 inline void __attribute__((always_inline)) paivita() {
   if(!laitot)
     return;
   SDL_SetRenderDrawColor(rend, tv.r, tv.g, tv.b, tv.a);
-  if(laitot & SUOTE)
-    PYYHI(suoteol);
-  if(laitot & ANNETUT)
-    PYYHI(annetutol);
-  if(laitot & VIESTI)
-    PYYHI(viestiol);
-  if(laitot & SUOTE) {
-    laita_teksti_ttf(&suoteol, rend);
-    laitot &= ~SUOTE;
+  SDL_RenderClear(rend);
+  for(int i=0; i<laitot_enum_pituus; i++) {
+    if( !((laitot >> i) & 0x01) )
+      continue;
+    switch(i) {
+    CASE(kysymys):
+      Poista_ttuurit(kysymys);
+      laita_teksti_ttf(&kysymysol, rend);
+      break;
+    CASE(suote):
+      Poista_ttuurit(suote);
+      suoteol.sij->y = kysymysol.toteutuma->y+kysymysol.toteutuma->h;
+      laita_teksti_ttf(&suoteol, rend);
+      break;
+    CASE(kysynta):
+      Poista_ttuurit(kysynta);
+      laita_alle(&suoteol, 0, kysyntaol.lista->seur, &kysyntaol, rend);
+      break;
+    CASE(annetut):
+      Poista_ttuurit(annetut);
+      int vali;
+      TTF_GlyphMetrics(kysyntaol.font, ' ', NULL, NULL, NULL, NULL, &vali);
+      annetutol.sij->y = kysyntaol.toteutuma->y;
+      laita_oikealle(&kysyntaol, 4*vali, annetutol.lista->seur, annetutol.lopusta, &annetutol, rend);
+      break;
+    CASE(viesti):
+      Poista_ttuurit(viesti);
+      laita_tekstilista(viestiol.lista, viestiol.lopusta, &viestiol, rend);
+      break;
+    }
   }
-  if(laitot & ANNETUT) {
-    laita_alle(&suoteol, 0, annetutol.lista->seur, &annetutol, rend);
-    laitot &= ~ANNETUT;
-  }
-  if(laitot & VIESTI) {
-    laita_tekstilista(viestiol.lista, viestiol.lopusta, &viestiol, rend);
-    laitot &= ~VIESTI;
-  }
+  laitot = 0;
+  laita_ttuurit(laitot_enum_pituus, &kysymysol, &suoteol, &kysyntaol, &annetutol, &viestiol);
   SDL_RenderPresent(rend);
 }
+#undef CASE
 
 /*Koko utf8-merkki pois kerralla. Voi sisältää monta tavua.*/
 inline void __attribute__((always_inline)) pyyhi(char* suote) {

@@ -9,8 +9,10 @@
 
 extern char* tmpc;
 
-void komento(char* suote) {
+void komento(const char* restrict suote) {
   strlista* knnot = _strpilko_sanoiksi(suote);
+  if(!knnot)
+    goto LOPPU;
   while(knnot) {
     
     if(knto("cd") && knnot->seur) {
@@ -40,6 +42,15 @@ void komento(char* suote) {
       }
       viestiol.lista = _yalkuun(viestiol.lista);
       pclose(p);
+
+    } else {
+    LOPPU:
+      if(kysyntaol.lista->edel) {
+	kysyntaol.lista = kysyntaol.lista->edel;
+	kysymysol.teksti = kysyntaol.lista->str;
+      }
+      knnot = _strpoista_kaikki(knnot);
+      return;
     }
     knnot = _strpoista1(knnot, 1);
   }

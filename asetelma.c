@@ -10,10 +10,10 @@ const int ikkuna_w0 = 600;
 const int ikkuna_h0 = 400;
 const char ohjelman_nimi[] = "csanat";
 
-int ikkuna_x=0;
-int ikkuna_y=0;
-int ikkuna_w=0;
-int ikkuna_h=0;
+int ikkuna_x;
+int ikkuna_y;
+int ikkuna_w;
+int ikkuna_h;
 
 const unsigned uniaika = 10;
 const unsigned maxpit_suote = 2000;
@@ -22,19 +22,29 @@ SDL_Color tv = (SDL_Color){0,0,0,255};
 
 const char kotihak[] = "/home/antterkk";
 
-tekstiolio_s suoteol;
+tekstiolio_s suoteol = {.ttflaji = 2,					\
+			.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
+			.fonttikoko = 45,				\
+			.vari = (SDL_Color){255,255,255,255}};
+tekstiolio_s kysymysol = {.ttflaji = 1,					\
+			  .vari = (SDL_Color){255,255,255,255}};
 tekstiolio_s annetutol;
 tekstiolio_s viestiol;
+tekstiolio_s kysyntaol = {.ttflaji = 2,					\
+			  .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
+			  .fonttikoko = 15,				\
+			  .vari = (SDL_Color){255,255,255,255},		\
+			  .lopusta = 0};
 
 void asetelma() {
   suoteol.teksti = calloc(maxpit_suote, 1);
-  suoteol.ttflaji = 2;
-  suoteol.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf";
-  suoteol.fonttikoko = 45;
-  suoteol.vari = (SDL_Color){255,255,255,255};
-  static SDL_Rect suoteolsij = {100,100,500,100}; suoteol.sij = &suoteolsij;
+  static SDL_Rect suoteolsij = {0,100,700,100}; suoteol.sij = &suoteolsij;
   static SDL_Rect suoteoltot = {0,0,0,0}; suoteol.toteutuma = &suoteoltot;
   suoteol.font = TTF_OpenFont(suoteol.fonttied, suoteol.fonttikoko);
+
+  kysymysol.font = suoteol.font;
+  static SDL_Rect kysymysolsij = {0,0,700,100}; kysymysol.sij = &kysymysolsij;
+  static SDL_Rect kysymysoltot = {0,0,0,0}; kysymysol.toteutuma = &kysymysoltot;
 
   annetutol.lista = _yuusi_lista();
   annetutol.ttflaji = 2;
@@ -46,6 +56,12 @@ void asetelma() {
   annetutol.lopusta = 0;
   annetutol.font = TTF_OpenFont(annetutol.fonttied, annetutol.fonttikoko);
 
+  static SDL_Rect kysyntaolsij = {0,100,500,1000};
+  static SDL_Rect kysyntaoltot = {0,0,0,0};
+  kysyntaol.sij = &kysyntaolsij;
+  kysyntaol.toteutuma = &kysyntaoltot;
+  kysyntaol.font = TTF_OpenFont(kysyntaol.fonttied, kysyntaol.fonttikoko);
+  
   viestiol.lista = NULL;
   viestiol.ttflaji = 2;
   viestiol.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf";
@@ -58,6 +74,11 @@ void asetelma() {
   static SDL_Rect viestioltot = {0,0,0,0}; viestiol.toteutuma = &viestioltot;
   viestiol.lopusta = 1;
   viestiol.font = TTF_OpenFont(viestiol.fonttied, viestiol.fonttikoko);
+
+  ikkuna_x = ikkuna_x0;
+  ikkuna_y = ikkuna_y0;
+  ikkuna_w = ikkuna_w0;
+  ikkuna_h = ikkuna_h0;
 }
 
 void tuhoa_asetelma() {
@@ -67,4 +88,10 @@ void tuhoa_asetelma() {
   TTF_CloseFont(annetutol.font);
   _strpoista_kaikki(_yalkuun(viestiol.lista));
   TTF_CloseFont(viestiol.font);
+  TTF_CloseFont(kysyntaol.font);
+  Poista_ttuurit(suote);
+  Poista_ttuurit(annetut);
+  Poista_ttuurit(viesti);
+  Poista_ttuurit(kysynta);
+  Poista_ttuurit(kysymys);
 }
