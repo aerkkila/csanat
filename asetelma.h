@@ -4,6 +4,13 @@
 #ifndef __asetelmaH__
 #define __asetelmaH__
 #define Poista_ttuurit(olio) poista_ttuurit(&olio ## ol)
+
+typedef struct {
+  int parinro;
+  int tiednro;
+  int kierrostarve;
+  int osattu;
+} metatied;
 #endif
 
 extern const int ikkuna_x0;
@@ -29,6 +36,9 @@ extern tekstiolio_s kysymysol;
 extern tekstiolio_s annetutol;
 extern tekstiolio_s viestiol;
 extern tekstiolio_s kysyntaol;
+
+extern strlista* kaan;
+extern ylista* meta;
 
 void asetelma();
 void tuhoa_asetelma();

@@ -1,4 +1,4 @@
-tdstot=main.c käyttöliittymä.c asetelma.c komento.c
+tdstot=main.c käyttöliittymä.c asetelma.c komento.c avaa.c
 headerit=asetelma.h
 incdir=-I/home/antterkk/c/include
 libdir=-L/home/antterkk/c/kirjastot

@@ -40,7 +40,6 @@ void kaunnista() {
     while(SDL_PollEvent(&tapaht)) {
       switch(tapaht.type) {
       case SDL_QUIT:
-	_strpoista_kaikki(_yalkuun(kysyntaol.lista));
 	return;
       case SDL_TEXTINPUT:
 	strcat(suote, tapaht.text.text);

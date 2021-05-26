@@ -36,6 +36,9 @@ tekstiolio_s kysyntaol = {.ttflaji = 2,					\
 			  .vari = (SDL_Color){255,255,255,255},		\
 			  .lopusta = 0};
 
+strlista* kaan;
+ylista* meta;
+
 void asetelma() {
   suoteol.teksti = calloc(maxpit_suote, 1);
   static SDL_Rect suoteolsij = {0,100,700,100}; suoteol.sij = &suoteolsij;
@@ -84,9 +87,7 @@ void asetelma() {
 void tuhoa_asetelma() {
   free(suoteol.teksti);
   TTF_CloseFont(suoteol.font);
-  _strpoista_kaikki(_yalkuun(annetutol.lista));
   TTF_CloseFont(annetutol.font);
-  _strpoista_kaikki(_yalkuun(viestiol.lista));
   TTF_CloseFont(viestiol.font);
   TTF_CloseFont(kysyntaol.font);
   Poista_ttuurit(suote);
@@ -94,4 +95,9 @@ void tuhoa_asetelma() {
   Poista_ttuurit(viesti);
   Poista_ttuurit(kysynta);
   Poista_ttuurit(kysymys);
+  _strpoista_kaikki(_yalkuun(annetutol.lista));
+  _strpoista_kaikki(_yalkuun(viestiol.lista));
+  _strpoista_kaikki(_yalkuun(kysyntaol.lista));
+  _strpoista_kaikki(_yalkuun(kaan));
+  _strpoista_kaikki(_yalkuun(meta));
 }

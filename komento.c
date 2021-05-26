@@ -12,7 +12,7 @@ extern char* tmpc;
 void komento(const char* restrict suote) {
   strlista* knnot = _strpilko_sanoiksi(suote);
   if(!knnot)
-    goto LOPPU;
+    knnot = _strlisaa_kopioiden(knnot, "");
   while(knnot) {
     
     if(knto("cd") && knnot->seur) {
@@ -44,11 +44,10 @@ void komento(const char* restrict suote) {
       pclose(p);
 
     } else {
-    LOPPU:
-      if(kysyntaol.lista->edel) {
-	kysyntaol.lista = kysyntaol.lista->edel;
-	kysymysol.teksti = kysyntaol.lista->str;
-      }
+      if(!(kysyntaol.lista->edel))
+	_yjatka_taakse(kysyntaol.lista);
+      kysyntaol.lista = kysyntaol.lista->edel;
+      kysymysol.teksti = kysyntaol.lista->str;
       knnot = _strpoista_kaikki(knnot);
       return;
     }
