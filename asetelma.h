@@ -4,11 +4,13 @@
 #ifndef __asetelmaH__
 #define __asetelmaH__
 #define Poista_ttuurit(olio) poista_ttuurit(&olio ## ol)
+#define SKM(funk) funk(sana); funk(kaan); funk(meta)
+#define META (*(metatied*)(meta->p))
 
 typedef struct {
   int parinro;
   int tiednro;
-  int kierrostarve;
+  int kierroksia;
   int osattu;
 } metatied;
 #endif
@@ -35,8 +37,9 @@ extern tekstiolio_s suoteol;
 extern tekstiolio_s kysymysol;
 extern tekstiolio_s annetutol;
 extern tekstiolio_s viestiol;
-extern tekstiolio_s kysyntaol;
+extern tekstiolio_s kysytytol;
 
+extern strlista* sana;
 extern strlista* kaan;
 extern ylista* meta;
 

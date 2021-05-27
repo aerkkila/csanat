@@ -10,11 +10,12 @@
 void paivita();
 void komento(const char* restrict suote);
 void pyyhi(char* suote);
+void seis() {;};
 
 enum laitot_enum {
   kysymys_enum,
   suote_enum,
-  kysynta_enum,
+  kysytyt_enum,
   annetut_enum,
   viesti_enum,
   laitot_enum_pituus //lukuarvo kertoo pituuden
@@ -29,9 +30,6 @@ extern SDL_Renderer* rend;
 
 void kaunnista() {
   /*testi*/
-  kysyntaol.lista = _yalkuun(_strlistaksi("joo;ei;1;2;54алудв", ";"));
-  kysyntaol.lista = _yloppuun(_yjatka_taakse(kysyntaol.lista));
-  kysymysol.teksti = kysyntaol.lista->str;
   SDL_Event tapaht;
   SDL_StartTextInput();
   laitot=kaikkilaitot;
@@ -50,6 +48,7 @@ void kaunnista() {
 	case SDLK_RETURN:
 	case SDLK_KP_ENTER:
 	  _strlisaa_kopioiden(annetutol.lista, suote);
+	  viestiol.lista = _strpoista_kaikki(_yalkuun(viestiol.lista));
 	  komento(suote);
 	  suote[0] = '\0';
 	  laitot = kaikkilaitot;
@@ -57,6 +56,14 @@ void kaunnista() {
 	case SDLK_BACKSPACE:
 	  pyyhi(suote);
 	  laita(suote);
+	  break;
+	case SDLK_ESCAPE:
+	  SKM(_yloppuun);
+	  kysymysol.teksti = NULL;
+	  laita(kysymys);
+	  break;
+	case SDLK_PAUSE:
+	  seis();
 	  break;
 	}
 	break; //keydown
@@ -98,6 +105,12 @@ void laita_ttuurit(int n, ...) {
   va_end(ap);
 }
 
+inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
+  int lev;
+  TTF_GlyphMetrics(f, c, NULL, NULL, NULL, NULL, &lev);
+  return lev;
+}
+
 #define CASE(a) case a ## _enum
 
 inline void __attribute__((always_inline)) paivita() {
@@ -118,25 +131,27 @@ inline void __attribute__((always_inline)) paivita() {
       suoteol.sij->y = kysymysol.toteutuma->y+kysymysol.toteutuma->h;
       laita_teksti_ttf(&suoteol, rend);
       break;
-    CASE(kysynta):
-      Poista_ttuurit(kysynta);
-      laita_alle(&suoteol, 0, kysyntaol.lista->seur, &kysyntaol, rend);
+    CASE(kysytyt):
+      Poista_ttuurit(kysytyt);
+      laita_alle(&suoteol, 0, kysytytol.lista, &kysytytol, rend);
       break;
     CASE(annetut):
       Poista_ttuurit(annetut);
       int vali;
-      TTF_GlyphMetrics(kysyntaol.font, ' ', NULL, NULL, NULL, NULL, &vali);
-      annetutol.sij->y = kysyntaol.toteutuma->y;
-      laita_oikealle(&kysyntaol, 4*vali, annetutol.lista->seur, annetutol.lopusta, &annetutol, rend);
+      TTF_GlyphMetrics(kysytytol.font, ' ', NULL, NULL, NULL, NULL, &vali);
+      annetutol.sij->y = kysytytol.toteutuma->y;
+      laita_oikealle(&kysytytol, 4*vali, annetutol.lista->seur, annetutol.lopusta, &annetutol, rend);
       break;
     CASE(viesti):
       Poista_ttuurit(viesti);
-      laita_tekstilista(viestiol.lista, viestiol.lopusta, &viestiol, rend);
+      viestiol.sij->y = suoteol.toteutuma->y + suoteol.toteutuma->h;
+      laita_oikealle(&annetutol, 4*leveys(viestiol.font, ' '),		\
+		     _yalkuun(viestiol.lista), viestiol.lopusta, &viestiol, rend);
       break;
     }
   }
   laitot = 0;
-  laita_ttuurit(laitot_enum_pituus, &kysymysol, &suoteol, &kysyntaol, &annetutol, &viestiol);
+  laita_ttuurit(laitot_enum_pituus, &kysymysol, &suoteol, &kysytytol, &annetutol, &viestiol);
   SDL_RenderPresent(rend);
 }
 #undef CASE

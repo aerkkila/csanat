@@ -30,12 +30,13 @@ tekstiolio_s kysymysol = {.ttflaji = 1,					\
 			  .vari = (SDL_Color){255,255,255,255}};
 tekstiolio_s annetutol;
 tekstiolio_s viestiol;
-tekstiolio_s kysyntaol = {.ttflaji = 2,					\
+tekstiolio_s kysytytol = {.ttflaji = 2,					\
 			  .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			  .fonttikoko = 15,				\
 			  .vari = (SDL_Color){255,255,255,255},		\
 			  .lopusta = 0};
 
+strlista* sana;
 strlista* kaan;
 ylista* meta;
 
@@ -59,20 +60,20 @@ void asetelma() {
   annetutol.lopusta = 0;
   annetutol.font = TTF_OpenFont(annetutol.fonttied, annetutol.fonttikoko);
 
-  static SDL_Rect kysyntaolsij = {0,100,500,1000};
-  static SDL_Rect kysyntaoltot = {0,0,0,0};
-  kysyntaol.sij = &kysyntaolsij;
-  kysyntaol.toteutuma = &kysyntaoltot;
-  kysyntaol.font = TTF_OpenFont(kysyntaol.fonttied, kysyntaol.fonttikoko);
+  static SDL_Rect kysytytolsij = {0,100,500,1000};
+  static SDL_Rect kysytytoltot = {0,0,0,0};
+  kysytytol.sij = &kysytytolsij;
+  kysytytol.toteutuma = &kysytytoltot;
+  kysytytol.font = TTF_OpenFont(kysytytol.fonttied, kysytytol.fonttikoko);
   
   viestiol.lista = NULL;
   viestiol.ttflaji = 2;
   viestiol.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf";
   viestiol.fonttikoko = 15;
   viestiol.vari = (SDL_Color){255,255,255,255};
-  static SDL_Rect viestiolsij = (SDL_Rect){0,0};
-  viestiolsij.w = ikkuna_w0;
-  viestiolsij.h = suoteol.sij->y;
+  static SDL_Rect viestiolsij = (SDL_Rect){300,0};
+  viestiolsij.w = ikkuna_w0 - viestiolsij.x;
+  viestiolsij.h = ikkuna_h0;
   viestiol.sij = &viestiolsij;
   static SDL_Rect viestioltot = {0,0,0,0}; viestiol.toteutuma = &viestioltot;
   viestiol.lopusta = 1;
@@ -89,15 +90,16 @@ void tuhoa_asetelma() {
   TTF_CloseFont(suoteol.font);
   TTF_CloseFont(annetutol.font);
   TTF_CloseFont(viestiol.font);
-  TTF_CloseFont(kysyntaol.font);
+  TTF_CloseFont(kysytytol.font);
   Poista_ttuurit(suote);
   Poista_ttuurit(annetut);
   Poista_ttuurit(viesti);
-  Poista_ttuurit(kysynta);
+  Poista_ttuurit(kysytyt);
   Poista_ttuurit(kysymys);
   _strpoista_kaikki(_yalkuun(annetutol.lista));
   _strpoista_kaikki(_yalkuun(viestiol.lista));
-  _strpoista_kaikki(_yalkuun(kysyntaol.lista));
+  _strpoista_kaikki(_yalkuun(kysytytol.lista));
+  _strpoista_kaikki(_yalkuun(sana));
   _strpoista_kaikki(_yalkuun(kaan));
   _strpoista_kaikki(_yalkuun(meta));
 }

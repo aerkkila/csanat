@@ -7,6 +7,8 @@
 #define knto(a) (!strcmp(knnot->str, a))
 #define STREND(a) (a)[strlen(a)-1]
 
+int avaa(const char* nimi);
+
 extern char* tmpc;
 
 void komento(const char* restrict suote) {
@@ -14,7 +16,6 @@ void komento(const char* restrict suote) {
   if(!knnot)
     knnot = _strlisaa_kopioiden(knnot, "");
   while(knnot) {
-    
     if(knto("cd") && knnot->seur) {
       knnot = _strpoista1(knnot, 1);
       chdir(knnot->str);
@@ -34,7 +35,6 @@ void komento(const char* restrict suote) {
 	}
       }
       FILE *p = popen(tmpc, "r");
-      viestiol.lista = _strpoista_kaikki(_yalkuun(viestiol.lista));
       while(fgets(tmpc, maxpit_suote, p) > 0) {
 	if(STREND(tmpc) == '\n')
 	  STREND(tmpc) = '\0';
@@ -44,13 +44,35 @@ void komento(const char* restrict suote) {
       pclose(p);
 
     } else {
-      if(!(kysyntaol.lista->edel))
-	_yjatka_taakse(kysyntaol.lista);
-      kysyntaol.lista = kysyntaol.lista->edel;
-      kysymysol.teksti = kysyntaol.lista->str;
-      knnot = _strpoista_kaikki(knnot);
-      return;
+      if(kysymysol.teksti) {
+	/*verrataan käännökseen ja laitetaan uusi sana ja poistutaan*/
+	kysytytol.lista = _strlisaa_kopioiden_taakse(kysytytol.lista, kysymysol.teksti);
+	META.kierroksia++;
+	if(!strcmp(kaan->str, suote))
+	  META.osattu++;
+	else
+	  viestiol.lista = _strlisaa_kopioiden(viestiol.lista, kaan->str);
+	if(sana->seur) {
+	  sana = sana->seur;
+	  kaan = kaan->seur;
+	  meta = meta->seur;
+	  kysymysol.teksti = sana->str;
+	} else {
+	  kysymysol.teksti = NULL;
+	}
+	knnot = _strpoista_kaikki(knnot);
+	return;
+      }
+      if(avaa(knnot->str)) {
+	sprintf(tmpc, "Ei avattu tiedostoa \"%s\"", knnot->str);
+	viestiol.lista = _strlisaa_kopioiden(viestiol.lista, tmpc);
+	goto JATKA;
+      }
+      kysymysol.teksti = sana->str;
+      goto JATKA;
     }
+  JATKA:
+    kysytytol.lista = _yjatka_taakse(kysytytol.lista);
     knnot = _strpoista1(knnot, 1);
   }
 }

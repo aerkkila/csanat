@@ -7,21 +7,28 @@
 #define STRPAATE(a) ((a)[strlen(a)-1])
 
 void* lue_tiedosto(const char* nimi) {
-  static int lasku = 0; //kutsutaan kolmesti palauttaen aina yhden listan
-  static strlista *sana = NULL;
+  static int lasku = -1; //kutsutaan kolmesti palauttaen aina yhden listan
+  strlista *sana = NULL;
   static strlista *kaan = NULL;
   static ylista *meta = NULL;
+  void* apu;
   static int tiedostonro = 0;
 
-  if(lasku == 1)
-    return kaan;
-  if(lasku++ == 2)
-    return meta;
-  lasku %= 3;
+  lasku = (lasku+1) % 3;
+  if(lasku == 1) {
+    apu = _yalkuun(kaan);
+    kaan = NULL;
+    return apu;
+  }
+  if(lasku == 2) {
+    apu = _yalkuun(meta);
+    meta = NULL;
+    return apu;
+  }
   
   FILE *f = fopen(nimi, "r");
   if (!f) {
-    lasku = 0;
+    lasku = -1;
     return NULL;
   }
   int sanoja = 0;
@@ -44,7 +51,7 @@ void* lue_tiedosto(const char* nimi) {
     metatied* m = malloc(sizeof(metatied));
     m->parinro = sanoja++;
     m->tiednro = tiedostonro;
-    meta = _ylsvlms(meta, m);
+    meta = _ylisaa(meta, m);
   }
   free(luenta);
   fclose(f);
@@ -55,7 +62,7 @@ int avaa(const char* nimi) {
   strlista* l = lue_tiedosto(nimi);
   if(!l)
     return 1;
-  kysyntaol.lista = _ylsvlms(kysyntaol.lista, l);
+  sana = _ylsvlms(sana, l); //listat ovat alussa
   kaan = _ylsvlms(kaan, lue_tiedosto(nimi));
   meta = _ylsvlms(meta, lue_tiedosto(nimi));
   return 0;
