@@ -25,12 +25,20 @@ int main(int argc, char** argv) {
   ikkuna = SDL_CreateWindow\
     (ohjelman_nimi, ikkuna_x0, ikkuna_y0, ikkuna_w0, ikkuna_h0, SDL_WINDOW_RESIZABLE);
   rend = SDL_CreateRenderer(ikkuna, -1, SDL_RENDERER_TARGETTEXTURE);
+  tmpc = malloc(maxpit_suote);
+  tmpc[0] = '\0';
 
   asetelma();
   /*komennot komentoriviltä tähän*/
+  char* apuc;
+  if(argc > 1)
+    strcpy(tmpc, argv[1]);
+  for(int i=2; i<argc; i++) {
+    apuc = tmpc + strlen(tmpc);
+    sprintf(apuc, " %s", argv[i]);
+  }
 
-  tmpc = malloc(maxpit_suote);
-  SDL_SetRenderDrawColor(rend, tv.r, tv.g, tv.b, tv.a);
+  aseta_vari(taustavari);
   SDL_RenderClear(rend);
   SDL_RenderPresent(rend);
   

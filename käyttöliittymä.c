@@ -27,6 +27,7 @@ const unsigned kaikkilaitot =  0xffff;
 unsigned laitot;
 strlista* annetut=NULL;
 extern SDL_Renderer* rend;
+extern char* tmpc;
 
 void kaunnista() {
   /*testi*/
@@ -34,12 +35,21 @@ void kaunnista() {
   SDL_StartTextInput();
   laitot=kaikkilaitot;
   char* const suote = suoteol.teksti;
+  if(tmpc) {
+    strcpy(suote, tmpc);
+    goto ENTER;
+  }
   while(1) {
     while(SDL_PollEvent(&tapaht)) {
       switch(tapaht.type) {
       case SDL_QUIT:
 	return;
       case SDL_TEXTINPUT:
+	if(suoteviesti) {
+	  suote[0] = '\0';
+	  suoteol.vari = apuvari;
+	  suoteviesti = 0;
+	}
 	strcat(suote, tapaht.text.text);
 	laita(suote);
 	break;
@@ -47,10 +57,17 @@ void kaunnista() {
 	switch(tapaht.key.keysym.sym) {
 	case SDLK_RETURN:
 	case SDLK_KP_ENTER:
+	  if(suoteviesti) {
+	    suote[0] = '\0';
+	    suoteol.vari = apuvari;
+	    suoteviesti = 0;
+	  }
+	ENTER:
 	  _strlisaa_kopioiden(annetutol.lista, suote);
 	  viestiol.lista = _strpoista_kaikki(_yalkuun(viestiol.lista));
 	  komento(suote);
-	  suote[0] = '\0';
+	  if(!suoteviesti)
+	    suote[0] = '\0';
 	  laitot = kaikkilaitot;
 	  break;
 	case SDLK_BACKSPACE:
@@ -116,7 +133,7 @@ inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
 inline void __attribute__((always_inline)) paivita() {
   if(!laitot)
     return;
-  SDL_SetRenderDrawColor(rend, tv.r, tv.g, tv.b, tv.a);
+  aseta_vari(taustavari);
   SDL_RenderClear(rend);
   for(int i=0; i<laitot_enum_pituus; i++) {
     if( !((laitot >> i) & 0x01) )

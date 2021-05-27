@@ -18,7 +18,11 @@ int ikkuna_h;
 const unsigned uniaika = 10;
 const unsigned maxpit_suote = 2000;
 
-SDL_Color tv = (SDL_Color){0,0,0,255};
+SDL_Color taustavari = (SDL_Color){0,0,0,255};
+SDL_Color oikeavari = (SDL_Color){20,255,20,255};
+SDL_Color virhevari = (SDL_Color){255,20,20,255};
+SDL_Color apuvari;
+int suoteviesti = 0;
 
 const char kotihak[] = "/home/antterkk";
 

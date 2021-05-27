@@ -48,10 +48,16 @@ void komento(const char* restrict suote) {
 	/*verrataan käännökseen ja laitetaan uusi sana ja poistutaan*/
 	kysytytol.lista = _strlisaa_kopioiden_taakse(kysytytol.lista, kysymysol.teksti);
 	META.kierroksia++;
-	if(!strcmp(kaan->str, suote))
+	if(!strcmp(kaan->str, suote)) {
+	  apuvari = suoteol.vari;
+	  suoteol.vari = oikeavari;
 	  META.osattu++;
-	else
-	  viestiol.lista = _strlisaa_kopioiden(viestiol.lista, kaan->str);
+	} else {
+	  strcpy(suoteol.teksti, kaan->str);
+	  apuvari = suoteol.vari;
+	  suoteol.vari = virhevari;
+	}
+	suoteviesti = 1;
 	if(sana->seur) {
 	  sana = sana->seur;
 	  kaan = kaan->seur;
