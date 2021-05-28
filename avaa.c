@@ -1,7 +1,8 @@
-#include <strlista.h>
+#include <listat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "asetelma.h"
 
 #define STRPAATE(a) ((a)[strlen(a)-1])
@@ -66,4 +67,40 @@ int avaa(const char* nimi) {
   kaan = _ylsvlms(kaan, lue_tiedosto(nimi));
   meta = _ylsvlms(meta, lue_tiedosto(nimi));
   return 0;
+}
+
+int* randperm(int alku, int loppu, int* julos) {
+  /*Menetelmä:
+    lista luvuista [alku:loppu[
+    for i in pituus {
+    arvotaan luku n ∈ [0:listan_pituus[
+    sijoitetaan listalta n. luku taulukkoon sijalle i
+    poistetaan n. luku listalta
+    } */
+  ilista *l = NULL;
+  for(int i=alku; i<loppu; i++)
+    l = _ilisaa(l, i);
+  l = _yalkuun(l);
+  
+  int n;
+  int pit = loppu-alku;
+  int *perm;
+  if(!julos)
+    perm = malloc(pit*sizeof(int));
+  else
+    perm = julos;
+  for(int i=0; i<pit; i++) {
+    n = rand() % (pit-i);
+    perm[i] = (*(ilista*)_ynouda(l,n)).i;
+    l = _yrm(l, &n, 1);
+  }
+  return perm;
+}
+
+void sekoita() {
+  srand(time(NULL));
+  int pit = _ylaske(sana);
+  int *jarj = randperm(0, pit, NULL);
+  SKMARGS(_yjarjestapit, jarj, pit);
+  free(jarj);
 }

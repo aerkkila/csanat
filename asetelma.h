@@ -4,7 +4,8 @@
 #ifndef __asetelmaH__
 #define __asetelmaH__
 #define Poista_ttuurit(olio) poista_ttuurit(&olio ## ol)
-#define SKM(funk) funk(sana); funk(kaan); funk(meta)
+#define SKM(funk) sana=funk(sana); kaan=funk(kaan); meta=funk(meta)
+#define SKMARGS(funk, ...) funk(sana, __VA_ARGS__); funk(kaan, __VA_ARGS__); funk(meta, __VA_ARGS__)
 #define META (*(metatied*)(meta->p))
 #define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
 

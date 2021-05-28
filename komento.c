@@ -8,6 +8,7 @@
 #define STREND(a) (a)[strlen(a)-1]
 
 int avaa(const char* nimi);
+void sekoita();
 
 extern char* tmpc;
 
@@ -69,11 +70,18 @@ void komento(const char* restrict suote) {
 	knnot = _strpoista_kaikki(knnot);
 	return;
       }
+      if(!strlen(knnot->str)) {
+	SKM(_yalkuun);
+	sekoita();
+	kysymysol.teksti = sana->str;
+	goto JATKA;
+      }
       if(avaa(knnot->str)) {
 	sprintf(tmpc, "Ei avattu tiedostoa \"%s\"", knnot->str);
 	viestiol.lista = _strlisaa_kopioiden(viestiol.lista, tmpc);
 	goto JATKA;
       }
+      sekoita();
       kysymysol.teksti = sana->str;
       goto JATKA;
     }

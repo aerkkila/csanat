@@ -35,7 +35,7 @@ void kaunnista() {
   SDL_StartTextInput();
   laitot=kaikkilaitot;
   char* const suote = suoteol.teksti;
-  if(tmpc) {
+  if(strlen(tmpc)) {
     strcpy(suote, tmpc);
     goto ENTER;
   }
