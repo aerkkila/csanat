@@ -44,7 +44,14 @@ void komento(const char* restrict suote) {
       viestiol.lista = _yalkuun(viestiol.lista);
       pclose(p);
 
+    } else if(knto("osaamisrajaksi") && knnot->seur) {
+      if(sscanf(knnot->seur->str, "%u", &osaamisraja))
+	knnot = _strpoista1(knnot,1);
+      else
+	goto VERTAILU;
+
     } else {
+    VERTAILU:
       if(kysymysol.teksti) {
 	/*verrataan käännökseen ja laitetaan uusi sana ja poistutaan*/
 	kysytytol.lista = _strlisaa_kopioiden_taakse(kysytytol.lista, kysymysol.teksti);
@@ -59,17 +66,22 @@ void komento(const char* restrict suote) {
 	  suoteol.vari = virhevari;
 	}
 	suoteviesti = 1;
-	if(sana->seur) {
+	/*haetaan seuraava, jota ei ole osattu*/
+	do {
+	  if(!sana->seur) {
+	    kysymysol.teksti = NULL;
+	    break;
+	  }
 	  sana = sana->seur;
 	  kaan = kaan->seur;
 	  meta = meta->seur;
 	  kysymysol.teksti = sana->str;
-	} else {
-	  kysymysol.teksti = NULL;
-	}
+	} while(META.osattu >= osaamisraja);
 	knnot = _strpoista_kaikki(knnot);
 	return;
       }
+      
+      /*lista on lopussa*/
       if(!strlen(knnot->str)) {
 	SKM(_yalkuun);
 	sekoita();
@@ -81,6 +93,7 @@ void komento(const char* restrict suote) {
 	viestiol.lista = _strlisaa_kopioiden(viestiol.lista, tmpc);
 	goto JATKA;
       }
+      /*tiedosto avattiin*/
       sekoita();
       kysymysol.teksti = sana->str;
       goto JATKA;

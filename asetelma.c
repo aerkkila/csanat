@@ -43,6 +43,7 @@ tekstiolio_s kysytytol = {.ttflaji = 2,					\
 strlista* sana;
 strlista* kaan;
 ylista* meta;
+unsigned osaamisraja=1;
 
 void asetelma() {
   suoteol.teksti = calloc(maxpit_suote, 1);

@@ -48,6 +48,7 @@ extern tekstiolio_s kysytytol;
 extern strlista* sana;
 extern strlista* kaan;
 extern ylista* meta;
+extern unsigned osaamisraja;
 
 void asetelma();
 void tuhoa_asetelma();
