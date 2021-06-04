@@ -35,6 +35,7 @@ void kaunnista() {
   SDL_StartTextInput();
   laitot=kaikkilaitot;
   char* const suote = suoteol.teksti;
+  char vaihto = 0;
   if(strlen(tmpc)) {
     strcpy(suote, tmpc);
     goto ENTER;
@@ -55,8 +56,17 @@ void kaunnista() {
 	break;
       case SDL_KEYDOWN:
 	switch(tapaht.key.keysym.sym) {
+	case SDLK_LSHIFT:
+	case SDLK_RSHIFT:
+	  vaihto = 1;
+	  break;
 	case SDLK_RETURN:
 	case SDLK_KP_ENTER:
+	  if(vaihto) {
+	    if(meta->edel)
+	      ((metatied*)meta->edel->p)->osattu++;
+	    break;
+	  }
 	  if(suoteviesti) {
 	    suote[0] = '\0';
 	    suoteol.vari = apuvari;
@@ -84,6 +94,14 @@ void kaunnista() {
 	  break;
 	}
 	break; //keydown
+      case SDL_KEYUP:
+	switch(tapaht.key.keysym.sym) {
+	case SDLK_LSHIFT:
+	case SDLK_RSHIFT:
+	  vaihto = 0;
+	  break;
+	}
+	break; //keyup 
       case SDL_WINDOWEVENT:
 	switch(tapaht.window.event) {
 	case SDL_WINDOWEVENT_RESIZED:
