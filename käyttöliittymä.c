@@ -163,7 +163,7 @@ inline void __attribute__((always_inline)) paivita() {
       break;
     CASE(suote):
       Poista_ttuurit(suote);
-      suoteol.sij->y = kysymysol.toteutuma->y+kysymysol.toteutuma->h;
+      suoteol.sij.y = kysymysol.toteutuma.y+kysymysol.toteutuma.h;
       laita_teksti_ttf(&suoteol, rend);
       break;
     CASE(kysytyt):
@@ -174,12 +174,12 @@ inline void __attribute__((always_inline)) paivita() {
       Poista_ttuurit(annetut);
       int vali;
       TTF_GlyphMetrics(kysytytol.font, ' ', NULL, NULL, NULL, NULL, &vali);
-      annetutol.sij->y = kysytytol.toteutuma->y;
+      annetutol.sij.y = kysytytol.toteutuma.y;
       laita_oikealle(&kysytytol, 4*vali, annetutol.lista->seur, annetutol.lopusta, &annetutol, rend);
       break;
     CASE(viesti):
       Poista_ttuurit(viesti);
-      viestiol.sij->y = suoteol.toteutuma->y + suoteol.toteutuma->h;
+      viestiol.sij.y = suoteol.toteutuma.y + suoteol.toteutuma.h;
       laita_oikealle(&annetutol, 4*leveys(viestiol.font, ' '),		\
 		     _yalkuun(viestiol.lista), viestiol.lopusta, &viestiol, rend);
       break;

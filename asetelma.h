@@ -6,6 +6,7 @@
 #define Poista_ttuurit(olio) poista_ttuurit(&olio ## ol)
 #define SKM(funk) sana=funk(sana); kaan=funk(kaan); meta=funk(meta)
 #define SKMARGS(funk, ...) funk(sana, __VA_ARGS__); funk(kaan, __VA_ARGS__); funk(meta, __VA_ARGS__)
+#define SKMLIIKU(seur) sana=sana->seur; kaan=kaan->seur; meta=meta->seur;
 #define META (*(metatied*)(meta->p))
 #define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
 
@@ -44,6 +45,7 @@ extern tekstiolio_s kysymysol;
 extern tekstiolio_s annetutol;
 extern tekstiolio_s viestiol;
 extern tekstiolio_s kysytytol;
+extern tekstiolio_s tiedotol;
 
 extern strlista* sana;
 extern strlista* kaan;

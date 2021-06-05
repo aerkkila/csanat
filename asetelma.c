@@ -4,8 +4,8 @@
 #include <tekstigraf.h>
 #include "asetelma.h"
 
-const int ikkuna_x0 = 0;
-const int ikkuna_y0 = 0;
+const int ikkuna_x0 = 150;
+const int ikkuna_y0 = 200;
 const int ikkuna_w0 = 600;
 const int ikkuna_h0 = 400;
 const char ohjelman_nimi[] = "csanat";
@@ -29,60 +29,62 @@ const char kotihak[] = "/home/antterkk";
 tekstiolio_s suoteol = {.ttflaji = 2,					\
 			.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			.fonttikoko = 45,				\
-			.vari = (SDL_Color){255,255,255,255}};
+			.vari = (SDL_Color){255,255,255,255},		\
+			.sij = {0,200,700,100}};
+
 tekstiolio_s kysymysol = {.ttflaji = 1,					\
-			  .vari = (SDL_Color){255,255,255,255}};
-tekstiolio_s annetutol;
-tekstiolio_s viestiol;
+			  .vari = (SDL_Color){255,255,255,255},		\
+			  .sij = {0,0,700,100}};
+
+tekstiolio_s annetutol = {.ttflaji = 2,					\
+			  .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
+			  .fonttikoko = 15,				\
+			  .vari = {255,255,255,255},			\
+			  .sij = {100,230,1000,1000},			\
+			  .lopusta = 0};
+
+tekstiolio_s viestiol = {.ttflaji = 2,					\
+			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
+			 .fonttikoko = 15,				\
+			 .vari = {255,255,255,255},			\
+			 .sij = {320,0},				\
+			 .lopusta = 1};
+
 tekstiolio_s kysytytol = {.ttflaji = 2,					\
 			  .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			  .fonttikoko = 15,				\
 			  .vari = (SDL_Color){255,255,255,255},		\
+			  .sij = {0,230,700,1000},			\
 			  .lopusta = 0};
+			 
+tekstiolio_s tiedotol = {.ttflaji = 2,					\
+			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
+			 .fonttikoko = 15,				\
+			 .vari = (SDL_Color){255,255,255,255},		\
+			 .lopusta = 0,					\
+			 .sij = (SDL_Rect){200,0,200,300}};
 
 strlista* sana;
 strlista* kaan;
 ylista* meta;
-unsigned osaamisraja=1;
+unsigned osaamisraja = 1;
 
 void asetelma() {
   suoteol.teksti = calloc(maxpit_suote, 1);
-  static SDL_Rect suoteolsij = {0,100,700,100}; suoteol.sij = &suoteolsij;
-  static SDL_Rect suoteoltot = {0,0,0,0}; suoteol.toteutuma = &suoteoltot;
   suoteol.font = TTF_OpenFont(suoteol.fonttied, suoteol.fonttikoko);
 
   kysymysol.font = suoteol.font;
-  static SDL_Rect kysymysolsij = {0,0,700,100}; kysymysol.sij = &kysymysolsij;
-  static SDL_Rect kysymysoltot = {0,0,0,0}; kysymysol.toteutuma = &kysymysoltot;
 
   annetutol.lista = _yuusi_lista();
-  annetutol.ttflaji = 2;
-  annetutol.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf";
-  annetutol.fonttikoko = 15;
-  annetutol.vari = (SDL_Color){255,255,255,255};
-  static SDL_Rect annetutolsij = {0,0,1000,1000}; annetutol.sij = &annetutolsij;
-  static SDL_Rect annetutoltot = {0,0,0,0}; annetutol.toteutuma = &annetutoltot;
-  annetutol.lopusta = 0;
   annetutol.font = TTF_OpenFont(annetutol.fonttied, annetutol.fonttikoko);
 
-  static SDL_Rect kysytytolsij = {0,100,500,1000};
-  static SDL_Rect kysytytoltot = {0,0,0,0};
-  kysytytol.sij = &kysytytolsij;
-  kysytytol.toteutuma = &kysytytoltot;
   kysytytol.font = TTF_OpenFont(kysytytol.fonttied, kysytytol.fonttikoko);
   
-  viestiol.lista = NULL;
-  viestiol.ttflaji = 2;
-  viestiol.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf";
-  viestiol.fonttikoko = 15;
-  viestiol.vari = (SDL_Color){255,255,255,255};
-  static SDL_Rect viestiolsij = (SDL_Rect){300,0};
-  viestiolsij.w = ikkuna_w0 - viestiolsij.x;
-  viestiolsij.h = ikkuna_h0;
-  viestiol.sij = &viestiolsij;
-  static SDL_Rect viestioltot = {0,0,0,0}; viestiol.toteutuma = &viestioltot;
-  viestiol.lopusta = 1;
+  viestiol.sij.w = ikkuna_w0 - viestiol.sij.x;
+  viestiol.sij.h = ikkuna_h0;
   viestiol.font = TTF_OpenFont(viestiol.fonttied, viestiol.fonttikoko);
+
+  tiedotol.font = TTF_OpenFont(tiedotol.fonttied, tiedotol.fonttikoko);
 
   ikkuna_x = ikkuna_x0;
   ikkuna_y = ikkuna_y0;
@@ -96,6 +98,7 @@ void tuhoa_asetelma() {
   TTF_CloseFont(annetutol.font);
   TTF_CloseFont(viestiol.font);
   TTF_CloseFont(kysytytol.font);
+  TTF_CloseFont(tiedotol.font);
   Poista_ttuurit(suote);
   Poista_ttuurit(annetut);
   Poista_ttuurit(viesti);

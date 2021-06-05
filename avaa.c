@@ -49,7 +49,7 @@ void* lue_tiedosto(const char* nimi) {
       STRPAATE(luenta) = 0;
     kaan = _strlisaa_kopioiden(kaan, luenta);
     
-    metatied* m = malloc(sizeof(metatied));
+    metatied* m = calloc(1,sizeof(metatied));
     m->parinro = sanoja++;
     m->tiednro = tiedostonro;
     meta = _ylisaa(meta, m);
@@ -63,7 +63,7 @@ int avaa(const char* nimi) {
   strlista* l = lue_tiedosto(nimi);
   if(!l)
     return 1;
-  sana = _ylsvlms(sana, l); //listat ovat alussa
+  sana = _ylsvlms(sana, l); //l on alussa
   kaan = _ylsvlms(kaan, lue_tiedosto(nimi));
   meta = _ylsvlms(meta, lue_tiedosto(nimi));
   return 0;

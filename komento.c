@@ -9,6 +9,8 @@
 
 int avaa(const char* nimi);
 void sekoita();
+void seuraava_osaamaton();
+void osaamaton();
 
 extern char* tmpc;
 
@@ -66,17 +68,7 @@ void komento(const char* restrict suote) {
 	  suoteol.vari = virhevari;
 	}
 	suoteviesti = 1;
-	/*haetaan seuraava, jota ei ole osattu*/
-	do {
-	  if(!sana->seur) {
-	    kysymysol.teksti = NULL;
-	    break;
-	  }
-	  sana = sana->seur;
-	  kaan = kaan->seur;
-	  meta = meta->seur;
-	  kysymysol.teksti = sana->str;
-	} while(META.osattu >= osaamisraja);
+	seuraava_osaamaton();
 	knnot = _strpoista_kaikki(knnot);
 	return;
       }
@@ -85,7 +77,7 @@ void komento(const char* restrict suote) {
       if(!strlen(knnot->str)) {
 	SKM(_yalkuun);
 	sekoita();
-	kysymysol.teksti = sana->str;
+	osaamaton();
 	goto JATKA;
       }
       if(avaa(knnot->str)) {
@@ -95,11 +87,34 @@ void komento(const char* restrict suote) {
       }
       /*tiedosto avattiin*/
       sekoita();
-      kysymysol.teksti = sana->str;
+      SKM(_yalkuun);
+      osaamaton();
       goto JATKA;
     }
   JATKA:
     kysytytol.lista = _yjatka_taakse(kysytytol.lista);
     knnot = _strpoista1(knnot, 1);
   }
+}
+
+inline void __attribute__((always_inline)) seuraava_osaamaton() {
+  do {
+    if(!sana->seur) {
+      kysymysol.teksti = NULL;
+      return;
+    }
+    SKMLIIKU(seur);
+  } while(META.osattu >= osaamisraja);
+  kysymysol.teksti = sana->str;
+}
+
+inline void __attribute__((always_inline)) osaamaton() {
+  while(META.osattu >= osaamisraja) {
+    if(!sana->seur) {
+      kysymysol.teksti = NULL;
+      return;
+    }
+    SKMLIIKU(seur);
+  }
+  kysymysol.teksti = sana->str;
 }

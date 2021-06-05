@@ -1,0 +1,7 @@
+Ohjelma lukee kolme listaa: sana, kaan ja meta
+Ne ovat aluksi alussa ja lopuksi lopussa (ei ole itsestäänselvyys)
+
+annetutol.lista:ssa on kansilehti, johon lista osoittaa,
+jäsenet lisätään sen perään
+
+kysytytol.lista on lopussa ja jäsenet lisätään taakse
