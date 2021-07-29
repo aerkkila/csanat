@@ -1,106 +1,60 @@
-#include <listat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include "lista.h"
 #include "asetelma.h"
 
 #define STRPAATE(a) ((a)[strlen(a)-1])
+extern char* tmpc;
 
-void* lue_tiedosto(const char* nimi) {
-  static int lasku = -1; //kutsutaan kolmesti palauttaen aina yhden listan
-  strlista *sana = NULL;
-  static strlista *kaan = NULL;
-  static ylista *meta = NULL;
-  void* apu;
+int avaa_tiedosto(const char* nimi) {
   static int tiedostonro = 0;
-
-  lasku = (lasku+1) % 3;
-  if(lasku == 1) {
-    apu = _yalkuun(kaan);
-    kaan = NULL;
-    return apu;
-  }
-  if(lasku == 2) {
-    apu = _yalkuun(meta);
-    meta = NULL;
-    return apu;
-  }
   
   FILE *f = fopen(nimi, "r");
-  if (!f) {
-    lasku = -1;
-    return NULL;
-  }
+  if (!f)
+    return -1;
+
   int sanoja = 0;
-  char* luenta = malloc(maxpit_suote);
   
   while (!feof(f)) {
     //rivinvaihto lopussa ja tyhjät rivit välissä ohitetaan
     if (fgetc(f) == '\n' || feof(f))
       continue;
+    jatka_listaa(snsto, 3);
     fseek(f,-1,SEEK_CUR);
-    fgets(luenta, maxpit_suote, f); //sana
-    STRPAATE(luenta) = 0; //rivinvaihto pois lopusta
-    sana = _strlisaa_kopioiden(sana, luenta);
+    fgets(tmpc, maxpit_suote, f); //sana
+    STRPAATE(tmpc) = 0; //rivinvaihto pois lopusta
+    snsto->taul[snsto->pit-3] = strdup(tmpc);
     
-    fgets(luenta, maxpit_suote, f); //käännös
-    if(STRPAATE(luenta) == '\n')
-      STRPAATE(luenta) = 0;
-    kaan = _strlisaa_kopioiden(kaan, luenta);
-    
-    metatied* m = calloc(1,sizeof(metatied));
-    m->parinro = sanoja++;
-    m->tiednro = tiedostonro;
-    meta = _ylisaa(meta, m);
+    fgets(tmpc, maxpit_suote, f); //käännös
+    if(STRPAATE(tmpc) == '\n')
+      STRPAATE(tmpc) = 0;
+    snsto->taul[snsto->pit-2] = strdup(tmpc);
+
+    /*3:nteen tulee:
+      (int)parin numero; (int)tiedoston numero; (int)montako kierrosta;
+      (12*char)biteittäin kultakin kierrokselta osattu/ei_osattu eli 96 kierrosta on maksimi*/
+    snsto->taul[snsto->pit-1] = calloc(24, 1);
+    *(int*)(snsto->taul[snsto->pit-1]+0) = sanoja++;
+    *(int*)(snsto->taul[snsto->pit-1]+4) = tiedostonro;
+    /*loput ovat alussa nollia*/
   }
-  free(luenta);
   fclose(f);
-  return _yalkuun(sana);
+  return sanoja;
 }
 
-int avaa(const char* nimi) {
-  strlista* l = lue_tiedosto(nimi);
-  if(!l)
-    return 1;
-  sana = _ylsvlms(sana, l); //l on alussa
-  kaan = _ylsvlms(kaan, lue_tiedosto(nimi));
-  meta = _ylsvlms(meta, lue_tiedosto(nimi));
-  return 0;
-}
-
-int* randperm(int alku, int loppu, int* julos) {
-  /*Menetelmä:
-    lista luvuista [alku:loppu[
-    for i in pituus {
-    arvotaan luku n ∈ [0:listan_pituus[
-    sijoitetaan listalta n. luku taulukkoon sijalle i
-    poistetaan n. luku listalta
-    } */
-  ilista *l = NULL;
-  for(int i=alku; i<loppu; i++)
-    l = _ilisaa(l, i);
-  l = _yalkuun(l);
-  
-  int n;
-  int pit = loppu-alku;
-  int *perm;
-  if(!julos)
-    perm = malloc(pit*sizeof(int));
-  else
-    perm = julos;
-  for(int i=0; i<pit; i++) {
-    n = rand() % (pit-i);
-    perm[i] = (*(ilista*)_ynouda(l,n)).i;
-    l = _yrm(l, &n, 1);
-  }
-  return perm;
-}
+#define VAIHDA(a, b) do {			\
+    char* apu = a;				\
+    a = b;					\
+    b = apu;					\
+  } while(0)
 
 void sekoita() {
-  srand(time(NULL));
-  int pit = _ylaske(sana);
-  int *jarj = randperm(0, pit, NULL);
-  SKMARGS(_yjarjestapit, jarj, pit);
-  free(jarj);
+  for(int jaljella=snsto->pit/3; jaljella>1; jaljella--) {
+    int sij = rand() % jaljella;
+    /*vaihdetaan sijainti ja viimeinen keskenään
+      kolme peräkkäistä osoitinta kuuluvat aina yhteen*/
+    for(int i=0; i<3; i++)
+      VAIHDA(snsto->taul[jaljella*3-3+i], snsto->taul[sij*3+i]);
+  }
 }
