@@ -1,22 +1,10 @@
-#include <tekstigraf.h>
+#ifndef __asetelma_h__
+#define __asetelma_h__
+
 #include <SDL2/SDL_pixels.h>
+#include "grafiikka.h"
 
-#ifndef __asetelmaH__
-#define __asetelmaH__
-#define Poista_ttuurit(olio) poista_ttuurit(&olio ## ol)
-#define SKM(funk) sana=funk(sana); kaan=funk(kaan); meta=funk(meta)
-#define SKMARGS(funk, ...) funk(sana, __VA_ARGS__); funk(kaan, __VA_ARGS__); funk(meta, __VA_ARGS__)
-#define SKMLIIKU(seur) sana=sana->seur; kaan=kaan->seur; meta=meta->seur;
-#define META (*(metatied*)(meta->p))
 #define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
-
-typedef struct {
-  int parinro;
-  int tiednro;
-  int kierroksia;
-  int osattu;
-} metatied;
-#endif
 
 extern const int ikkuna_x0;
 extern const int ikkuna_y0;
@@ -42,15 +30,17 @@ extern const char kotihak[];
 
 extern tekstiolio_s suoteol;
 extern tekstiolio_s kysymysol;
-extern tekstiolio_s annetutol;
-extern tekstiolio_s viestiol;
-extern tekstiolio_s kysytytol;
+extern tekstiolio_s kauntiol; //sisältää annetut ja kysytyt
+extern tekstiolio_s viestiol; //käytetään esim ls:n tulokseen
 extern tekstiolio_s tiedotol;
 
-extern strlista* sana;
-extern strlista* kaan;
-extern ylista* meta;
+extern lista* snsto;
+extern lista* kysynnat;
 extern unsigned osaamisraja;
+
+extern SDL_Texture* alusta;
+extern SDL_Texture* apualusta;
 
 void asetelma();
 void tuhoa_asetelma();
+#endif
