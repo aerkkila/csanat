@@ -32,8 +32,8 @@ int avaa_tiedosto(const char* nimi) {
     snsto->taul[snsto->pit-2] = strdup(tmpc);
 
     /*3:nteen tulee:
-      (int)parin numero; (int)tiedoston numero; (int)montako kierrosta;
-      (12*char)biteittäin kultakin kierrokselta osattu/ei_osattu eli 96 kierrosta on maksimi*/
+      (int)parin numero; (int)tiedoston numero; (int)montako kierrosta; (int)osaamisten määrä;
+      (uint64)bittimaski osaamisista, viimeisin kierros vähiten merkitsevänä*/
     snsto->taul[snsto->pit-1] = calloc(24, 1);
     *(int*)(snsto->taul[snsto->pit-1]+0) = sanoja++;
     *(int*)(snsto->taul[snsto->pit-1]+4) = tiedostonro;

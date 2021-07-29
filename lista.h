@@ -4,9 +4,10 @@
 #define listan_loppu(l) ((l)->taul+(l)->pit-1)
 
 typedef struct {
-  unsigned pit;
-  unsigned patka;
-  unsigned tilaa;
+  int pit;
+  int patka;
+  int tilaa;
+  int sij;
   char** taul;
 } lista;
 
