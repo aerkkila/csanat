@@ -80,7 +80,6 @@ void asetelma() {
   viestiol.sij.w = ikkuna_w0 - viestiol.sij.x;
   viestiol.sij.h = ikkuna_h0;
   viestiol.font = TTF_OpenFont(viestiol.fonttied, viestiol.fonttikoko);
-  viestiol.lista = alusta_lista(16);
 
   tiedotol.font = TTF_OpenFont(tiedotol.fonttied, tiedotol.fonttikoko);
 
@@ -99,7 +98,8 @@ void tuhoa_asetelma() {
   TTF_CloseFont(kauntiol.font);
   TTF_CloseFont(viestiol.font);
   TTF_CloseFont(tiedotol.font);
-  viestiol.lista = tuhoa_lista(viestiol.lista);
+  if(viestiol.lista)
+    viestiol.lista = tuhoa_lista(viestiol.lista);
   snsto = tuhoa_lista(snsto);
   kysynnat = tuhoa_lista(kysynnat);
   SDL_DestroyTexture(alusta);

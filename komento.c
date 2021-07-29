@@ -11,9 +11,9 @@
 #define SEURAAVA(lista)  (lista->taul[lista->sij+1])
 #define VIIMEINEN(l) ((l)->taul[(l)->pit-1])
 
-#define KIERROKSIA_SANALLA ((int*)( NYT_OLEVA(snsto)[2] )+2)
-#define OSAAMISKERRAT (KIERROKSIA_SANALLA+1)
-#define SANAN_OSAAMISET ((long long unsigned*)(KIERROKSIA_SANALLA+2))
+#define KIERROKSIA_SANALLA ((int*)( NYT_OLEVA(snsto)[2] )+META_KIERROKSIA)
+#define OSAAMISKERRAT      ((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISIA)
+#define SANAN_OSAAMISET ((long long unsigned*)((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISET))
 
 int avaa_tiedosto(const char*);
 void sekoita();
@@ -148,4 +148,15 @@ lista* pilko_sanoiksi(const char* restrict str) {
     VIIMEINEN(r) = strdup(tmpc);
   }
   return r;
+}
+
+void edellinen_osatuksi() {
+  if(snsto->sij < 3)
+    return;
+  snsto->sij -= 3;
+  if(!(*SANAN_OSAAMISET & 0x01)) {
+    (*OSAAMISKERRAT)++;
+    *SANAN_OSAAMISET += 1;
+  }
+  snsto->sij += 3;
 }

@@ -1,22 +1,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <SDL2/SDL.h>
-#include <strlista.h>
-#include <tekstigraf.h>
+#include "lista.h"
 #include "asetelma.h"
 
 void paivita();
 void komento(const char* restrict suote);
+void edellinen_osatuksi();
 void pyyhi(char* suote);
 void seis() {;};
 
 enum laitot_enum {
   kysymys_enum,
   suote_enum,
-  kysytyt_enum,
-  annetut_enum,
+  kaunti_enum,
   viesti_enum,
   laitot_enum_pituus //lukuarvo kertoo pituuden
 };
@@ -25,12 +23,10 @@ const unsigned kaikkilaitot =  0xffff;
 #define laita(jotain) (laitot |= (1u << jotain ## _enum))
 
 unsigned laitot;
-strlista* annetut=NULL;
 extern SDL_Renderer* rend;
 extern char* tmpc;
 
 void kaunnista() {
-  /*testi*/
   SDL_Event tapaht;
   SDL_StartTextInput();
   laitot=kaikkilaitot;
@@ -63,8 +59,7 @@ void kaunnista() {
 	case SDLK_RETURN:
 	case SDLK_KP_ENTER:
 	  if(vaihto) {
-	    if(meta->edel)
-	      ((metatied*)meta->edel->p)->osattu++;
+	    edellinen_osatuksi();
 	    break;
 	  }
 	  if(suoteviesti) {
@@ -73,8 +68,7 @@ void kaunnista() {
 	    suoteviesti = 0;
 	  }
 	ENTER:
-	  _strlisaa_kopioiden(annetutol.lista, suote);
-	  viestiol.lista = _strpoista_kaikki(_yalkuun(viestiol.lista));
+	  viestiol.lista = tuhoa_lista(viestiol.lista);
 	  komento(suote);
 	  if(!suoteviesti)
 	    suote[0] = '\0';
@@ -85,7 +79,7 @@ void kaunnista() {
 	  laita(suote);
 	  break;
 	case SDLK_ESCAPE:
-	  SKM(_yloppuun);
+	  snsto->sij = snsto->pit;
 	  kysymysol.teksti = NULL;
 	  laita(kysymys);
 	  break;
@@ -118,28 +112,6 @@ void kaunnista() {
   } //while 1
 }
 
-void laita_ttuurit(int n, ...) {
-  tekstiolio_s* ol;
-  ylista* tex;
-  ylista* osa;
-  ylista* tot;
-  va_list ap;
-  va_start(ap, n);
-  for(int i=0; i<n; i++) {
-    ol = va_arg(ap, tekstiolio_s*);
-    tex = ol->ttuurit;
-    osa = ol->osat;
-    tot = ol->totmat;
-    while(osa) {
-      SDL_RenderCopy(rend, tex->p, osa->p, tot->p);
-      tex=tex->edel;
-      osa=osa->edel;
-      tot=tot->edel;
-    }
-  }
-  va_end(ap);
-}
-
 inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
   int lev;
   TTF_GlyphMetrics(f, c, NULL, NULL, NULL, NULL, &lev);
@@ -158,45 +130,32 @@ inline void __attribute__((always_inline)) paivita() {
       continue;
     switch(i) {
     CASE(kysymys):
-      Poista_ttuurit(kysymys);
       laita_teksti_ttf(&kysymysol, rend);
       break;
     CASE(suote):
-      Poista_ttuurit(suote);
       suoteol.sij.y = kysymysol.toteutuma.y+kysymysol.toteutuma.h;
       laita_teksti_ttf(&suoteol, rend);
       break;
-    CASE(kysytyt):
-      Poista_ttuurit(kysytyt);
-      laita_alle(&suoteol, 0, kysytytol.lista, &kysytytol, rend);
-      break;
-    CASE(annetut):
-      Poista_ttuurit(annetut);
-      int vali;
-      TTF_GlyphMetrics(kysytytol.font, ' ', NULL, NULL, NULL, NULL, &vali);
-      annetutol.sij.y = kysytytol.toteutuma.y;
-      laita_oikealle(&kysytytol, 4*vali, annetutol.lista->seur, annetutol.lopusta, &annetutol, rend);
+    CASE(kaunti):
+      laita_kaunti(&suoteol, 0, kauntiol.lista, &kauntiol, rend);
       break;
     CASE(viesti):
-      Poista_ttuurit(viesti);
       viestiol.sij.y = suoteol.toteutuma.y + suoteol.toteutuma.h;
-      laita_oikealle(&annetutol, 4*leveys(viestiol.font, ' '),		\
-		     _yalkuun(viestiol.lista), viestiol.lopusta, &viestiol, rend);
+      laita_oikealle(&kauntiol, 4*leveys(viestiol.font, ' '),		\
+		     viestiol.lista, viestiol.lopusta, &viestiol, rend);
       break;
     }
   }
-  laitot = 0;
-  laita_ttuurit(laitot_enum_pituus, &kysymysol, &suoteol, &kysytytol, &annetutol, &viestiol);
   SDL_RenderPresent(rend);
 }
 #undef CASE
 
-/*Koko utf8-merkki pois kerralla. Voi sisältää monta tavua.*/
+/*Kerralla pois koko utf8-merkki, joka voi sisältää monta tavua.*/
 inline void __attribute__((always_inline)) pyyhi(char* suote) {
   int jatka = 1;
   int pit = strlen(suote);
   while(jatka && pit--) {
-    jatka = ((suote[pit] & 0xc0) == 0x80)? 1 : 0; //alkaako 10:lla: 0xc0 poimii, 0x80 vertaa
+    jatka = (suote[pit] & 0xc0) == 0x80; //alkaako 10:lla
     suote[pit] = '\0';
   }
 }

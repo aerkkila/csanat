@@ -4,6 +4,10 @@
 #include <SDL2/SDL_pixels.h>
 #include "grafiikka.h"
 
+#define META_KIERROKSIA 2
+#define META_OSAAMISIA 3
+#define META_OSAAMISET 4
+
 #define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
 
 extern const int ikkuna_x0;
