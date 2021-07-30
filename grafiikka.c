@@ -19,7 +19,7 @@ void laita_teksti_ttf(tekstiolio_s *o) {
     pinta = TTF_RenderUTF8_Solid(o->font, o->teksti, o->vari);
     break;
   case 1:
-    pinta = TTF_RenderUTF8_Shaded(o->font, o->teksti, o->vari, (SDL_Color){0,0,0,0});
+    pinta = TTF_RenderUTF8_Shaded(o->font, o->teksti, o->vari, tekstin_taustavari);
     break;
   case 2:
     pinta = TTF_RenderUTF8_Blended(o->font, o->teksti, o->vari);
@@ -121,13 +121,21 @@ void laita_kaunti() {
   int alaraja = (yht-mahtuu)*2*(mahtuu<yht); //0, paitsi jos erotus ≥ 0
 
   /*kysynnät*/
+  SDL_Color ovari = o->vari;
+  o->vari = (SDL_Color){0,0,0,0};
   for(int i=o->alku*2; i>=alaraja; i-=2) {
     o->teksti = l->taul[i];
+    if(o->teksti[strlen(o->teksti)+1]) //sana osattiin
+      tekstin_taustavari = oikeavari;
+    else
+      tekstin_taustavari = virhevari;
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;
     (o->sij.y) += rvali;
   }
+  tekstin_taustavari = taustavari;
+  o->vari = ovari;
 
   int leveystot0 = leveystot;
   o->sij.y = oy;

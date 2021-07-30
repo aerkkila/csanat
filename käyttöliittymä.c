@@ -59,6 +59,7 @@ void kaunnista() {
 	case SDLK_KP_ENTER:
 	  if(vaihto) {
 	    edellinen_osatuksi();
+	    laita(kaunti);
 	    break;
 	  }
 	  if(suoteviesti) {

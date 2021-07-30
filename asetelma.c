@@ -19,9 +19,10 @@ int ikkuna_h;
 const unsigned uniaika = 10;
 const unsigned maxpit_suote = 2000;
 
-SDL_Color taustavari = (SDL_Color){0,0,0,255};
-SDL_Color oikeavari = (SDL_Color){20,255,20,255};
-SDL_Color virhevari = (SDL_Color){255,20,20,255};
+const SDL_Color taustavari = (SDL_Color){0,0,0,255};
+const SDL_Color oikeavari = (SDL_Color){20,255,20,255};
+const SDL_Color virhevari = (SDL_Color){255,20,20,255};
+SDL_Color tekstin_taustavari;
 SDL_Color apuvari;
 int suoteviesti = 0;
 
@@ -37,7 +38,7 @@ tekstiolio_s kysymysol = {.ttflaji = 1,					\
 			  .vari = (SDL_Color){255,255,255,255},		\
 			  .sij = {0,0,700,100}};
 
-tekstiolio_s kauntiol = {.ttflaji = 2,					\
+tekstiolio_s kauntiol = {.ttflaji = 1,					\
 			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			 .fonttikoko = 15,				\
 			 .vari = {255,255,255,255},			\
@@ -87,6 +88,7 @@ void asetelma() {
   ikkuna_y = ikkuna_y0;
   ikkuna_w = ikkuna_w0;
   ikkuna_h = ikkuna_h0;
+  tekstin_taustavari = taustavari;
   
   alusta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w0, ikkuna_h0);
   apualusta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w0, ikkuna_h0);

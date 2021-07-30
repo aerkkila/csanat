@@ -5,16 +5,12 @@
 #include "lista.h"
 #include "asetelma.h"
 
-#define NYT_OLEVA(l) ((l)->taul+(l)->sij)
 #define knto(a) (!strcmp(*NYT_OLEVA(knnot), a))
 #define STREND(a) (a)[strlen(a)-1]
 #define EI_LOPUSSA(lista) (lista->sij+1 < lista->pit)
 #define SEURAAVA(lista)  (lista->taul[lista->sij+1])
 #define VIIMEINEN(l) ((l)->taul[(l)->pit-1])
-
-#define KIERROKSIA_SANALLA ((int*)( NYT_OLEVA(snsto)[2] )+META_KIERROKSIA)
-#define OSAAMISKERRAT      ((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISIA)
-#define SANAN_OSAAMISET ((long long unsigned*)((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISET))
+#define TOISEKSI_VIIM (kysynnat->taul[kysynnat->pit-2])
 
 int avaa_tiedosto(const char*);
 void sekoita();
@@ -70,7 +66,8 @@ void komento(const char* restrict suote) {
       if(kysymysol.teksti) {
 	/*verrataan käännökseen, laitetaan uusi sana ja poistutaan*/
 	jatka_listaa(kysynnat, 2);
-	(&VIIMEINEN(kysynnat))[-1] = strdup(kysymysol.teksti);
+	TOISEKSI_VIIM = malloc(strlen(kysymysol.teksti) + 2);
+	strcpy(TOISEKSI_VIIM, kysymysol.teksti); //nullin jälkeen tulee osaattiinko
 	VIIMEINEN(kysynnat) = strdup(suote);
 	*SANAN_OSAAMISET <<= 1;
 	if(!strcmp(NYT_OLEVA(snsto)[1], suote)) {
@@ -78,10 +75,12 @@ void komento(const char* restrict suote) {
 	  suoteol.vari = oikeavari;
 	  *SANAN_OSAAMISET += 1;
 	  (*OSAAMISKERRAT)++;
+	  TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x01;
 	} else {
 	  strcpy(suoteol.teksti, *(NYT_OLEVA(snsto)+1));
 	  apuvari = suoteol.vari;
 	  suoteol.vari = virhevari;
+	  TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x00;
 	}
 	(*KIERROKSIA_SANALLA)++;
 	suoteviesti = 1;
@@ -158,4 +157,5 @@ void edellinen_osatuksi() {
     *SANAN_OSAAMISET += 1;
   }
   snsto->sij += 3;
+  TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x01;
 }
