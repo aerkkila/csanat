@@ -18,7 +18,6 @@
 
 int avaa_tiedosto(const char*);
 void sekoita();
-void seuraava_osaamaton();
 void osaamaton();
 lista* pilko_sanoiksi(const char* restrict str);
 
@@ -86,7 +85,8 @@ void komento(const char* restrict suote) {
 	}
 	(*KIERROKSIA_SANALLA)++;
 	suoteviesti = 1;
-	seuraava_osaamaton();
+	snsto->sij+=3;
+	osaamaton();
         knnot = tuhoa_lista(knnot);
 	return;
       }
@@ -106,6 +106,7 @@ void komento(const char* restrict suote) {
 	  tuhoa_lista(viestiol.lista);
 	viestiol.lista = alusta_lista(1);
 	viestiol.lista->taul[0] = strdup(tmpc);
+	viestiol.lista->pit = 1;
 	knnot->sij++;
 	continue;
       }
@@ -119,26 +120,15 @@ void komento(const char* restrict suote) {
   knnot = tuhoa_lista(knnot);
 }
 
-inline void __attribute__((always_inline)) seuraava_osaamaton() {
-  do {
-    snsto->sij+=3;
-    if(snsto->sij >= snsto->pit) {
-      kysymysol.teksti = NULL;
-      return;
-    }
-  } while(*OSAAMISKERRAT >= osaamisraja);
-  kysymysol.teksti = *NYT_OLEVA(snsto);
-}
-
 inline void __attribute__((always_inline)) osaamaton() {
-  while(*OSAAMISKERRAT >= osaamisraja) {
-    if(snsto->sij >= snsto->pit) {
-      kysymysol.teksti = NULL;
+  while(snsto->sij < snsto->pit) {
+    if( *OSAAMISKERRAT < osaamisraja) {
+      kysymysol.teksti = *NYT_OLEVA(snsto);
       return;
     }
     snsto->sij+=3;
   }
-  kysymysol.teksti = *NYT_OLEVA(snsto);
+  kysymysol.teksti = NULL;
 }
 
 lista* pilko_sanoiksi(const char* restrict str) {
