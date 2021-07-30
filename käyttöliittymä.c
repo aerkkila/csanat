@@ -9,7 +9,6 @@
 void paivita();
 void komento(const char* restrict suote);
 void pyyhi(char* suote);
-void seis() {;};
 
 enum laitot_enum {
   kysymys_enum,
@@ -21,7 +20,6 @@ enum laitot_enum {
 };
 
 const unsigned kaikkilaitot =  0xffff;
-#define laita(jotain) (laitot |= (1u << jotain ## _enum))
 
 unsigned laitot = 0;
 extern SDL_Renderer* rend;
@@ -89,7 +87,8 @@ void kaunnista() {
 	laita(kysymys);
 	break;
       case SDLK_PAUSE:
-	seis();
+	if(vaihto)
+	  asm("int $0x03"); //jäljityspisteansa (breakpoint debuggerille)
 	break;
       }
       break; //keydown
@@ -192,4 +191,13 @@ inline void __attribute__((always_inline)) pyyhi(char* suote) {
     jatka = (suote[pit] & 0xc0) == 0x80; //alkaako 10:lla
     suote[pit] = '\0';
   }
+}
+
+void viestiksi(const char* restrict s) {
+  if(viestiol.lista)
+    tuhoa_lista(viestiol.lista);
+  viestiol.lista = alusta_lista(1);
+  viestiol.lista->taul[0] = strdup(s);
+  viestiol.lista->pit = 1;
+  laita(viesti);
 }

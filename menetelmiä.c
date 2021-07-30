@@ -65,32 +65,60 @@ void sekoita() {
 }
 
 void tee_tiedot() {
-  sprintf(tiedotol.lista->taul[0], "Sijainti: %i / %i", snsto->sij/3, snsto->pit/3);
-  sprintf(tiedotol.lista->taul[1], "Osattuja %i", laske_osatut());
-}
-
-int laske_osatut() {
-  int r = 0;
-  int sij = snsto->sij;
-  for(int i=0; i<snsto->pit; i+=3) {
-    snsto->sij = i;
-    if(*OSAAMISKERRAT >= osaamisraja)
-      r++;
+  if(snsto->pit == 0) {
+    for(int i=0; i<2; i++)
+      tiedotol.lista->taul[i][0] = '\0';
+    return;
   }
-  snsto->sij = sij;
-  return r;
+  /*sijainti n / m: m:ää ei päivitetä joka kerralla, vaan ainoastaan kierroksen alussa*/
+  static int kierroksen_pituus = -1;
+  if(kierroksen_pituus == -1)
+    kierroksen_pituus = snsto->pit/3; //tätä ei voi alustaa suoraan
+
+  extern int alussa;
+  int osattuja = 0;
+  int sijainti_kierroksella = kierroksen_pituus; //vähennetään tästä tulossa olevien osaamattomien määrä
+  int sij0 = snsto->sij;
+  int i=0;
+  
+  /*nykyiseen asti ei muuteta sijaintia kierroksella*/
+  for(; i<sij0; i+=3) {
+    snsto->sij=i;
+    if(*OSAAMISKERRAT >= osaamisraja) //osattiin
+      osattuja++;
+  }
+  
+  /*nykysijainnista eteenpäin vähennetään sijaintia_kierroksella*/
+  for(; i<snsto->pit; i+=3) {
+    snsto->sij = i;
+    if(*OSAAMISKERRAT < osaamisraja) { //ei osattu
+      sijainti_kierroksella--;
+      continue;
+    }
+    osattuja++;
+  }
+  if(alussa) {
+    kierroksen_pituus = snsto->pit/3-osattuja;
+    sijainti_kierroksella = 0;
+    alussa = 0;
+  }
+  snsto->sij = sij0;
+  sprintf(tiedotol.lista->taul[0], "Sijainti: %i / %i", sijainti_kierroksella, kierroksen_pituus);
+  sprintf(tiedotol.lista->taul[1], "Osattuja %i / %i", osattuja, snsto->pit/3);
 }
 
 void edellinen_osatuksi() {
-  if(snsto->sij < 3)
+  extern int edellinen_sij;
+  if(edellinen_sij < 0)
     return;
-  snsto->sij -= 3;
+  int sij0 = snsto->sij;
+  snsto->sij = edellinen_sij;
   if(!(*SANAN_OSAAMISET & 0x01)) {
     (*OSAAMISKERRAT)++;
     *SANAN_OSAAMISET += 1;
   }
-  snsto->sij += 3;
   TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x01;
+  snsto->sij = sij0;
 }
 
 lista* pilko_sanoiksi(const char* restrict str) {

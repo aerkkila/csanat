@@ -14,6 +14,8 @@
 void osaamaton();
 
 extern char* tmpc;
+int alussa = 0;
+int edellinen_sij = -1;
 
 void komento(const char* restrict suote) {
   lista* knnot = pilko_sanoiksi(suote);
@@ -80,6 +82,7 @@ void komento(const char* restrict suote) {
 	}
 	(*KIERROKSIA_SANALLA)++;
 	suoteviesti = 1;
+	edellinen_sij = snsto->sij;
 	snsto->sij+=3;
 	osaamaton();
         knnot = tuhoa_lista(knnot);
@@ -88,26 +91,27 @@ void komento(const char* restrict suote) {
       
       /*sanasto on lopussa*/
       if(!strlen(*NYT_OLEVA(knnot))) {
+	edellinen_sij = snsto->pit-3;
 	snsto->sij = 0;
 	sekoita();
 	osaamaton();
+	alussa = 1;
         knnot->sij++;
 	continue;
       }
-      if(avaa_tiedosto(*NYT_OLEVA(knnot)) < 0) {
+      int _avaa = avaa_tiedosto(*NYT_OLEVA(knnot));
+      if(_avaa < 0) {
 	fprintf(stderr, "Ei avattu tiedostoa \"%s\"\n", *NYT_OLEVA(knnot));
 	sprintf(tmpc, "Ei avattu tiedostoa \"%s\"", *NYT_OLEVA(knnot));
-	if(viestiol.lista)
-	  tuhoa_lista(viestiol.lista);
-	viestiol.lista = alusta_lista(1);
-	viestiol.lista->taul[0] = strdup(tmpc);
-	viestiol.lista->pit = 1;
 	knnot->sij++;
 	continue;
+      } else if(_avaa == 0) {
+	printf("Varoitus: tiedosto \"%s\" avattiin mutta yhtään sanaa ei luettu\n", *NYT_OLEVA(knnot));
       }
       /*tiedosto avattiin*/
       sekoita();
       osaamaton();
+      edellinen_sij = -1;
       knnot->sij++;
     }
     knnot->sij++;
