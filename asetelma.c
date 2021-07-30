@@ -60,14 +60,14 @@ tekstiolio_s tiedotol = {.ttflaji = 2,					\
 
 lista* snsto;
 lista* kysynnat;
-unsigned osaamisraja = 1;
+int osaamisraja = 1;
 SDL_Texture* alusta;
 SDL_Texture* apualusta;
 
 void asetelma() {
   extern SDL_Renderer* rend;
-  snsto = alusta_lista(16*3);
-  kysynnat = alusta_lista(16*2);
+  snsto = alusta_lista(11*3);
+  kysynnat = alusta_lista(11*2);
 
   suoteol.teksti = calloc(maxpit_suote, 1);
   suoteol.font = TTF_OpenFont(suoteol.fonttied, suoteol.fonttikoko);

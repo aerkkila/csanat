@@ -40,7 +40,7 @@ extern tekstiolio_s tiedotol;
 
 extern lista* snsto;
 extern lista* kysynnat;
-extern unsigned osaamisraja;
+extern int osaamisraja;
 
 extern SDL_Texture* alusta;
 extern SDL_Texture* apualusta;

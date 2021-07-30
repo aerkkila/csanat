@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "lista.h"
 #include "asetelma.h"
 
@@ -22,11 +23,13 @@ int avaa_tiedosto(const char* nimi) {
       continue;
     jatka_listaa(snsto, 3);
     fseek(f,-1,SEEK_CUR);
-    fgets(tmpc, maxpit_suote, f); //sana
+    if(!fgets(tmpc, maxpit_suote, f)) //sana
+      break;
     STRPAATE(tmpc) = 0; //rivinvaihto pois lopusta
     snsto->taul[snsto->pit-3] = strdup(tmpc);
     
-    fgets(tmpc, maxpit_suote, f); //käännös
+    if(!fgets(tmpc, maxpit_suote, f)) //käännös
+      fprintf(stderr, "Virhe: Ei luettu käännöstä\n");
     if(STRPAATE(tmpc) == '\n')
       STRPAATE(tmpc) = 0;
     snsto->taul[snsto->pit-2] = strdup(tmpc);
@@ -50,6 +53,7 @@ int avaa_tiedosto(const char* nimi) {
   } while(0)
 
 void sekoita() {
+  srand((unsigned)time(NULL));
   for(int jaljella=snsto->pit/3; jaljella>1; jaljella--) {
     int sij = rand() % jaljella;
     /*vaihdetaan sijainti ja viimeinen keskenään

@@ -1,6 +1,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include "lista.h"
 #include "asetelma.h"
 
@@ -25,15 +26,15 @@ extern char* tmpc;
 
 void komento(const char* restrict suote) {
   lista* knnot = pilko_sanoiksi(suote);
-  while(knnot) {
-    if(knnot->sij == knnot->pit)
-      break;
+  while(knnot->sij < knnot->pit) {
     if(knto("cd") && EI_LOPUSSA(knnot)) {
       knnot->sij++;
-      chdir(*NYT_OLEVA(knnot));
+      if(chdir(*NYT_OLEVA(knnot)))
+	fprintf(stderr, "Virhe: %s\n", strerror(errno));
       
     } else if(knto("cd") || knto("cd;")) {
-      chdir(kotihak);
+      if(chdir(kotihak))
+	fprintf(stderr, "Virhe: %s\n", strerror(errno));
       
     } else if(knto("ls") || knto("ls;")) {
       strcpy(tmpc, "/bin/ls");
@@ -73,7 +74,7 @@ void komento(const char* restrict suote) {
 	(&VIIMEINEN(kysynnat))[-1] = strdup(kysymysol.teksti);
 	VIIMEINEN(kysynnat) = strdup(suote);
 	*SANAN_OSAAMISET <<= 1;
-	if(!strcmp(*NYT_OLEVA(snsto), suote)) {
+	if(!strcmp(NYT_OLEVA(snsto)[1], suote)) {
 	  apuvari = suoteol.vari;
 	  suoteol.vari = oikeavari;
 	  *SANAN_OSAAMISET += 1;
@@ -90,7 +91,7 @@ void komento(const char* restrict suote) {
 	return;
       }
       
-      /*lista on lopussa*/
+      /*sanasto on lopussa*/
       if(!strlen(*NYT_OLEVA(knnot))) {
 	snsto->sij = 0;
 	sekoita();
@@ -99,6 +100,7 @@ void komento(const char* restrict suote) {
 	continue;
       }
       if(avaa_tiedosto(*NYT_OLEVA(knnot)) < 0) {
+	fprintf(stderr, "Ei avattu tiedostoa \"%s\"\n", *NYT_OLEVA(knnot));
 	sprintf(tmpc, "Ei avattu tiedostoa \"%s\"", *NYT_OLEVA(knnot));
 	if(viestiol.lista)
 	  tuhoa_lista(viestiol.lista);
@@ -112,15 +114,15 @@ void komento(const char* restrict suote) {
       osaamaton();
       knnot->sij++;
     }
+    knnot->sij++;
   }
-  if(knnot)
-    knnot = tuhoa_lista(knnot);
+  knnot = tuhoa_lista(knnot);
 }
 
 inline void __attribute__((always_inline)) seuraava_osaamaton() {
   do {
-    snsto->sij++;
-    if(snsto->sij == snsto->pit) {
+    snsto->sij+=3;
+    if(snsto->sij >= snsto->pit) {
       kysymysol.teksti = NULL;
       return;
     }
@@ -130,11 +132,11 @@ inline void __attribute__((always_inline)) seuraava_osaamaton() {
 
 inline void __attribute__((always_inline)) osaamaton() {
   while(*OSAAMISKERRAT >= osaamisraja) {
-    if(snsto->sij == snsto->pit) {
+    if(snsto->sij >= snsto->pit) {
       kysymysol.teksti = NULL;
       return;
     }
-    snsto->sij++;
+    snsto->sij+=3;
   }
   kysymysol.teksti = *NYT_OLEVA(snsto);
 }
@@ -143,9 +145,16 @@ lista* pilko_sanoiksi(const char* restrict str) {
   const char* osoit = str;
   lista* r = alusta_lista(2);
   while(sscanf(osoit, "%s", tmpc) == 1) {
+    while((unsigned char)osoit[0] <= 0x20)
+      osoit++; //välien yli ensin
     osoit += strlen(tmpc);
+    /*välien yli*/
     jatka_listaa(r, 1);
     VIIMEINEN(r) = strdup(tmpc);
+  }
+  if(r->pit == 0) { //myös tyhjästä syötteestä tehdään lista
+    jatka_listaa(r, 1);
+    VIIMEINEN(r) = strdup("");
   }
   return r;
 }

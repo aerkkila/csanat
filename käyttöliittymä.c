@@ -22,14 +22,13 @@ enum laitot_enum {
 const unsigned kaikkilaitot =  0xffff;
 #define laita(jotain) (laitot |= (1u << jotain ## _enum))
 
-unsigned laitot;
+unsigned laitot = 0;
 extern SDL_Renderer* rend;
 extern char* tmpc;
 
 void kaunnista() {
   SDL_Event tapaht;
   SDL_StartTextInput();
-  laitot=kaikkilaitot;
   char* const suote = suoteol.teksti;
   char vaihto = 0;
   if(strlen(tmpc)) {
@@ -68,7 +67,8 @@ void kaunnista() {
 	    suoteviesti = 0;
 	  }
 	ENTER:
-	  viestiol.lista = tuhoa_lista(viestiol.lista);
+	  if(viestiol.lista)
+	    viestiol.lista = tuhoa_lista(viestiol.lista);
 	  komento(suote);
 	  if(!suoteviesti)
 	    suote[0] = '\0';
@@ -118,34 +118,42 @@ inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
   return lev;
 }
 
+inline void __attribute__((always_inline)) putsaa(tekstiolio_s* o) {
+  aseta_vari(taustavari);
+  SDL_RenderFillRect(rend, &o->toteutuma);
+}
+
 #define CASE(a) case a ## _enum
 
 inline void __attribute__((always_inline)) paivita() {
   if(!laitot)
     return;
-  aseta_vari(taustavari);
-  SDL_RenderClear(rend);
   for(int i=0; i<laitot_enum_pituus; i++) {
     if( !((laitot >> i) & 0x01) )
       continue;
     switch(i) {
     CASE(kysymys):
-      laita_teksti_ttf(&kysymysol, rend);
+      putsaa(&kysymysol);
+      laita_teksti_ttf(&kysymysol);
       break;
     CASE(suote):
+      putsaa(&suoteol);
       suoteol.sij.y = kysymysol.toteutuma.y+kysymysol.toteutuma.h;
-      laita_teksti_ttf(&suoteol, rend);
+      laita_teksti_ttf(&suoteol);
       break;
     CASE(kaunti):
-      laita_kaunti(&suoteol, 0, kauntiol.lista, &kauntiol, rend);
+      putsaa(&kauntiol);
+      laita_kaunti();
       break;
     CASE(viesti):
+      putsaa(&viestiol);
       viestiol.sij.y = suoteol.toteutuma.y + suoteol.toteutuma.h;
-      laita_oikealle(&kauntiol, 4*leveys(viestiol.font, ' '),		\
-		     viestiol.lista, viestiol.lopusta, &viestiol, rend);
+      viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
+      laita_tekstilista(viestiol.lista, viestiol.lopusta, &viestiol);
       break;
     }
   }
+  laitot = 0;
   SDL_RenderPresent(rend);
 }
 #undef CASE
