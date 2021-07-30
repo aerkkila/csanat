@@ -4,10 +4,10 @@
 #include <SDL2/SDL.h>
 #include "lista.h"
 #include "asetelma.h"
+#include "menetelmiä.h"
 
 void paivita();
 void komento(const char* restrict suote);
-void edellinen_osatuksi();
 void pyyhi(char* suote);
 void seis() {;};
 
@@ -15,6 +15,7 @@ enum laitot_enum {
   kysymys_enum,
   suote_enum,
   kaunti_enum,
+  tiedot_enum,
   viesti_enum,
   laitot_enum_pituus //lukuarvo kertoo pituuden
 };
@@ -35,82 +36,85 @@ void kaunnista() {
     strcpy(suote, tmpc);
     goto ENTER;
   }
-  while(1) {
-    while(SDL_PollEvent(&tapaht)) {
-      switch(tapaht.type) {
-      case SDL_QUIT:
-	return;
-      case SDL_TEXTINPUT:
+  /*Mielestäni goto on helpommin luettava kuin while(1), jos ehdoton toistolause on pitkä*/
+ TOISTOLAUSE:
+  while(SDL_PollEvent(&tapaht)) {
+    switch(tapaht.type) {
+    case SDL_QUIT:
+      return;
+    case SDL_TEXTINPUT:
+      if(suoteviesti) {
+	suote[0] = '\0';
+	suoteol.vari = apuvari;
+	suoteviesti = 0;
+      }
+      strcat(suote, tapaht.text.text);
+      laita(suote);
+      break;
+    case SDL_KEYDOWN:
+      switch(tapaht.key.keysym.sym) {
+      case SDLK_LSHIFT:
+      case SDLK_RSHIFT:
+	vaihto = 1;
+	break;
+      case SDLK_RETURN:
+      case SDLK_KP_ENTER:
+	if(vaihto) {
+	  edellinen_osatuksi();
+	  laita(kaunti);
+	  tee_tiedot();
+	  laita(tiedot);
+	  break;
+	}
 	if(suoteviesti) {
 	  suote[0] = '\0';
 	  suoteol.vari = apuvari;
 	  suoteviesti = 0;
 	}
-	strcat(suote, tapaht.text.text);
+      ENTER:
+	if(viestiol.lista)
+	  viestiol.lista = tuhoa_lista(viestiol.lista);
+	komento(suote);
+	if(!suoteviesti)
+	  suote[0] = '\0';
+	laitot = kaikkilaitot;
+	break;
+      case SDLK_BACKSPACE:
+	pyyhi(suote);
 	laita(suote);
 	break;
-      case SDL_KEYDOWN:
-	switch(tapaht.key.keysym.sym) {
-	case SDLK_LSHIFT:
-	case SDLK_RSHIFT:
-	  vaihto = 1;
-	  break;
-	case SDLK_RETURN:
-	case SDLK_KP_ENTER:
-	  if(vaihto) {
-	    edellinen_osatuksi();
-	    laita(kaunti);
-	    break;
-	  }
-	  if(suoteviesti) {
-	    suote[0] = '\0';
-	    suoteol.vari = apuvari;
-	    suoteviesti = 0;
-	  }
-	ENTER:
-	  if(viestiol.lista)
-	    viestiol.lista = tuhoa_lista(viestiol.lista);
-	  komento(suote);
-	  if(!suoteviesti)
-	    suote[0] = '\0';
-	  laitot = kaikkilaitot;
-	  break;
-	case SDLK_BACKSPACE:
-	  pyyhi(suote);
-	  laita(suote);
-	  break;
-	case SDLK_ESCAPE:
-	  snsto->sij = snsto->pit;
-	  kysymysol.teksti = NULL;
-	  laita(kysymys);
-	  break;
-	case SDLK_PAUSE:
-	  seis();
-	  break;
-	}
-	break; //keydown
-      case SDL_KEYUP:
-	switch(tapaht.key.keysym.sym) {
-	case SDLK_LSHIFT:
-	case SDLK_RSHIFT:
-	  vaihto = 0;
-	  break;
-	}
-	break; //keyup 
-      case SDL_WINDOWEVENT:
-	switch(tapaht.window.event) {
-	case SDL_WINDOWEVENT_RESIZED:
-	  ikkuna_w = tapaht.window.data1;
-	  ikkuna_h = tapaht.window.data1;
-	  laitot = kaikkilaitot;
-	  break;
-	}
+      case SDLK_ESCAPE:
+	snsto->sij = snsto->pit;
+	kysymysol.teksti = NULL;
+	laita(kysymys);
 	break;
-      } //tapaht.type
-    } //pollEvent
-    paivita();
-    SDL_Delay(uniaika);
-  } //while 1
+      case SDLK_PAUSE:
+	seis();
+	break;
+      }
+      break; //keydown
+    case SDL_KEYUP:
+      switch(tapaht.key.keysym.sym) {
+      case SDLK_LSHIFT:
+      case SDLK_RSHIFT:
+	vaihto = 0;
+	break;
+      }
+      break; //keyup 
+    case SDL_WINDOWEVENT:
+      switch(tapaht.window.event) {
+      case SDL_WINDOWEVENT_RESIZED:
+	ikkuna_w = tapaht.window.data1;
+	ikkuna_h = tapaht.window.data1;
+	laitot = kaikkilaitot;
+	break;
+      }
+      break;
+    } //tapaht.type
+  } //pollEvent
+  paivita();
+  SDL_Delay(uniaika);
+  goto TOISTOLAUSE;
 }
 
 inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
@@ -129,28 +133,49 @@ inline void __attribute__((always_inline)) putsaa(tekstiolio_s* o) {
 inline void __attribute__((always_inline)) paivita() {
   if(!laitot)
     return;
+  /*putsataan kaikki kerralla ennen laittamista*/
   for(int i=0; i<laitot_enum_pituus; i++) {
     if( !((laitot >> i) & 0x01) )
       continue;
     switch(i) {
     CASE(kysymys):
       putsaa(&kysymysol);
-      laita_teksti_ttf(&kysymysol);
       break;
     CASE(suote):
       putsaa(&suoteol);
-      suoteol.sij.y = kysymysol.toteutuma.y+kysymysol.toteutuma.h;
-      laita_teksti_ttf(&suoteol);
       break;
     CASE(kaunti):
       putsaa(&kauntiol);
-      laita_kaunti();
+      break;
+    CASE(tiedot):
+      putsaa(&tiedotol);
       break;
     CASE(viesti):
       putsaa(&viestiol);
-      viestiol.sij.y = suoteol.toteutuma.y + suoteol.toteutuma.h;
-      viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
-      laita_tekstilista(viestiol.lista, viestiol.lopusta, &viestiol);
+      break;
+    }
+  }
+  for(int i=0; i<laitot_enum_pituus; i++) {
+    if( !((laitot >> i) & 0x01) )
+      continue;
+    switch(i) {
+    CASE(kysymys):
+      laita_teksti_ttf(&kysymysol);
+      break;
+    CASE(suote):
+      laita_teksti_ttf(&suoteol);
+      break;
+    CASE(kaunti):
+      laita_kaunti();
+      break;
+    CASE(tiedot):
+      tee_tiedot();
+      tiedotol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
+      laita_tekstilista(&tiedotol);
+      break;
+    CASE(viesti):
+      viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + tiedotol.toteutuma.w + 8*leveys(viestiol.font, ' ');
+      laita_tekstilista(&viestiol);
       break;
     }
   }

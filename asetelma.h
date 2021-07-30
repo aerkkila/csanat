@@ -4,16 +4,6 @@
 #include <SDL2/SDL_pixels.h>
 #include "grafiikka.h"
 
-#define META_KIERROKSIA 2
-#define META_OSAAMISIA 3
-#define META_OSAAMISET 4
-#define NYT_OLEVA(l) ((l)->taul+(l)->sij)
-#define KIERROKSIA_SANALLA ((int*)( NYT_OLEVA(snsto)[2] )+META_KIERROKSIA)
-#define OSAAMISKERRAT      ((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISIA)
-#define SANAN_OSAAMISET ((long long unsigned*)((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISET))
-
-#define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
-
 extern const int ikkuna_x0;
 extern const int ikkuna_y0;
 extern const int ikkuna_w0;
@@ -28,8 +18,10 @@ extern int ikkuna_h;
 extern const SDL_Color taustavari;
 extern const SDL_Color oikeavari;
 extern const SDL_Color virhevari;
-extern SDL_Color apuvari;
+extern const SDL_Color oikea_taustavari;
+extern const SDL_Color virhe_taustavari;
 extern SDL_Color tekstin_taustavari;
+extern SDL_Color apuvari;
 extern int suoteviesti;
 
 extern const unsigned uniaika;

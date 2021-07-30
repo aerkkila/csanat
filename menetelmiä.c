@@ -4,6 +4,7 @@
 #include <time.h>
 #include "lista.h"
 #include "asetelma.h"
+#include "menetelmiä.h"
 
 #define STRPAATE(a) ((a)[strlen(a)-1])
 extern char* tmpc;
@@ -61,4 +62,51 @@ void sekoita() {
     for(int i=0; i<3; i++)
       VAIHDA(snsto->taul[jaljella*3-3+i], snsto->taul[sij*3+i]);
   }
+}
+
+void tee_tiedot() {
+  sprintf(tiedotol.lista->taul[0], "Sijainti: %i / %i", snsto->sij/3, snsto->pit/3);
+  sprintf(tiedotol.lista->taul[1], "Osattuja %i", laske_osatut());
+}
+
+int laske_osatut() {
+  int r = 0;
+  int sij = snsto->sij;
+  for(int i=0; i<snsto->pit; i+=3) {
+    snsto->sij = i;
+    if(*OSAAMISKERRAT >= osaamisraja)
+      r++;
+  }
+  snsto->sij = sij;
+  return r;
+}
+
+void edellinen_osatuksi() {
+  if(snsto->sij < 3)
+    return;
+  snsto->sij -= 3;
+  if(!(*SANAN_OSAAMISET & 0x01)) {
+    (*OSAAMISKERRAT)++;
+    *SANAN_OSAAMISET += 1;
+  }
+  snsto->sij += 3;
+  TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x01;
+}
+
+lista* pilko_sanoiksi(const char* restrict str) {
+  const char* osoit = str;
+  lista* r = alusta_lista(2);
+  while(sscanf(osoit, "%s", tmpc) == 1) {
+    while((unsigned char)osoit[0] <= 0x20)
+      osoit++; //välien yli ensin
+    osoit += strlen(tmpc);
+    /*välien yli*/
+    jatka_listaa(r, 1);
+    VIIMEINEN(r) = strdup(tmpc);
+  }
+  if(r->pit == 0) { //myös tyhjästä syötteestä tehdään lista
+    jatka_listaa(r, 1);
+    VIIMEINEN(r) = strdup("");
+  }
+  return r;
 }

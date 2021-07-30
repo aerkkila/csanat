@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "asetelma.h"
+#include "menetelmiä.h"
 
 SDL_Window *ikkuna;
 SDL_Renderer *rend;

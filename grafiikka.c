@@ -61,7 +61,8 @@ void laita_teksti_ttf(tekstiolio_s *o) {
 
 /*antamalla aloitukseksi 0:n listan alkupää tulostetaan, muuten loppupää
   palauttaa, montako laitettiin*/
-int laita_tekstilista(lista* l, int aloitus, tekstiolio_s *o) {
+int laita_tekstilista(tekstiolio_s *o) {
+  lista* l = o->lista;
   if(!l) {
     o->toteutuma.w = 0;
     o->toteutuma.h = 0;
@@ -73,15 +74,14 @@ int laita_tekstilista(lista* l, int aloitus, tekstiolio_s *o) {
   int leveystot = 0;
   
   /*laitetaan niin monta jäsentä kuin mahtuu*/
-  if(aloitus) //laitetaan lopusta
-    aloitus = (yht > mahtuu)*(yht - mahtuu); //jos erotus on negatiivinen, kerrotaan 0:lla
+  if(o->lopusta)
+    o->alku = (yht > mahtuu)*(yht - mahtuu); //jos erotus on negatiivinen, kerrotaan 0:lla
   else
-    aloitus = -o->rullaus;
-  o->alku = aloitus;
+    o->alku = -o->rullaus;
   int oy = o->sij.y;
   int raja = (mahtuu < yht)? mahtuu : yht;
   for(int i=0; i<raja; i++) {
-    o->teksti = l->taul[i+aloitus];
+    o->teksti = l->taul[i+o->alku];
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;
@@ -126,9 +126,9 @@ void laita_kaunti() {
   for(int i=o->alku*2; i>=alaraja; i-=2) {
     o->teksti = l->taul[i];
     if(o->teksti[strlen(o->teksti)+1]) //sana osattiin
-      tekstin_taustavari = oikeavari;
+      tekstin_taustavari = oikea_taustavari;
     else
-      tekstin_taustavari = virhevari;
+      tekstin_taustavari = virhe_taustavari;
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;

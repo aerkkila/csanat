@@ -22,7 +22,7 @@ typedef struct {
 } tekstiolio_s;
 
 void laita_teksti_ttf(tekstiolio_s*);
-int laita_tekstilista(lista*, int, tekstiolio_s*);
+int laita_tekstilista(tekstiolio_s*);
 void laita_kaunti();
 
 #endif

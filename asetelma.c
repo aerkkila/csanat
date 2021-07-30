@@ -22,17 +22,19 @@ const unsigned maxpit_suote = 2000;
 const SDL_Color taustavari = (SDL_Color){0,0,0,255};
 const SDL_Color oikeavari = (SDL_Color){20,255,20,255};
 const SDL_Color virhevari = (SDL_Color){255,20,20,255};
+const SDL_Color oikea_taustavari = (SDL_Color){20,255,60,255};
+const SDL_Color virhe_taustavari = (SDL_Color){255,80,50,255};
 SDL_Color tekstin_taustavari;
 SDL_Color apuvari;
 int suoteviesti = 0;
 
 const char kotihak[] = "/home/antterkk";
 
-tekstiolio_s suoteol = {.ttflaji = 2,					\
+tekstiolio_s suoteol = {.ttflaji = 1,					\
 			.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			.fonttikoko = 45,				\
 			.vari = (SDL_Color){255,255,255,255},		\
-			.sij = {0,200,700,100}};
+			.sij = {0,0,700,100}};
 
 tekstiolio_s kysymysol = {.ttflaji = 1,					\
 			  .vari = (SDL_Color){255,255,255,255},		\
@@ -42,22 +44,22 @@ tekstiolio_s kauntiol = {.ttflaji = 1,					\
 			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			 .fonttikoko = 15,				\
 			 .vari = {255,255,255,255},			\
-			 .sij = {0,230,1000,1000},			\
+			 .sij = {0,0,600,1000},				\
 			 .lopusta = 0};
-
-tekstiolio_s viestiol = {.ttflaji = 2,					\
-			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
-			 .fonttikoko = 15,				\
-			 .vari = {255,255,255,255},			\
-			 .sij = {320,0},				\
-			 .lopusta = 1};
 			 
-tekstiolio_s tiedotol = {.ttflaji = 2,					\
+tekstiolio_s tiedotol = {.ttflaji = 1,					\
 			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
 			 .fonttikoko = 15,				\
 			 .vari = (SDL_Color){255,255,255,255},		\
 			 .lopusta = 0,					\
 			 .sij = (SDL_Rect){200,0,200,300}};
+
+tekstiolio_s viestiol = {.ttflaji = 1,					\
+			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
+			 .fonttikoko = 15,				\
+			 .vari = {255,255,255,255},			\
+			 .sij = {320,0},				\
+			 .lopusta = 1};
 
 lista* snsto;
 lista* kysynnat;
@@ -72,17 +74,24 @@ void asetelma() {
 
   suoteol.teksti = calloc(maxpit_suote, 1);
   suoteol.font = TTF_OpenFont(suoteol.fonttied, suoteol.fonttikoko);
+  suoteol.sij.y = TTF_FontLineSkip(suoteol.font);
 
   kysymysol.font = suoteol.font;
 
   kauntiol.lista = kysynnat;
   kauntiol.font = TTF_OpenFont(kauntiol.fonttied, kauntiol.fonttikoko);
+  kauntiol.sij.y = 2*TTF_FontLineSkip(suoteol.font);
   
   viestiol.sij.w = ikkuna_w0 - viestiol.sij.x;
   viestiol.sij.h = ikkuna_h0;
   viestiol.font = TTF_OpenFont(viestiol.fonttied, viestiol.fonttikoko);
 
   tiedotol.font = TTF_OpenFont(tiedotol.fonttied, tiedotol.fonttikoko);
+  tiedotol.lista = alusta_lista(2);
+  tiedotol.lista->pit = 2;
+  for(int i=0; i<2; i++)
+    tiedotol.lista->taul[i] = malloc(24);
+  tiedotol.sij.y = kauntiol.sij.y;
 
   ikkuna_x = ikkuna_x0;
   ikkuna_y = ikkuna_y0;
@@ -102,6 +111,7 @@ void tuhoa_asetelma() {
   TTF_CloseFont(tiedotol.font);
   if(viestiol.lista)
     viestiol.lista = tuhoa_lista(viestiol.lista);
+  tiedotol.lista = tuhoa_lista(tiedotol.lista);
   snsto = tuhoa_lista(snsto);
   kysynnat = tuhoa_lista(kysynnat);
   SDL_DestroyTexture(alusta);
