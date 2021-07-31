@@ -20,6 +20,7 @@ extern const SDL_Color oikeavari;
 extern const SDL_Color virhevari;
 extern const SDL_Color oikea_taustavari;
 extern const SDL_Color virhe_taustavari;
+extern const SDL_Color kohdistinvari;
 extern SDL_Color tekstin_taustavari;
 extern SDL_Color apuvari;
 extern int suoteviesti;
@@ -38,7 +39,8 @@ extern tekstiolio_s tiedotol;
 extern lista* snsto;
 extern lista* kysynnat;
 extern int osaamisraja;
-extern int suoteid; //kasvaa oikealta vasemmalle, mihin väliin kirjain laitetaan
+extern int kohdistin; //kasvaa oikealta vasemmalle, mihin väliin kirjain laitetaan
+extern SDL_Rect kohdistinsij;
 
 extern SDL_Texture* alusta; //toistaiseksi nämä ovat turhia
 extern SDL_Texture* apualusta;

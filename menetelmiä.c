@@ -140,14 +140,29 @@ lista* pilko_sanoiksi(const char* restrict str) {
 }
 
 /*näissä siirrytään eteen- tai taakespäin koko utf-8-merkin verran*/
-void edellinen_kohta(const char* restrict suote, int* id) {
+int edellinen_kohta(const char* restrict suote, int* id) {
   int jatka = 1;
   int pit = strlen(suote);
-  while(jatka && pit > *id)
+  int r = 0;
+  while(jatka && pit > *id) {
+    r=1;
     jatka = (suote[pit- ++(*id)] & 0xc0) == 0x80;
+  }
+  return r;
 }
 
-void seuraava_kohta(const char* restrict suote, int* id) {
+int seuraava_kohta(const char* restrict suote, int* id) {
   int pit = strlen(suote);
-  while(*id && (suote[pit- --(*id)] & 0x80));
+  int r = 0;
+  while(*id && (r=1) && ((suote[pit- --(*id)] & 0xc0) == 0x80));
+  return r;
+}
+
+int xsijainti(tekstiolio_s* o, int p) {
+  int lev;
+  char c0 = o->teksti[p];
+  o->teksti[p] = '\0';
+  TTF_SizeUTF8(o->font, o->teksti, &lev, NULL);
+  o->teksti[p] = c0;
+  return lev + o->toteutuma.x;
 }

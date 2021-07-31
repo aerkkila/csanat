@@ -46,10 +46,10 @@ void kaunnista() {
 	suoteol.vari = apuvari;
 	suoteviesti = 0;
       }
-      if(!suoteid)
+      if(!kohdistin)
 	strcat(suote, tapaht.text.text);
       else {
-	char* s = suote+strlen(suote)-suoteid;
+	char* s = suote+strlen(suote)-kohdistin;
 	strcpy(tmpc, s); //loppuosa talteen
 	strcpy(s, tapaht.text.text); //syötetty teksti
 	strcat(suote, tmpc); //loppuosa perään
@@ -88,6 +88,11 @@ void kaunnista() {
 	pyyhi(suote);
 	laita(suote);
 	break;
+      case SDLK_DELETE:
+	if(seuraava_kohta(suote, &kohdistin))
+	  pyyhi(suote);
+	laita(suote);
+	break;
       case SDLK_ESCAPE:
 	snsto->sij = snsto->pit;
 	tee_tiedot();
@@ -96,10 +101,20 @@ void kaunnista() {
 	laita(kysymys);
 	break;
       case SDLK_LEFT:
-	edellinen_kohta(suote, &suoteid);
+	edellinen_kohta(suote, &kohdistin);
+	laita(suote);
 	break;
       case SDLK_RIGHT:
-	seuraava_kohta(suote, &suoteid);
+	seuraava_kohta(suote, &kohdistin);
+	laita(suote);
+	break;
+      case SDLK_HOME:
+	kohdistin = strlen(suote);
+	laita(suote);
+	break;
+      case SDLK_END:
+	kohdistin = 0;
+	laita(suote);
 	break;
       case SDLK_PAUSE:
 	if(vaihto)
@@ -124,7 +139,7 @@ void kaunnista() {
 	break;
       }
       break;
-    } //tapaht.type
+    } //switch tapaht.type
   } //pollEvent
   paivita();
   SDL_Delay(uniaika);
@@ -138,7 +153,6 @@ inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
 }
 
 inline void __attribute__((always_inline)) putsaa(tekstiolio_s* o) {
-  aseta_vari(taustavari);
   SDL_RenderFillRect(rend, &o->toteutuma);
 }
 
@@ -147,6 +161,7 @@ inline void __attribute__((always_inline)) putsaa(tekstiolio_s* o) {
 inline void __attribute__((always_inline)) paivita() {
   if(!laitot)
     return;
+  aseta_vari(taustavari);
   /*putsataan kaikki kerralla ennen laittamista*/
   for(int i=0; i<laitot_enum_pituus; i++) {
     if( !((laitot >> i) & 0x01) )
@@ -157,6 +172,7 @@ inline void __attribute__((always_inline)) paivita() {
       break;
     CASE(suote):
       putsaa(&suoteol);
+      SDL_RenderFillRect(rend, &kohdistinsij);
       break;
     CASE(kaunti):
       putsaa(&kauntiol);
@@ -178,6 +194,11 @@ inline void __attribute__((always_inline)) paivita() {
       break;
     CASE(suote):
       laita_teksti_ttf(&suoteol);
+      if(kohdistin) {
+	aseta_vari(kohdistinvari);
+	kohdistinsij.x = xsijainti(&suoteol, strlen(suoteol.teksti)-kohdistin);
+	SDL_RenderFillRect(rend, &kohdistinsij);
+      }
       break;
     CASE(kaunti):
       laita_kaunti();
@@ -200,11 +221,11 @@ inline void __attribute__((always_inline)) paivita() {
 
 inline void __attribute__((always_inline)) pyyhi(char* suote) {
   int pit = strlen(suote);
-  int id0 = suoteid;
-  strcpy(tmpc, suote+pit-suoteid);
-  edellinen_kohta(suote, &suoteid);
-  strcpy(suote+pit-suoteid, tmpc);
-  suoteid = id0;
+  int id0 = kohdistin;
+  strcpy(tmpc, suote+pit-kohdistin);
+  edellinen_kohta(suote, &kohdistin);
+  strcpy(suote+pit-kohdistin, tmpc);
+  kohdistin = id0;
 }
 
 void viestiksi(const char* restrict s) {

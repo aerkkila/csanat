@@ -19,11 +19,12 @@ int ikkuna_h;
 const unsigned uniaika = 10;
 const unsigned maxpit_suote = 2000;
 
-const SDL_Color taustavari = (SDL_Color){0,0,0,255};
-const SDL_Color oikeavari = (SDL_Color){20,255,20,255};
-const SDL_Color virhevari = (SDL_Color){255,20,20,255};
-const SDL_Color oikea_taustavari = (SDL_Color){20,255,60,255};
-const SDL_Color virhe_taustavari = (SDL_Color){255,80,50,255};
+const SDL_Color taustavari       = {0,  0,  0,  255};
+const SDL_Color oikeavari        = {20, 255,20, 255};
+const SDL_Color virhevari        = {255,20, 20, 255};
+const SDL_Color oikea_taustavari = {20, 255,60, 255};
+const SDL_Color virhe_taustavari = {255,80, 50, 255};
+const SDL_Color kohdistinvari    = {255,255,255,255};
 SDL_Color tekstin_taustavari;
 SDL_Color apuvari;
 int suoteviesti = 0;
@@ -64,7 +65,8 @@ tekstiolio_s viestiol = {.ttflaji = 1,					\
 lista* snsto;
 lista* kysynnat;
 int osaamisraja = 1;
-int suoteid = 0;
+int kohdistin = 0;
+SDL_Rect kohdistinsij;
 SDL_Texture* alusta;
 SDL_Texture* apualusta;
 
@@ -99,6 +101,13 @@ void asetelma() {
   ikkuna_w = ikkuna_w0;
   ikkuna_h = ikkuna_h0;
   tekstin_taustavari = taustavari;
+
+  kohdistinsij.y = suoteol.sij.y;
+  kohdistinsij.h = TTF_FontLineSkip(suoteol.font);
+  TTF_GlyphMetrics(suoteol.font, ' ', NULL, NULL, NULL, NULL, &kohdistinsij.w);
+  kohdistinsij.w /= 10;
+  if(!kohdistinsij.w)
+    kohdistinsij.w = 1;
   
   alusta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w0, ikkuna_h0);
   apualusta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w0, ikkuna_h0);

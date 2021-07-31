@@ -21,6 +21,7 @@ void tee_tiedot();
 void sekoita();
 void edellinen_osatuksi();
 void viestiksi(const char* restrict s); //määritelty käyttöliittymä.c:ssä
-void edellinen_kohta(const char* restrict suote, int* id);
-void seuraava_kohta(const char* restrict suote, int* id);
+int edellinen_kohta(const char* restrict suote, int* id);
+int seuraava_kohta(const char* restrict suote, int* id);
+int xsijainti(tekstiolio_s* o, int p);
 #endif
