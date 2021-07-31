@@ -46,7 +46,14 @@ void kaunnista() {
 	suoteol.vari = apuvari;
 	suoteviesti = 0;
       }
-      strcat(suote, tapaht.text.text);
+      if(!suoteid)
+	strcat(suote, tapaht.text.text);
+      else {
+	char* s = suote+strlen(suote)-suoteid;
+	strcpy(tmpc, s); //loppuosa talteen
+	strcpy(s, tapaht.text.text); //syötetty teksti
+	strcat(suote, tmpc); //loppuosa perään
+      }
       laita(suote);
       break;
     case SDL_KEYDOWN:
@@ -83,8 +90,16 @@ void kaunnista() {
 	break;
       case SDLK_ESCAPE:
 	snsto->sij = snsto->pit;
+	tee_tiedot();
+	laita(tiedot);
 	kysymysol.teksti = NULL;
 	laita(kysymys);
+	break;
+      case SDLK_LEFT:
+	edellinen_kohta(suote, &suoteid);
+	break;
+      case SDLK_RIGHT:
+	seuraava_kohta(suote, &suoteid);
 	break;
       case SDLK_PAUSE:
 	if(vaihto)
@@ -183,14 +198,13 @@ inline void __attribute__((always_inline)) paivita() {
 }
 #undef CASE
 
-/*Kerralla pois koko utf8-merkki, joka voi sisältää monta tavua.*/
 inline void __attribute__((always_inline)) pyyhi(char* suote) {
-  int jatka = 1;
   int pit = strlen(suote);
-  while(jatka && pit--) {
-    jatka = (suote[pit] & 0xc0) == 0x80; //alkaako 10:lla
-    suote[pit] = '\0';
-  }
+  int id0 = suoteid;
+  strcpy(tmpc, suote+pit-suoteid);
+  edellinen_kohta(suote, &suoteid);
+  strcpy(suote+pit-suoteid, tmpc);
+  suoteid = id0;
 }
 
 void viestiksi(const char* restrict s) {

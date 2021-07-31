@@ -138,3 +138,16 @@ lista* pilko_sanoiksi(const char* restrict str) {
   }
   return r;
 }
+
+/*näissä siirrytään eteen- tai taakespäin koko utf-8-merkin verran*/
+void edellinen_kohta(const char* restrict suote, int* id) {
+  int jatka = 1;
+  int pit = strlen(suote);
+  while(jatka && pit > *id)
+    jatka = (suote[pit- ++(*id)] & 0xc0) == 0x80;
+}
+
+void seuraava_kohta(const char* restrict suote, int* id) {
+  int pit = strlen(suote);
+  while(*id && (suote[pit- --(*id)] & 0x80));
+}

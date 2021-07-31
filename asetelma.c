@@ -64,6 +64,7 @@ tekstiolio_s viestiol = {.ttflaji = 1,					\
 lista* snsto;
 lista* kysynnat;
 int osaamisraja = 1;
+int suoteid = 0;
 SDL_Texture* alusta;
 SDL_Texture* apualusta;
 

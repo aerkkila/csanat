@@ -38,8 +38,9 @@ extern tekstiolio_s tiedotol;
 extern lista* snsto;
 extern lista* kysynnat;
 extern int osaamisraja;
+extern int suoteid; //kasvaa oikealta vasemmalle, mihin väliin kirjain laitetaan
 
-extern SDL_Texture* alusta;
+extern SDL_Texture* alusta; //toistaiseksi nämä ovat turhia
 extern SDL_Texture* apualusta;
 
 void asetelma();
