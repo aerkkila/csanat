@@ -21,7 +21,7 @@ enum laitot_enum {
 
 const unsigned kaikkilaitot =  0xffff;
 
-unsigned laitot = 0;
+unsigned laitot = 0xffff;
 extern SDL_Renderer* rend;
 extern char* tmpc;
 
@@ -31,10 +31,11 @@ void kaunnista() {
   char* const suote = suoteol.teksti;
   char vaihto = 0;
   if(strlen(tmpc)) {
-    strcpy(suote, tmpc);
-    goto ENTER;
+    strcpy(suote, tmpc); //pilko_sanoiksi käyttää tmpc-muuttujaa
+    komento(suote);
+    suote[0] = '\0';
   }
-  /*Mielestäni goto on helpommin luettava kuin while(1), jos ehdoton toistolause on pitkä*/
+  /*Mielestäni goto TOISTOLAUSE on tässä selkeämpi kuin while(1)*/
  TOISTOLAUSE:
   while(SDL_PollEvent(&tapaht)) {
     switch(tapaht.type) {
@@ -71,12 +72,12 @@ void kaunnista() {
 	  laita(tiedot);
 	  break;
 	}
+	kohdistin = 0;
 	if(suoteviesti) {
 	  suote[0] = '\0';
 	  suoteol.vari = apuvari;
 	  suoteviesti = 0;
 	}
-      ENTER:
 	if(viestiol.lista)
 	  viestiol.lista = tuhoa_lista(viestiol.lista);
 	komento(suote);
@@ -140,7 +141,7 @@ void kaunnista() {
       }
       break;
     } //switch tapaht.type
-  } //pollEvent
+  } //while pollEvent
   paivita();
   SDL_Delay(uniaika);
   goto TOISTOLAUSE;

@@ -32,9 +32,8 @@ int main(int argc, char** argv) {
   asetelma();
   /*komennot komentoriviltä tähän*/
   char* apuc;
-  if(argc > 1)
-    strcpy(tmpc, argv[1]);
-  for(int i=2; i<argc; i++) {
+  tmpc[0] = '\0';
+  for(int i=1; i<argc; i++) {
     apuc = tmpc + strlen(tmpc);
     sprintf(apuc, " %s", argv[i]);
   }
