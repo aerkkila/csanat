@@ -65,7 +65,7 @@ void komento(const char* restrict suote) {
 	/*verrataan käännökseen, laitetaan uusi sana ja poistutaan*/
 	jatka_listaa(kysynnat, 2);
 	TOISEKSI_VIIM = malloc(strlen(kysymysol.teksti) + 2);
-	strcpy(TOISEKSI_VIIM, kysymysol.teksti); //nullin jälkeen tulee osaattiinko
+	strcpy(TOISEKSI_VIIM, kysymysol.teksti); //nollatavun jälkeen tulee osaattiinko
 	VIIMEINEN(kysynnat) = strdup(suote);
 	*SANAN_OSAAMISET <<= 1;
 	if(!strcmp(NYT_OLEVA(snsto)[1], suote)) { //osattiin

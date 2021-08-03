@@ -9,6 +9,7 @@
 void paivita();
 void komento(const char* restrict suote);
 void pyyhi(char* suote);
+void ennen_komentoa();
 
 enum laitot_enum {
   kysymys_enum,
@@ -24,13 +25,14 @@ const unsigned kaikkilaitot =  0xffff;
 unsigned laitot = 0xffff;
 extern SDL_Renderer* rend;
 extern char* tmpc;
+static char* apusuote = NULL; //syöte tallennetaan tähän, kun nuolilla selataan aiempia syötteitä
 
 void kaunnista() {
   SDL_Event tapaht;
-  SDL_StartTextInput();
   char* const suote = suoteol.teksti;
+  SDL_StartTextInput();
   char vaihto = 0;
-  if(strlen(tmpc)) {
+  if(strlen(tmpc)) { //alussa komentoriviargumentit
     strcpy(suote, tmpc); //pilko_sanoiksi käyttää tmpc-muuttujaa
     komento(suote);
     suote[0] = '\0';
@@ -40,6 +42,7 @@ void kaunnista() {
   while(SDL_PollEvent(&tapaht)) {
     switch(tapaht.type) {
     case SDL_QUIT:
+      if(apusuote) {free(apusuote); apusuote=NULL;}
       return;
     case SDL_TEXTINPUT:
       if(suoteviesti) {
@@ -72,14 +75,7 @@ void kaunnista() {
 	  laita(tiedot);
 	  break;
 	}
-	kohdistin = 0;
-	if(suoteviesti) {
-	  suote[0] = '\0';
-	  suoteol.vari = apuvari;
-	  suoteviesti = 0;
-	}
-	if(viestiol.lista)
-	  viestiol.lista = tuhoa_lista(viestiol.lista);
+	ennen_komentoa();
 	komento(suote);
 	if(!suoteviesti)
 	  suote[0] = '\0';
@@ -100,6 +96,44 @@ void kaunnista() {
 	laita(tiedot);
 	kysymysol.teksti = NULL;
 	laita(kysymys);
+	break;
+      case SDLK_DOWN:
+	if(suoteviesti) {
+	  suoteviesti = 0;
+	  suoteol.vari = apuvari;
+	  laita(suote);
+	}
+	if(!apusuote) { //ensimmäinen painallus
+	  if(!(apusuote = strdup(suote)))
+	    printf("Varoitus: apusyötettä ei alustettu\n");
+	  kysynnat->sij = kysynnat->pit-1; //kysynnat->sij on tavallisesti määrittelemätön
+	} else if(kysynnat->sij < 3)
+	  break;
+	else
+	  kysynnat->sij -= 2;
+	strcpy(suote, *NYT_OLEVA(kysynnat));
+	laita(suote);
+	break;
+      case SDLK_UP:
+	if(suoteviesti) {
+	  suoteviesti = 0;
+	  suoteol.vari = apuvari;
+	  laita(suote);
+	}
+	if(!apusuote) //ollaan jo uudessa syötteessä
+	  break;
+	if(kysynnat->sij == kysynnat->pit-1) { //tullaan uuteen syötteeseen
+	  strcpy(suote, apusuote);
+	  free(apusuote);
+	  apusuote = NULL;
+	  laita(suote);
+	  break;
+	}
+	kysynnat->sij += 2;
+	if(kysynnat->sij >= kysynnat->pit)
+	  printf("Varoitus: kysyntöjen sijainti on %i ja pituus on %i\n", kysynnat->sij, kysynnat->pit);
+	strcpy(suote, *NYT_OLEVA(kysynnat));
+	laita(suote);
 	break;
       case SDLK_LEFT:
 	edellinen_kohta(suote, &kohdistin);
@@ -236,4 +270,19 @@ void viestiksi(const char* restrict s) {
   viestiol.lista->taul[0] = strdup(s);
   viestiol.lista->pit = 1;
   laita(viesti);
+}
+
+void ennen_komentoa() {
+  kohdistin = 0;
+  if(apusuote) {
+    free(apusuote);
+    apusuote = NULL;
+  }
+  if(suoteviesti) {
+    suoteol.teksti[0] = '\0';
+    suoteol.vari = apuvari;
+    suoteviesti = 0;
+  }
+  if(viestiol.lista)
+    viestiol.lista = tuhoa_lista(viestiol.lista);
 }
