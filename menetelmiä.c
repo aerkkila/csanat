@@ -166,3 +166,13 @@ int xsijainti(tekstiolio_s* o, int p) {
   o->teksti[p] = c0;
   return lev + o->toteutuma.x;
 }
+
+void viestiksi(const char* restrict s) {
+  extern unsigned laitot;
+  if(viestiol.lista)
+    tuhoa_lista(viestiol.lista);
+  viestiol.lista = alusta_lista(1);
+  viestiol.lista->taul[0] = strdup(s);
+  viestiol.lista->pit = 1;
+  laita(viesti);
+}

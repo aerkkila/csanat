@@ -9,7 +9,8 @@ const int ikkuna_x0 = 150;
 const int ikkuna_y0 = 200;
 const int ikkuna_w0 = 600;
 const int ikkuna_h0 = 400;
-const char ohjelman_nimi[] = "csanat";
+const char* ohjelman_nimi = "csanat";
+const char* kotihak = "/home/antterkk";
 
 int ikkuna_x;
 int ikkuna_y;
@@ -28,8 +29,6 @@ const SDL_Color kohdistinvari    = {255,255,255,255};
 SDL_Color tekstin_taustavari;
 SDL_Color apuvari;
 int suoteviesti = 0;
-
-const char kotihak[] = "/home/antterkk";
 
 tekstiolio_s suoteol = {.ttflaji = 1,					\
 			.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \

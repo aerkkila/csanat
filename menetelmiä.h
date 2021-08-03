@@ -15,6 +15,18 @@
 #define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
 #define laita(jotain) (laitot |= (1u << jotain ## _enum))
 
+#ifndef __laitot_enum__
+#define __laitot_enum__
+enum laitot_enum {
+  kysymys_enum,
+  suote_enum,
+  kaunti_enum,
+  tiedot_enum,
+  viesti_enum,
+  laitot_enum_pituus //lukuarvo kertoo pituuden
+};
+#endif
+
 int avaa_tiedosto(const char*);
 lista* pilko_sanoiksi(const char* restrict str);
 void tee_tiedot();
@@ -24,4 +36,5 @@ void viestiksi(const char* restrict s); //määritelty käyttöliittymä.c:ssä
 int edellinen_kohta(const char* restrict suote, int* id);
 int seuraava_kohta(const char* restrict suote, int* id);
 int xsijainti(tekstiolio_s* o, int p);
+void viestiksi(const char* restrict);
 #endif

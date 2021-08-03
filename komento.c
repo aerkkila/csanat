@@ -10,6 +10,11 @@
 #define STREND(a) (a)[strlen(a)-1]
 #define EI_LOPUSSA(lista) (lista->sij+1 < lista->pit)
 #define SEURAAVA(lista)  (lista->taul[lista->sij+1])
+#define TEE(mjono, ...) do {			\
+    sprintf(tmpc, mjono, __VA_ARGS__);		\
+    puts(tmpc);					\
+    viestiksi(tmpc);				\
+  } while(0)
 
 void osaamaton();
 
@@ -23,12 +28,10 @@ void komento(const char* restrict suote) {
     if(knto("cd") && EI_LOPUSSA(knnot)) {
       knnot->sij++;
       if(chdir(*NYT_OLEVA(knnot)))
-	fprintf(stderr, "Virhe: %s\n", strerror(errno));
-      
+	TEE("Virhe: %s", strerror(errno));
     } else if(knto("cd") || knto("cd;")) {
       if(chdir(kotihak))
-	fprintf(stderr, "Virhe: %s\n", strerror(errno));
-      
+	TEE("Virhe: %s", strerror(errno));
     } else if(knto("ls") || knto("ls;")) {
       strcpy(tmpc, "/bin/ls");
       if(knto("ls") && EI_LOPUSSA(knnot)) {
@@ -101,12 +104,11 @@ void komento(const char* restrict suote) {
       }
       int _avaa = avaa_tiedosto(*NYT_OLEVA(knnot));
       if(_avaa < 0) {
-	fprintf(stderr, "Ei avattu tiedostoa \"%s\"\n", *NYT_OLEVA(knnot));
-	sprintf(tmpc, "Ei avattu tiedostoa \"%s\"", *NYT_OLEVA(knnot));
+	TEE("Ei avattu tiedostoa \"%s\"", *NYT_OLEVA(knnot));
 	knnot->sij++;
 	continue;
       } else if(_avaa == 0) {
-	printf("Varoitus: tiedosto \"%s\" avattiin mutta yhtään sanaa ei luettu\n", *NYT_OLEVA(knnot));
+	TEE("Varoitus: tiedosto \"%s\" avattiin mutta yhtään sanaa ei luettu", *NYT_OLEVA(knnot));
       }
       /*tiedosto avattiin*/
       sekoita();

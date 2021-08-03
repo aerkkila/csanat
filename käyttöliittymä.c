@@ -11,15 +11,6 @@ void komento(const char* restrict suote);
 void pyyhi(char* suote);
 void ennen_komentoa();
 
-enum laitot_enum {
-  kysymys_enum,
-  suote_enum,
-  kaunti_enum,
-  tiedot_enum,
-  viesti_enum,
-  laitot_enum_pituus //lukuarvo kertoo pituuden
-};
-
 const unsigned kaikkilaitot =  0xffff;
 
 unsigned laitot = 0xffff;
@@ -263,15 +254,6 @@ inline void __attribute__((always_inline)) pyyhi(char* suote) {
   edellinen_kohta(suote, &kohdistin);
   strcpy(suote+pit-kohdistin, tmpc);
   kohdistin = id0;
-}
-
-void viestiksi(const char* restrict s) {
-  if(viestiol.lista)
-    tuhoa_lista(viestiol.lista);
-  viestiol.lista = alusta_lista(1);
-  viestiol.lista->taul[0] = strdup(s);
-  viestiol.lista->pit = 1;
-  laita(viesti);
 }
 
 void ennen_komentoa() {

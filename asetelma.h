@@ -8,7 +8,8 @@ extern const int ikkuna_x0;
 extern const int ikkuna_y0;
 extern const int ikkuna_w0;
 extern const int ikkuna_h0;
-extern const char ohjelman_nimi[];
+extern const char* ohjelman_nimi;
+extern const char* kotihak;
 
 extern int ikkuna_x;
 extern int ikkuna_y;
@@ -27,8 +28,6 @@ extern int suoteviesti;
 
 extern const unsigned uniaika;
 extern const unsigned maxpit_suote;
-
-extern const char kotihak[];
 
 extern tekstiolio_s suoteol;
 extern tekstiolio_s kysymysol;
