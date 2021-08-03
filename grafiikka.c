@@ -59,8 +59,6 @@ void laita_teksti_ttf(tekstiolio_s *o) {
   return;
 }
 
-/*antamalla aloitukseksi 0:n listan alkupää tulostetaan, muuten loppupää
-  palauttaa, montako laitettiin*/
 int laita_tekstilista(tekstiolio_s *o) {
   lista* l = o->lista;
   if(!l) {

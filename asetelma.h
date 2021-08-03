@@ -42,9 +42,6 @@ extern int osaamisraja;
 extern int kohdistin; //kasvaa oikealta vasemmalle, mihin väliin kirjain laitetaan
 extern SDL_Rect kohdistinsij;
 
-extern SDL_Texture* alusta; //toistaiseksi nämä ovat turhia
-extern SDL_Texture* apualusta;
-
 void asetelma();
 void tuhoa_asetelma();
 #endif

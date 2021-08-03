@@ -67,11 +67,8 @@ lista* kysynnat;
 int osaamisraja = 1;
 int kohdistin = 0;
 SDL_Rect kohdistinsij;
-SDL_Texture* alusta;
-SDL_Texture* apualusta;
 
 void asetelma() {
-  extern SDL_Renderer* rend;
   snsto = alusta_lista(11*3);
   kysynnat = alusta_lista(11*2);
 
@@ -108,9 +105,6 @@ void asetelma() {
   kohdistinsij.w /= 10;
   if(!kohdistinsij.w)
     kohdistinsij.w = 1;
-  
-  alusta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w0, ikkuna_h0);
-  apualusta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w0, ikkuna_h0);
 }
 
 void tuhoa_asetelma() {
@@ -124,6 +118,4 @@ void tuhoa_asetelma() {
   tiedotol.lista = tuhoa_lista(tiedotol.lista);
   snsto = tuhoa_lista(snsto);
   kysynnat = tuhoa_lista(kysynnat);
-  SDL_DestroyTexture(alusta);
-  SDL_DestroyTexture(apualusta);
 }

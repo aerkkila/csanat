@@ -103,6 +103,8 @@ void kaunnista() {
 	  suoteol.vari = apuvari;
 	  laita(suote);
 	}
+	if(!kysynnat->pit)
+	  break;
 	if(!apusuote) { //ensimmäinen painallus
 	  if(!(apusuote = strdup(suote)))
 	    printf("Varoitus: apusyötettä ei alustettu\n");
