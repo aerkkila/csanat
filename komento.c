@@ -6,7 +6,7 @@
 #include "asetelma.h"
 #include "menetelmiä.h"
 
-#define knto(a) (!strcmp(*NYT_OLEVA(knnot), a))
+#define knto(a) (!strcmp(*NYT_OLEVA(knnot), #a))
 #define STREND(a) (a)[strlen(a)-1]
 #define EI_LOPUSSA(lista) (lista->sij+1 < lista->pit)
 #define SEURAAVA(lista)  (lista->taul[lista->sij+1])
@@ -16,25 +16,23 @@
     viestiksi(tmpc);				\
   } while(0)
 
-void osaamaton();
-
 extern char* tmpc;
-int alussa = 0;
-int edellinen_sij = -1;
 
 void komento(const char* restrict suote) {
   lista* knnot = pilko_sanoiksi(suote);
   while(knnot->sij < knnot->pit) {
-    if(knto("cd") && EI_LOPUSSA(knnot)) {
+    
+    if(knto(cd) && EI_LOPUSSA(knnot)) {                           //cd
       knnot->sij++;
       if(chdir(*NYT_OLEVA(knnot)))
 	TEE("Virhe: %s", strerror(errno));
-    } else if(knto("cd") || knto("cd;")) {
+    } else if(knto(cd) || knto(cd;)) {
       if(chdir(kotihak))
 	TEE("Virhe: %s", strerror(errno));
-    } else if(knto("ls") || knto("ls;")) {
+      
+    } else if(knto(ls) || knto(ls;)) {                            //ls
       strcpy(tmpc, "/bin/ls");
-      if(knto("ls") && EI_LOPUSSA(knnot)) {
+      if(knto(ls) && EI_LOPUSSA(knnot)) {
 	int jatka = 1;
 	do {
 	  knnot->sij++;
@@ -56,15 +54,28 @@ void komento(const char* restrict suote) {
       }
       pclose(p);
 
-    } else if(knto("osaamisrajaksi") && EI_LOPUSSA(knnot)) {
+    } else if(knto(.osaamisrajaksi) && EI_LOPUSSA(knnot)) {       //osaamisrajaksi
       if(sscanf(SEURAAVA(knnot), "%u", &osaamisraja))
 	knnot->sij++;
       else
 	goto VERTAILU;
       
+    } else if(knto(.tyhjennä) || knto(thj)) {                     //tyhjennä
+      tuhoa_lista(snsto);
+      snsto = alusta_lista(11*3);
+      kysymysol.teksti = NULL;
+
+    } else if(knto(.uudesti)) {                                   //uudesti
+      for(snsto->sij=0; snsto->sij<snsto->pit; snsto->sij+=3) {
+	*OSAAMISKERRAT = 0;
+	*KIERROKSIA_SANALLA = 0;
+	*SANAN_OSAAMISET = 0;
+      }
+      uusi_kierros();
+      
     } else {
     VERTAILU:
-      if(kysymysol.teksti) {
+      if(snsto->sij < snsto->pit) {
 	/*verrataan käännökseen, laitetaan uusi sana ja poistutaan*/
 	jatka_listaa(kysynnat, 2);
 	TOISEKSI_VIIM = malloc(strlen(kysymysol.teksti) + 2);
@@ -94,12 +105,8 @@ void komento(const char* restrict suote) {
       
       /*sanasto on lopussa*/
       if(!strlen(*NYT_OLEVA(knnot))) {
-	edellinen_sij = snsto->pit-3;
-	snsto->sij = 0;
-	sekoita();
-	osaamaton();
-	alussa = 1;
         knnot->sij++;
+	uusi_kierros();
 	continue;
       }
       int _avaa = avaa_tiedosto(*NYT_OLEVA(knnot));
@@ -119,15 +126,4 @@ void komento(const char* restrict suote) {
     knnot->sij++;
   }
   knnot = tuhoa_lista(knnot);
-}
-
-inline void __attribute__((always_inline)) osaamaton() {
-  while(snsto->sij < snsto->pit) {
-    if( *OSAAMISKERRAT < osaamisraja) {
-      kysymysol.teksti = *NYT_OLEVA(snsto);
-      return;
-    }
-    snsto->sij+=3;
-  }
-  kysymysol.teksti = NULL;
 }

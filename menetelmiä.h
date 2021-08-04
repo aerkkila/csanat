@@ -37,4 +37,6 @@ int edellinen_kohta(const char* restrict suote, int* id);
 int seuraava_kohta(const char* restrict suote, int* id);
 int xsijainti(tekstiolio_s* o, int p);
 void viestiksi(const char* restrict);
+void uusi_kierros();
+void osaamaton();
 #endif

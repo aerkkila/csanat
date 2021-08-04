@@ -10,8 +10,10 @@ float skaala = 1.0;
 extern SDL_Renderer* rend;
 
 void laita_teksti_ttf(tekstiolio_s *o) {
-  if(!o->teksti || !strcmp(o->teksti, ""))
+  if(!o->teksti || !strcmp(o->teksti, "")) {
+    o->toteutuma = (SDL_Rect){0,0,0,0};
     return;
+  }
   SDL_Surface *pinta;
   switch(o->ttflaji) {
   case 0:

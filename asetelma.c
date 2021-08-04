@@ -66,6 +66,8 @@ lista* kysynnat;
 int osaamisraja = 1;
 int kohdistin = 0;
 SDL_Rect kohdistinsij;
+int alussa = 0;
+int edellinen_sij = -1;
 
 void asetelma() {
   snsto = alusta_lista(11*3);

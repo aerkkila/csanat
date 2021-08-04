@@ -40,6 +40,8 @@ extern lista* kysynnat;
 extern int osaamisraja;
 extern int kohdistin; //kasvaa oikealta vasemmalle, mihin väliin kirjain laitetaan
 extern SDL_Rect kohdistinsij;
+extern int alussa;
+extern int edellinen_sij;
 
 void asetelma();
 void tuhoa_asetelma();

@@ -75,7 +75,6 @@ void tee_tiedot() {
   if(kierroksen_pituus == -1)
     kierroksen_pituus = snsto->pit/3; //tätä ei voi alustaa suoraan
 
-  extern int alussa;
   int osattuja = 0;
   int sijainti_kierroksella = kierroksen_pituus; //vähennetään tästä tulossa olevien osaamattomien määrä
   int sij0 = snsto->sij;
@@ -175,4 +174,26 @@ void viestiksi(const char* restrict s) {
   viestiol.lista->taul[0] = strdup(s);
   viestiol.lista->pit = 1;
   laita(viesti);
+}
+
+void uusi_kierros() {
+  edellinen_sij = snsto->pit-3;
+  snsto->sij = 0;
+  sekoita();
+  osaamaton();
+  alussa = 1;
+  jatka_listaa(kysynnat, 2);
+  kysynnat->taul[kysynnat->pit-2] = calloc(2,1);
+  kysynnat->taul[kysynnat->pit-1] = calloc(2,1);
+}
+
+void osaamaton() {
+  while(snsto->sij < snsto->pit) {
+    if( *OSAAMISKERRAT < osaamisraja) {
+      kysymysol.teksti = *NYT_OLEVA(snsto);
+      return;
+    }
+    snsto->sij+=3;
+  }
+  kysymysol.teksti = NULL;
 }
