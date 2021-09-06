@@ -16,7 +16,7 @@ int avaa_tiedosto(const char* nimi) {
   if (!f)
     return -1;
 
-  int sanoja = 0;
+  static int sanoja = 0;
   
   while (!feof(f)) {
     //rivinvaihto lopussa ja tyhjät rivit välissä ohitetaan
@@ -39,11 +39,12 @@ int avaa_tiedosto(const char* nimi) {
       (int)parin numero; (int)tiedoston numero; (int)montako kierrosta; (int)osaamisten määrä;
       (uint64)bittimaski osaamisista, viimeisin kierros vähiten merkitsevänä*/
     snsto->taul[snsto->pit-1] = calloc(24, 1);
-    *(int*)(snsto->taul[snsto->pit-1]+0) = sanoja++;
-    *(int*)(snsto->taul[snsto->pit-1]+4) = tiedostonro;
+    *(int*)(snsto->taul[snsto->pit-1]+META_ID) = sanoja++;
+    *(int*)(snsto->taul[snsto->pit-1]+META_TIEDOSTONRO) = tiedostonro;
     /*loput ovat alussa nollia*/
   }
   fclose(f);
+  listalle_kopioiden(tiedostot, nimi);
   return sanoja;
 }
 
@@ -66,7 +67,7 @@ void sekoita() {
 
 void tee_tiedot() {
   if(snsto->pit == 0) {
-    for(int i=0; i<2; i++)
+    for(int i=0; i<3; i++)
       tiedotol.lista->taul[i][0] = '\0';
     return;
   }
@@ -104,6 +105,10 @@ void tee_tiedot() {
   snsto->sij = sij0;
   sprintf(tiedotol.lista->taul[0], "Sijainti: %i / %i", sijainti_kierroksella, kierroksen_pituus);
   sprintf(tiedotol.lista->taul[1], "Osattuja %i / %i", osattuja, snsto->pit/3);
+  if(snsto->sij < snsto->pit)
+    sprintf(tiedotol.lista->taul[2], "Tiedosto: \"%s\"", tiedostot->taul[*TIEDOSTO_NYT]);
+  else
+    tiedotol.lista->taul[2][0] = '\0';
 }
 
 void edellinen_osatuksi() {
