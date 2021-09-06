@@ -14,4 +14,5 @@ typedef struct {
 void jatka_listaa(lista*, int);
 lista* alusta_lista(unsigned);
 void* tuhoa_lista(lista*);
+void listalle_kopioiden(lista* l, const char* restrict s);
 #endif
