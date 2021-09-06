@@ -37,6 +37,7 @@ extern tekstiolio_s tiedotol;
 
 extern lista* snsto;
 extern lista* kysynnat;
+extern lista* tiedostot;
 extern int osaamisraja;
 extern int kohdistin; //kasvaa oikealta vasemmalle, mihin väliin kirjain laitetaan
 extern SDL_Rect kohdistinsij;

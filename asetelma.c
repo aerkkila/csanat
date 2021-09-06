@@ -63,6 +63,7 @@ tekstiolio_s viestiol = {.ttflaji = 1,					\
 
 lista* snsto;
 lista* kysynnat;
+lista* tiedostot;
 int osaamisraja = 1;
 int kohdistin = 0;
 SDL_Rect kohdistinsij;
@@ -72,6 +73,7 @@ int edellinen_sij = -1;
 void asetelma() {
   snsto = alusta_lista(11*3);
   kysynnat = alusta_lista(11*2);
+  tiedostot = alusta_lista(1);
 
   suoteol.teksti = calloc(maxpit_suote, 1);
   suoteol.font = TTF_OpenFont(suoteol.fonttied, suoteol.fonttikoko);
@@ -87,12 +89,14 @@ void asetelma() {
   viestiol.sij.h = ikkuna_h0;
   viestiol.font = TTF_OpenFont(viestiol.fonttied, viestiol.fonttikoko);
 
+#define RIVEJA 3
   tiedotol.font = TTF_OpenFont(tiedotol.fonttied, tiedotol.fonttikoko);
-  tiedotol.lista = alusta_lista(2);
-  tiedotol.lista->pit = 2;
-  for(int i=0; i<2; i++)
-    tiedotol.lista->taul[i] = malloc(24);
+  tiedotol.lista = alusta_lista(RIVEJA);
+  tiedotol.lista->pit = RIVEJA;
+  for(int i=0; i<RIVEJA; i++)
+    tiedotol.lista->taul[i] = malloc(32);
   tiedotol.sij.y = kauntiol.sij.y;
+#undef RIVEJA
 
   ikkuna_x = ikkuna_x0;
   ikkuna_y = ikkuna_y0;
@@ -119,4 +123,5 @@ void tuhoa_asetelma() {
   tiedotol.lista = tuhoa_lista(tiedotol.lista);
   snsto = tuhoa_lista(snsto);
   kysynnat = tuhoa_lista(kysynnat);
+  tiedostot = tuhoa_lista(tiedostot);
 }
