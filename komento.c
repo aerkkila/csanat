@@ -15,6 +15,11 @@
     puts(tmpc);					\
     viestiksi(tmpc);				\
   } while(0)
+#define VIESTIKSI(mjono, ...) do {		\
+    sprintf(tmpc, mjono, __VA_ARGS__);		\
+    viestiksi(tmpc);				\
+  } while(0)
+
 
 extern char* tmpc;
 
@@ -117,6 +122,7 @@ void komento(const char* restrict suote) {
       } else if(_avaa == 0) {
 	TEE("Varoitus: tiedosto \"%s\" avattiin mutta yhtään sanaa ei luettu", *NYT_OLEVA(knnot));
       }
+      
       /*tiedosto avattiin*/
       sekoita();
       osaamaton();
