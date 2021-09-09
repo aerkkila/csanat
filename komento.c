@@ -22,9 +22,11 @@
 
 
 extern char* tmpc;
+static void avaa(lista*);
 
 void komento(const char* restrict suote) {
   lista* knnot = pilko_sanoiksi(suote);
+  int snsto_eiole_lopussa = snsto->sij < snsto->pit; // tämä talteen, koska sijainti muuttuu avattaessa
   while(knnot->sij < knnot->pit) {
     
     if(knto(cd) && EI_LOPUSSA(knnot)) {                           //cd
@@ -96,9 +98,17 @@ void komento(const char* restrict suote) {
       snsto->taul[sij] = strdup(*NYT_OLEVA(knnot));
       sprintf(tmpc+strlen(tmpc), "\"%s\"", snsto->taul[sij]);
       viestiksi(tmpc);
+
+    } else if(knto(.avaa)) {                                      //avaa
+      if(knnot->sij == knnot->pit-1) {
+	viestiksi("Käyttö .avaa tiedoston_nimi");
+	break;
+      }
+      knnot->sij++;
+      avaa(knnot);
       
     } else {
-      if(snsto->sij < snsto->pit) {
+      if(snsto_eiole_lopussa) {
 	/*verrataan käännökseen, laitetaan uusi sana ja poistutaan*/
 	jatka_listaa(kysynnat, 2);
 	TOISEKSI_VIIM = malloc(strlen(kysymysol.teksti) + 2);
@@ -132,22 +142,22 @@ void komento(const char* restrict suote) {
 	uusi_kierros();
 	continue;
       }
-      int _avaa = avaa_tiedosto(*NYT_OLEVA(knnot));
-      if(_avaa < 0) {
-	TEE("Ei avattu tiedostoa \"%s\"", *NYT_OLEVA(knnot));
-	knnot->sij++;
-	continue;
-      } else if(_avaa == 0) {
-	TEE("Varoitus: tiedosto \"%s\" avattiin mutta yhtään sanaa ei luettu", *NYT_OLEVA(knnot));
-      }
-      
-      /*tiedosto avattiin*/
-      sekoita();
-      osaamaton();
-      edellinen_sij = -1;
-      knnot->sij++;
+      avaa(knnot);
     }
     knnot->sij++;
   }
   knnot = tuhoa_lista(knnot);
+}
+
+static void avaa(lista* knnot) {
+  int _avaa = avaa_tiedosto(*NYT_OLEVA(knnot));
+  if(_avaa < 0) {
+    TEE("Ei avattu tiedostoa \"%s\"", *NYT_OLEVA(knnot));
+    return;
+  } else if(_avaa == 0)
+    TEE("Varoitus: tiedosto \"%s\" avattiin mutta yhtään sanaa ei luettu", *NYT_OLEVA(knnot));    
+  /*tiedosto avattiin*/
+  sekoita();
+  osaamaton();
+  edellinen_sij = -1;
 }
