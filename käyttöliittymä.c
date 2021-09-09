@@ -237,7 +237,8 @@ inline void __attribute__((always_inline)) paivita() {
       laita_tekstilista(&tiedotol);
       break;
     CASE(viesti):
-      viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + tiedotol.toteutuma.w + 8*leveys(viestiol.font, ' ');
+      viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
+      viestiol.sij.y = tiedotol.toteutuma.y + tiedotol.toteutuma.h + TTF_FontLineSkip(viestiol.font);
       laita_tekstilista(&viestiol);
       break;
     }
