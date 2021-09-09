@@ -63,7 +63,7 @@ void komento(const char* restrict suote) {
       if(sscanf(SEURAAVA(knnot), "%u", &osaamisraja))
 	knnot->sij++;
       else
-	goto VERTAILU;
+	break;
       
     } else if(knto(.tyhjennä) || knto(thj)) {                     //tyhjennä
       tuhoa_lista(snsto);
@@ -77,9 +77,27 @@ void komento(const char* restrict suote) {
 	*SANAN_OSAAMISET = 0;
       }
       uusi_kierros();
+
+    } else if(knto(.korjaa) && EI_LOPUSSA(knnot)) {               //korjaa
+      int taakse;
+      knnot->sij++;
+      if(sscanf(*NYT_OLEVA(knnot), "%i", &taakse) != 1 || !(EI_LOPUSSA(knnot))) {
+	viestiksi("Käyttö: .korjaa n_taakse korjaus");
+	break;
+      }
+      knnot->sij++;
+      int sij = snsto->sij-taakse/2*3 + taakse%2;
+      if(!(0 <= sij && sij < snsto->pit)) {
+	VIESTIKSI("Virheellinen sijainti (%i)", sij);
+	break;
+      }
+      sprintf(tmpc, "Korjattiin paikallisesti \"%s\" --> ", snsto->taul[sij]);
+      free(snsto->taul[sij]);
+      snsto->taul[sij] = strdup(*NYT_OLEVA(knnot));
+      sprintf(tmpc+strlen(tmpc), "\"%s\"", snsto->taul[sij]);
+      viestiksi(tmpc);
       
     } else {
-    VERTAILU:
       if(snsto->sij < snsto->pit) {
 	/*verrataan käännökseen, laitetaan uusi sana ja poistutaan*/
 	jatka_listaa(kysynnat, 2);
