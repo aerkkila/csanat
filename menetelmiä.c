@@ -10,7 +10,8 @@
 extern char* tmpc;
 
 int avaa_tiedosto(const char* nimi) {
-  static int tiedostonro = 0;
+  static int tiedostonro = -1;
+  tiedostonro++;
   
   FILE *f = fopen(nimi, "r");
   if (!f)
@@ -39,11 +40,12 @@ int avaa_tiedosto(const char* nimi) {
       (int)parin numero; (int)tiedoston numero; (int)montako kierrosta; (int)osaamisten määrä;
       (uint64)bittimaski osaamisista, viimeisin kierros vähiten merkitsevänä*/
     snsto->taul[snsto->pit-1] = calloc(24, 1);
-    *(int*)(snsto->taul[snsto->pit-1]+META_ID) = sanoja++;
-    *(int*)(snsto->taul[snsto->pit-1]+META_TIEDOSTONRO) = tiedostonro;
+    *((int*)(snsto->taul[snsto->pit-1])+META_ID) = sanoja++;
+    *((int*)(snsto->taul[snsto->pit-1])+META_TIEDOSTONRO) = tiedostonro;
     /*loput ovat alussa nollia*/
   }
   fclose(f);
+  alussa = 1;
   listalle_kopioiden(tiedostot, nimi);
   return sanoja;
 }
@@ -56,12 +58,12 @@ int avaa_tiedosto(const char* nimi) {
 
 void sekoita() {
   srand((unsigned)time(NULL));
-  for(int jaljella=snsto->pit/3; jaljella>1; jaljella--) {
+  for(int jaljella=(snsto->pit-snsto->sij)/3; jaljella>1; jaljella--) {
     int sij = rand() % jaljella;
-    /*vaihdetaan sijainti ja viimeinen keskenään
+    /*vaihdetaan sijainti ja viimeinen keskenään, viimeinen siirtyy aina lähemmäs,
       kolme peräkkäistä osoitinta kuuluvat aina yhteen*/
     for(int i=0; i<3; i++)
-      VAIHDA(snsto->taul[jaljella*3-3+i], snsto->taul[sij*3+i]);
+      VAIHDA(snsto->taul[snsto->sij+jaljella*3-3+i], snsto->taul[snsto->sij+sij*3+i]);
   }
 }
 
@@ -77,7 +79,7 @@ void tee_tiedot() {
     kierroksen_pituus = snsto->pit/3; //tätä ei voi alustaa suoraan
 
   int osattuja = 0;
-  int sijainti_kierroksella = kierroksen_pituus; //vähennetään tästä tulossa olevien osaamattomien määrä
+  int sijainti_kierroksella = snsto->pit/3; //vähennetään tästä tulossa olevien osaamattomien määrä
   int sij0 = snsto->sij;
   int i=0;
   
@@ -99,7 +101,6 @@ void tee_tiedot() {
   }
   if(alussa) {
     kierroksen_pituus = snsto->pit/3-osattuja;
-    sijainti_kierroksella = 0;
     alussa = 0;
   }
   snsto->sij = sij0;
