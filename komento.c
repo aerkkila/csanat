@@ -106,6 +106,10 @@ void komento(const char* restrict suote) {
       }
       knnot->sij++;
       avaa(knnot);
+
+    } else if(knto(.käännä)) {                                    //käännä
+      for(int i=0; i<snsto->pit; i+=3)
+	VAIHDA(snsto->taul[i], snsto->taul[i+1]);
       
     } else {
       if(snsto_eiole_lopussa) {

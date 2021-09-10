@@ -17,6 +17,11 @@
 #define SANAN_OSAAMISET ((long long unsigned*)((int*)( NYT_OLEVA(snsto)[2] )+META_OSAAMISET))
 
 #define FOR_LISTA(l) for((l)->sij=0; (l)->sij<(l)->pit; (l)->sij++)
+#define VAIHDA(a, b) do {			\
+    char* apu = a;				\
+    a = b;					\
+    b = apu;					\
+  } while(0)
 
 #define aseta_vari(v) SDL_SetRenderDrawColor(rend, v.r, v.g, v.b, v.a)
 #define laita(jotain) (laitot |= (1u << jotain ## _enum))

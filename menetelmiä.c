@@ -50,12 +50,6 @@ int avaa_tiedosto(const char* nimi) {
   return sanoja;
 }
 
-#define VAIHDA(a, b) do {			\
-    char* apu = a;				\
-    a = b;					\
-    b = apu;					\
-  } while(0)
-
 void sekoita() {
   srand((unsigned)time(NULL));
   for(int jaljella=(snsto->pit-snsto->sij)/3; jaljella>1; jaljella--) {
