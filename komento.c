@@ -10,16 +10,6 @@
 #define STREND(a) (a)[strlen(a)-1]
 #define EI_LOPUSSA(lista) (lista->sij+1 < lista->pit)
 #define SEURAAVA(lista)  (lista->taul[lista->sij+1])
-#define TEE(mjono, ...) do {			\
-    sprintf(tmpc, mjono, __VA_ARGS__);		\
-    puts(tmpc);					\
-    viestiksi(tmpc);				\
-  } while(0)
-#define VIESTIKSI(mjono, ...) do {		\
-    sprintf(tmpc, mjono, __VA_ARGS__);		\
-    viestiksi(tmpc);				\
-  } while(0)
-
 
 extern char* tmpc;
 static void avaa(lista*);
@@ -110,6 +100,9 @@ void komento(const char* restrict suote) {
     } else if(knto(.käännä)) {                                    //käännä
       for(int i=0; i<snsto->pit; i+=3)
 	VAIHDA(snsto->taul[i], snsto->taul[i+1]);
+
+    } else if(knto(.tallenna)) {                                  //tallenna
+      tallenna();
       
     } else {
       if(snsto_eiole_lopussa) {

@@ -17,7 +17,7 @@ int avaa_tiedosto(const char* nimi) {
   if (!f)
     return -1;
 
-  static int sanoja = 0;
+  static int sanoja = -1; //perustiedoston id:t olkoot negatiivisia, .tiedot*-tiedostossa ne ovat positiivisia
   
   while (!feof(f)) {
     //rivinvaihto lopussa ja tyhjät rivit välissä ohitetaan
@@ -40,14 +40,14 @@ int avaa_tiedosto(const char* nimi) {
       (int)parin numero; (int)tiedoston numero; (int)montako kierrosta; (int)osaamisten määrä;
       (uint64)bittimaski osaamisista, viimeisin kierros vähiten merkitsevänä*/
     snsto->taul[snsto->pit-1] = calloc(24, 1);
-    *((int*)(snsto->taul[snsto->pit-1])+META_ID) = sanoja++;
+    *((int*)(snsto->taul[snsto->pit-1])+META_ID) = sanoja--;
     *((int*)(snsto->taul[snsto->pit-1])+META_TIEDOSTONRO) = tiedostonro;
     /*loput ovat alussa nollia*/
   }
   fclose(f);
   alussa = 1;
   listalle_kopioiden(tiedostot, nimi);
-  return sanoja;
+  return -sanoja-1;
 }
 
 void sekoita() {

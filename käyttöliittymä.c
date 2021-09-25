@@ -36,7 +36,7 @@ void kaunnista() {
       if(apusuote) {free(apusuote); apusuote=NULL;}
       return;
     case SDL_TEXTINPUT:
-      if(suoteviesti) {
+      if(suoteviesti) { //syötteen paikalla voi olla viestinä edellisen oikea vastaus
 	suote[0] = '\0';
 	suoteol.vari = apuvari;
 	suoteviesti = 0;

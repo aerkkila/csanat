@@ -1,4 +1,4 @@
-tdstot=main.c käyttöliittymä.c asetelma.c komento.c menetelmiä.c lista.c grafiikka.c
+tdstot=main.c käyttöliittymä.c asetelma.c komento.c menetelmiä.c lista.c grafiikka.c io_tiedot.c
 otsakkeet=asetelma.h grafiikka.h lista.h menetelmiä.h
 krjstot=-lSDL2 -lSDL2_ttf
 
