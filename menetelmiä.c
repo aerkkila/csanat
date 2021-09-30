@@ -57,7 +57,7 @@ void sekoita() {
     /*vaihdetaan sijainti ja viimeinen keskenään, viimeinen siirtyy aina lähemmäs,
       kolme peräkkäistä osoitinta kuuluvat aina yhteen*/
     for(int i=0; i<3; i++)
-      VAIHDA(snsto->taul[snsto->sij+jaljella*3-3+i], snsto->taul[snsto->sij+sij*3+i]);
+      VAIHDA(snsto->taul[snsto->sij+jaljella*3-3+i], snsto->taul[snsto->sij+sij*3+i], char*);
   }
 }
 
@@ -129,11 +129,11 @@ lista* pilko_sanoiksi(const char* restrict str) {
     osoit += strlen(tmpc);
     /*välien yli*/
     jatka_listaa(r, 1);
-    VIIMEINEN(r) = strdup(tmpc);
+    *VIIMEINEN(r) = strdup(tmpc);
   }
   if(r->pit == 0) { //myös tyhjästä syötteestä tehdään lista
     jatka_listaa(r, 1);
-    VIIMEINEN(r) = strdup("");
+    *VIIMEINEN(r) = strdup("");
   }
   return r;
 }

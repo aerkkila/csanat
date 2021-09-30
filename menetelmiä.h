@@ -12,7 +12,7 @@ extern char* tmpc;
 #define META_OSAAMISIA 3
 #define META_OSAAMISET 4
 #define NYT_OLEVA(l) ((l)->taul+(l)->sij)
-#define VIIMEINEN(l) ((l)->taul[(l)->pit-1])
+#define VIIMEINEN(l) ((l)->taul+(l)->pit-1)
 #define TOISEKSI_VIIM (kysynnat->taul[kysynnat->pit-2])
 #define METATIEDOT         ((int*)NYT_OLEVA(snsto)[2])
 #define ID_SANALLA         (METATIEDOT + META_ID)
@@ -22,8 +22,8 @@ extern char* tmpc;
 #define SANAN_OSAAMISET ((uint64_t*)(METATIEDOT + META_OSAAMISET))
 
 #define FOR_LISTA(l,i) for((l)->sij=0; (l)->sij<(l)->pit; (l)->sij+=i)
-#define VAIHDA(a, b) do {		\
-    char* apu = a;			\
+#define VAIHDA(a, b, tyyppi) do {	\
+    tyyppi apu = a;			\
     a = b;				\
     b = apu;				\
   } while(0)

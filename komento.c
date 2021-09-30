@@ -99,7 +99,7 @@ void komento(const char* restrict suote) {
 
     } else if(knto(.käännä)) {                                    //käännä
       for(int i=0; i<snsto->pit; i+=3)
-	VAIHDA(snsto->taul[i], snsto->taul[i+1]);
+	VAIHDA(snsto->taul[i], snsto->taul[i+1], char*);
 
     } else if(knto(.tallenna)) {                                  //tallenna
       tallenna();
@@ -110,7 +110,7 @@ void komento(const char* restrict suote) {
 	jatka_listaa(kysynnat, 2);
 	TOISEKSI_VIIM = malloc(strlen(kysymysol.teksti) + 2);
 	strcpy(TOISEKSI_VIIM, kysymysol.teksti); //nollatavun jälkeen tulee osaattiinko
-	VIIMEINEN(kysynnat) = strdup(suote);
+	*VIIMEINEN(kysynnat) = strdup(suote);
 	*SANAN_OSAAMISET <<= 1;
 	if(!strcmp(NYT_OLEVA(snsto)[1], suote)) { //osattiin
 	  apuvari = suoteol.vari;
