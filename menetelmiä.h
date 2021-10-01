@@ -23,9 +23,9 @@ extern char* tmpc;
 
 #define FOR_LISTA(l,i) for((l)->sij=0; (l)->sij<(l)->pit; (l)->sij+=i)
 #define VAIHDA(a, b, tyyppi) do {	\
-    tyyppi apu = a;			\
+    tyyppi it205ox49fi = a;		\
     a = b;				\
-    b = apu;				\
+    b = it205ox49fi;			\
   } while(0)
 #define TEE(...) do {		       	\
     sprintf(tmpc, __VA_ARGS__);		\
@@ -52,8 +52,9 @@ enum laitot_enum {
 };
 #endif
 
-int avaa_tiedosto(const char*);
+int lue_tiedosto(const char*);
 void tallenna();
+void avaa_sanoja(int kpl);
 lista* pilko_sanoiksi(const char* restrict str);
 void tee_tiedot();
 void sekoita();

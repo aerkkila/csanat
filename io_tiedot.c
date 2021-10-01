@@ -48,8 +48,7 @@ void tallenna_uusia_sanoja() {
   }
   FILE *sanatied = fopen(sanat, "a");
   fseek(f,0,SEEK_END);
-  int32_t kirjoite[TIETOPIT4];
-  uint32_t hetki = time(NULL);
+  int32_t kirjoite[TIETOPIT4] = {0};
   int sij0 = snsto->sij;
   char** apuc;
   FOR_LISTA(snsto,3) {
@@ -58,9 +57,7 @@ void tallenna_uusia_sanoja() {
     memset(kirjoite, 0, TIETOPIT);
     *ID_SANALLA = id; //asetetaan nämä tunnisteet myös aukiolevaan sanastoon
     kirjoite[0] = id;
-    for(int j=0; j<*KIERROKSIA_SANALLA; j++)
-      kirjoite[j+1] = hetki | (*SANAN_OSAAMISET >> j & 1) << 31; //suurimpaan bittiin osaaminen
-    fwrite(kirjoite, TIETOPIT, 1, f);
+    fwrite(kirjoite, TIETOPIT, 1, f); //laitetaan vain tunniste, ei aikoja tässä funktiossa
     /*sanan ja käännöksen kirjoittaminen*/
     apuc = NYT_OLEVA(snsto);
     fprintf(sanatied, "%i\036%s\036%s\n", id, apuc[0], apuc[1]);
@@ -155,16 +152,20 @@ void avaa_sanoja(int kpl) {
   Avataan sen mukaan, minkä osaamisesta on kauimmin.
   Samanaikaisista valitaan satunnaisesti, jos niitä on liikaa.*/
 static int* valitse_sanat(int kpl, FILE* f, int yht) {
-  int32_t* lis = malloc(yht*8);
-  fseek(f, 4, SEEK_SET);
+  const uint64_t alkunolla = 0x00000000ffffffff;
+  uint64_t* lis = malloc(yht*8);
   for(int i=0; i<yht; i++) {
-    int luenta;
+    fseek(f, i*TIETOPIT+4, SEEK_SET);
+    long unsigned luentalong;
+    unsigned luenta;
     do
       fread(&luenta, 4, 1, f);
     while(luenta);
-    fseek(f, -4, SEEK_CUR); //viimeisen ajan paikka
-    fread(lis+i*2, 4, 1, f);
-    lis[i*2+1] = i;
+    fseek(f, -8, SEEK_CUR); //viimeisen ajan paikka: taakse nolla ja aika eli 2*4
+    fread(&luenta, 4, 1, f);
+    luentalong = luenta;
+    lis[i] = luentalong << 32;
+    lis[i] += i;
   }
   /*Listalla on nyt aina (int32 aika, int32 id), missä ajan merkitsevin bitti on osaaminen (0/1).
     Tämä voidaan lajitella uint64:nä jolloin aika ja id pysyvät peräkkäin,
@@ -173,23 +174,25 @@ static int* valitse_sanat(int kpl, FILE* f, int yht) {
   /*tarvittaessa arvotaan, jos on samaan aikaan saatuja, ei valita vain pienimmän id:n mukaan*/
   int alkukohta=0;
   for(int i=1; i<kpl; i++)
-    if(lis[i*2] != lis[(i-1)*2])
+    if(lis[i]>>32 != lis[i-1]>>32)
       alkukohta = i;
   /*ei-arvottavat*/
   int* valinnat = malloc(kpl*sizeof(int));
   for(int i=0; i<alkukohta; i++)
-    valinnat[i] = lis[i*2+1]; //val <- id[i]
+    valinnat[i] = lis[i] & alkunolla; //val <- id[i]
   /*arvottavat*/
   int pituus=1;
-  for(; lis[(alkukohta+pituus)*2] == lis[alkukohta]; pituus++); //montako samanaikaista on
+  for(; lis[(alkukohta+pituus)]>>32 == lis[alkukohta]>>32 && alkukohta+pituus<yht; pituus++); //montako samanaikaista on
   int arvonta[pituus];
   for(int i=0; i<pituus; i++)
     arvonta[i] = i;
   srand((unsigned)( time(NULL)+(intptr_t)f ));
-  for(int i=0; i<kpl-alkukohta; i++) //sekoitetaan vain tarvittava määrä
-    VAIHDA(arvonta[i], arvonta[rand()%(pituus-i)], int);
+  for(int i=0; i<kpl-alkukohta; i++) {//sekoitetaan vain tarvittava määrä
+    int j = rand()%(pituus-i); //VAIHDA-makron argumenttina otettaisiin kahdesti rand()
+    VAIHDA(arvonta[i], arvonta[j], int);
+  }
   for(int i=0; i<kpl-alkukohta; i++)
-    valinnat[i+alkukohta] = lis[(arvonta[i]+alkukohta)*2+1];
+    valinnat[i+alkukohta] = lis[arvonta[i]+alkukohta] & alkunolla;
   free(lis);
   return valinnat;
 }
@@ -234,10 +237,10 @@ static void _siirry_jarjestuksessa(int id, int siirto, FILE* f) {
   return;
 }
 
-/*id-osuuksia ei tarvitse järjestää, joten tämä lyhenee todellisesta järjestämisestä*/
+/*tämä saa alkaa 4:stä, koska id-osuuksia ei tarvitse lajitella*/
 void* kantalukulajittele64(uint64_t* taul, int pit) {
   uint64_t* apu = malloc(pit*8);
-  unsigned siirto = 32;
+  unsigned siirto = 4*8;
   int lasku[256];
   for(int j=4; j<8; j++, siirto+=8) {
     memset(lasku, 0, 256*sizeof(int));

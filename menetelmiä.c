@@ -9,7 +9,7 @@
 #define STRPAATE(a) ((a)[strlen(a)-1])
 extern char* tmpc;
 
-int avaa_tiedosto(const char* nimi) {
+int lue_tiedosto(const char* nimi) {
   static int tiedostonro = -1;
   tiedostonro++;
   
