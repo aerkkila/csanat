@@ -6,7 +6,10 @@
 #include "menetelmiä.h"
 #include "asetelma.h"
 
-/*Tiedostossa ".tiedotCsanat" on tiedot kaikista sanoista:
+/*Tässä tiedostossa on sanojen osaamistietojen tallentaminen ja lukeminen.
+  Kaikki, mikä liittyy tiedostoihin .tiedotCsanat tai .sanatCsanat on täällä.
+
+  Tiedostossa ".tiedotCsanat" on tiedot kaikista sanoista:
   int32_t id, uint32_t[127] [1.bitti: osattiinko, ajankohta]
 
   Tiedostossa ".sanatCsanat on %i id, \036, sana, \036, käännös, \n
@@ -120,7 +123,7 @@ void avaa_sanoja(int kpl) {
   int32_t maara; //onko sanoja tarpeeksi
   fseek(f, 0, SEEK_END);
   maara = ftell(f) / TIETOPIT;
-  if(maara < kpl)
+  if(maara < kpl || kpl < 0)
     kpl = maara;
 
   int* idt = valitse_sanat(kpl, f, maara);
@@ -148,26 +151,40 @@ void avaa_sanoja(int kpl) {
   free(idt);
 }
 
-/*Tämä on toistaiseksi hyvin yksinkertainen:
-  Avataan sen mukaan, minkä osaamisesta on kauimmin.
-  Samanaikaisista valitaan satunnaisesti, jos niitä on liikaa.*/
+/*Tämä on toistaiseksi yksinkertainen:
+  Avataan viime kerran perusteella:
+  ei-osatut ensin, sitten kauimmin sitten olleet
+  Samanaikaisista valitaan ne, joissa on ollut virheitä
+  ja sitten  satunnaisesti, jos niitä on liikaa.*/
 static int* valitse_sanat(int kpl, FILE* f, int yht) {
   const uint64_t alkunolla = 0x00000000ffffffff;
+  const int aikasiirto = 14; //noin 4,5 tunnin sisään (2^14 s) pidetään samanaikaisina
+  long unsigned luentalong;
   uint64_t* lis = malloc(yht*8);
   for(int i=0; i<yht; i++) {
     fseek(f, i*TIETOPIT+4, SEEK_SET);
-    long unsigned luentalong;
-    unsigned luenta;
-    do
+    unsigned viimeaika=0, luenta;
+    int pituus=1;
+    do {
       fread(&luenta, 4, 1, f);
-    while(luenta);
-    fseek(f, -8, SEEK_CUR); //viimeisen ajan paikka: taakse nolla ja aika eli 2*4
-    fread(&luenta, 4, 1, f);
-    luentalong = luenta;
+      if(luenta<<1>>(aikasiirto+1) == viimeaika)
+	pituus++;
+      else {
+	viimeaika = luenta>>aikasiirto;
+	pituus=1;
+      }
+    } while(luenta);
+    fseek(f, -4-4*pituus, SEEK_CUR); //viimeisen ajan paikka: taakse nolla ja luettavat
+    luentalong = 0xff;
+    for(int j=0; j<pituus; j++) {
+      fread(&luenta, 4, 1, f);
+      luentalong -= !(luenta>>31); //montako meni väärin
+    }
+    luentalong |= luenta >> aikasiirto << aikasiirto;
     lis[i] = luentalong << 32;
     lis[i] += i;
   }
-  /*Listalla on nyt aina (int32 aika, int32 id), missä ajan merkitsevin bitti on osaaminen (0/1).
+  /*Listalla on nyt aina (int32 aika,virheet; int32 id), missä ajan merkitsevin bitti on osaaminen (0/1).
     Tämä voidaan lajitella uint64:nä jolloin aika ja id pysyvät peräkkäin,
     kaikki osaamattomat tulevat ensin ja osatut sen jälkeen sen mukaan, mistä on kauimmin.*/
   lis = kantalukulajittele64((uint64_t*)lis, yht);
