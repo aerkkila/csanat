@@ -10,6 +10,8 @@ void paivita();
 void komento(const char* restrict suote);
 void pyyhi(char* suote);
 void ennen_komentoa();
+static int xy_alueella(int x, int y, SDL_Rect* alue);
+static void rullaustapahtuma_lopusta(tekstiolio_s*, int);
 
 const unsigned kaikkilaitot =  0xffff;
 
@@ -20,6 +22,7 @@ static char* apusuote = NULL; //syöte tallennetaan tähän, kun nuolilla selata
 
 void kaunnista() {
   SDL_Event tapaht;
+  int hiirix, hiiriy;
   char* const suote = suoteol.teksti;
   SDL_StartTextInput();
   char vaihto = 0;
@@ -167,6 +170,17 @@ void kaunnista() {
 	break;
       }
       break;
+    case SDL_MOUSEMOTION:
+      hiirix = tapaht.motion.x;
+      hiiriy = tapaht.motion.y;
+      break;
+    case SDL_MOUSEWHEEL:
+      if(xy_alueella(hiirix, hiiriy, &viestiol.toteutuma)) {
+	rullaustapahtuma_lopusta(&viestiol, tapaht.wheel.y);
+	laita(viesti);
+	break;
+      }
+      break;
     } //switch tapaht.type
   } //while pollEvent
   paivita();
@@ -270,4 +284,18 @@ void ennen_komentoa() {
   }
   if(viestiol.lista)
     viestiol.lista = tuhoa_lista(viestiol.lista);
+}
+
+static inline int xy_alueella(int x, int y, SDL_Rect* alue) {
+  return (alue->x < x && alue->y < y && alue->w+alue->x > x && alue->h+alue->y > y);
+}
+
+/*rullaus >= 0*/
+static inline void rullaustapahtuma_lopusta(tekstiolio_s* o, int y) {
+  if((o->alku <= 0 && y > 0) ||	\
+     (o->rullaus <= 0 && y < 0))
+    return;
+  o->rullaus += y;
+  o->rullaus *= o->rullaus >= 0;
+  return;
 }
