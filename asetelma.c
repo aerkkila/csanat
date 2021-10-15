@@ -10,7 +10,7 @@ const int ikkuna_y0 = 200;
 const int ikkuna_w0 = 600;
 const int ikkuna_h0 = 400;
 const char* ohjelman_nimi = "csanat";
-const char* kotihak = "/home/antterkk";
+const char* kotihak = "/home/aerk";
 
 int ikkuna_x;
 int ikkuna_y;
@@ -30,36 +30,50 @@ SDL_Color tekstin_taustavari;
 SDL_Color apuvari;
 int suoteviesti = 0;
 
-tekstiolio_s suoteol = {.ttflaji = 1,					\
-			.fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
-			.fonttikoko = 45,				\
-			.vari = (SDL_Color){255,255,255,255},		\
-			.sij = {0,0,700,100}};
+//#define PAAFONTTI "/usr/share/fonts/gnu-free/FreeSans.otf"
+//#define PAAFONTTI "/usr/share/fonts/truetype/verdana.ttf"
+#define PAAFONTTI "/usr/share/fonts/noto/NotoSerif-Light.ttf"
 
-tekstiolio_s kysymysol = {.ttflaji = 1,					\
-			  .vari = (SDL_Color){255,255,255,255},		\
-			  .sij = {0,0,700,100}};
+tekstiolio_s suoteol = {			\
+  .ttflaji = 1,					\
+  .fonttied = PAAFONTTI,			\
+  .fonttikoko = 45,				\
+  .vari = (SDL_Color){255,255,255,255},		\
+  .sij = {0,0,700,100}				\
+};
 
-tekstiolio_s kauntiol = {.ttflaji = 1,					\
-			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
-			 .fonttikoko = 15,				\
-			 .vari = {255,255,255,255},			\
-			 .sij = {0,0,600,1000},				\
-			 .lopusta = 0};
-			 
-tekstiolio_s tiedotol = {.ttflaji = 1,					\
-			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
-			 .fonttikoko = 15,				\
-			 .vari = (SDL_Color){255,255,255,255},		\
-			 .lopusta = 0,					\
-			 .sij = (SDL_Rect){200,0,200,300}};
+tekstiolio_s kysymysol = {		    \
+  .ttflaji = 1,				    \
+  .vari = (SDL_Color){255,255,255,255},	    \
+  .sij = {0,0,700,100}			    \
+};
 
-tekstiolio_s viestiol = {.ttflaji = 1,					\
-			 .fonttied = "/usr/share/fonts/truetype/msttcorefonts/Verdana.ttf", \
-			 .fonttikoko = 15,				\
-			 .vari = {255,255,255,255},			\
-			 .sij = {320,0},				\
-			 .lopusta = 1};
+tekstiolio_s kauntiol = {			\
+  .ttflaji = 1,					\
+  .fonttied = PAAFONTTI,			\
+  .fonttikoko = 15,				\
+  .vari = {255,255,255,255},			\
+  .sij = {0,0,600,1000},			\
+  .lopusta = 0             			\
+};
+
+tekstiolio_s tiedotol = {						\
+  .ttflaji = 1,								\
+  .fonttied = PAAFONTTI,						\
+  .fonttikoko = 15,							\
+  .vari = (SDL_Color){255,255,255,255},					\
+  .lopusta = 0,								\
+  .sij = (SDL_Rect){200,0,200,300}					\
+};
+
+tekstiolio_s viestiol = {						\
+  .ttflaji = 1,								\
+  .fonttied = PAAFONTTI,						\
+  .fonttikoko = 15,							\
+  .vari = {255,255,255,255},						\
+  .sij = {320,0},							\
+  .lopusta = 1								\
+};
 
 lista* snsto;
 lista* kysynnat;
@@ -70,27 +84,35 @@ SDL_Rect kohdistinsij;
 int alussa = 0;
 int edellinen_sij = -1;
 
+static void avaa_fontti(tekstiolio_s* olio) {
+  olio->font = TTF_OpenFont(olio->fonttied, olio->fonttikoko);	
+  if(!olio->font) {
+    fprintf(stderr, "Ei avattu fonttia \"%s\"\n%s\n", olio->fonttied, TTF_GetError());
+    exit(1);
+  }
+}
+
 void asetelma() {
   snsto = alusta_lista(11*3);
   kysynnat = alusta_lista(11*2);
   tiedostot = alusta_lista(1);
 
   suoteol.teksti = calloc(maxpit_suote, 1);
-  suoteol.font = TTF_OpenFont(suoteol.fonttied, suoteol.fonttikoko);
+  avaa_fontti(&suoteol);
   suoteol.sij.y = TTF_FontLineSkip(suoteol.font);
 
   kysymysol.font = suoteol.font;
 
   kauntiol.lista = kysynnat;
-  kauntiol.font = TTF_OpenFont(kauntiol.fonttied, kauntiol.fonttikoko);
+  avaa_fontti(&kauntiol);
   kauntiol.sij.y = 2*TTF_FontLineSkip(suoteol.font);
   
   viestiol.sij.w = ikkuna_w0 - viestiol.sij.x;
   viestiol.sij.h = ikkuna_h0;
-  viestiol.font = TTF_OpenFont(viestiol.fonttied, viestiol.fonttikoko);
+  avaa_fontti(&viestiol);
 
 #define RIVEJA 3
-  tiedotol.font = TTF_OpenFont(tiedotol.fonttied, tiedotol.fonttikoko);
+  avaa_fontti(&tiedotol);
   tiedotol.lista = alusta_lista(RIVEJA);
   tiedotol.lista->pit = RIVEJA;
   for(int i=0; i<RIVEJA; i++)

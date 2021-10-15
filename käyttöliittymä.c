@@ -165,7 +165,9 @@ void kaunnista() {
       switch(tapaht.window.event) {
       case SDL_WINDOWEVENT_RESIZED:
 	ikkuna_w = tapaht.window.data1;
-	ikkuna_h = tapaht.window.data1;
+	ikkuna_h = tapaht.window.data2;
+	aseta_vari(taustavari);
+	SDL_RenderClear(rend);
 	laitot = kaikkilaitot;
 	break;
       }
@@ -253,6 +255,7 @@ inline void __attribute__((always_inline)) paivita() {
     CASE(viesti):
       viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
       viestiol.sij.y = tiedotol.toteutuma.y + tiedotol.toteutuma.h + TTF_FontLineSkip(viestiol.font);
+      viestiol.sij.h = ikkuna_h - viestiol.sij.y;
       laita_tekstilista(&viestiol);
       break;
     }
