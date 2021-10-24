@@ -171,8 +171,17 @@ void viestiksi(const char* restrict s) {
   if(viestiol.lista)
     tuhoa_lista(viestiol.lista);
   viestiol.lista = alusta_lista(1);
-  viestiol.lista->taul[0] = strdup(s);
-  viestiol.lista->pit = 1;
+  jatka_listaa(viestiol.lista, 1);
+  *VIIMEINEN(viestiol.lista) = strdup(s);
+  laita(viesti);
+}
+
+void viestiksi_peraan(const char* restrict s) {
+  extern unsigned laitot;
+  if(!viestiol.lista)
+    viestiol.lista = alusta_lista(1);
+  jatka_listaa(viestiol.lista, 1);
+  *VIIMEINEN(viestiol.lista) = strdup(s);
   laita(viesti);
 }
 

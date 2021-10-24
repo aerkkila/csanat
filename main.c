@@ -37,7 +37,6 @@ int main(int argc, char** argv) {
     apuc = tmpc + strlen(tmpc);
     sprintf(apuc, " %s", argv[i]);
   }
-
   aseta_vari(taustavari);
   SDL_RenderClear(rend);
   SDL_RenderPresent(rend);

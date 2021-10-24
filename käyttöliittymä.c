@@ -31,7 +31,6 @@ void kaunnista() {
     komento(suote);
     suote[0] = '\0';
   }
-  /*Mielestäni goto TOISTOLAUSE on tässä selkeämpi kuin while(1)*/
  TOISTOLAUSE:
   while(SDL_PollEvent(&tapaht)) {
     switch(tapaht.type) {
@@ -250,12 +249,14 @@ inline void __attribute__((always_inline)) paivita() {
     CASE(tiedot):
       tee_tiedot();
       tiedotol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
+      tiedotol.sij.w = ikkuna_w - tiedotol.sij.x;
       laita_tekstilista(&tiedotol);
       break;
     CASE(viesti):
       viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
       viestiol.sij.y = tiedotol.toteutuma.y + tiedotol.toteutuma.h + TTF_FontLineSkip(viestiol.font);
       viestiol.sij.h = ikkuna_h - viestiol.sij.y;
+      viestiol.sij.w = ikkuna_w - viestiol.sij.x;
       laita_tekstilista(&viestiol);
       break;
     }

@@ -32,7 +32,7 @@ int suoteviesti = 0;
 
 //#define PAAFONTTI "/usr/share/fonts/gnu-free/FreeSans.otf"
 //#define PAAFONTTI "/usr/share/fonts/truetype/verdana.ttf"
-#define PAAFONTTI "/usr/share/fonts/noto/NotoSerif-Light.ttf"
+#define PAAFONTTI "/usr/share/fonts/noto/NotoSerif-Regular.ttf"
 
 tekstiolio_s suoteol = {			\
   .ttflaji = 1,					\
@@ -51,7 +51,7 @@ tekstiolio_s kysymysol = {		    \
 tekstiolio_s kauntiol = {			\
   .ttflaji = 1,					\
   .fonttied = PAAFONTTI,			\
-  .fonttikoko = 15,				\
+  .fonttikoko = 17,				\
   .vari = {255,255,255,255},			\
   .sij = {0,0,600,1000},			\
   .lopusta = 0             			\
@@ -60,7 +60,7 @@ tekstiolio_s kauntiol = {			\
 tekstiolio_s tiedotol = {						\
   .ttflaji = 1,								\
   .fonttied = PAAFONTTI,						\
-  .fonttikoko = 15,							\
+  .fonttikoko = 17,							\
   .vari = (SDL_Color){255,255,255,255},					\
   .lopusta = 0,								\
   .sij = (SDL_Rect){200,0,200,300}					\
@@ -69,7 +69,7 @@ tekstiolio_s tiedotol = {						\
 tekstiolio_s viestiol = {						\
   .ttflaji = 1,								\
   .fonttied = PAAFONTTI,						\
-  .fonttikoko = 15,							\
+  .fonttikoko = 17,							\
   .vari = {255,255,255,255},						\
   .sij = {320,0},							\
   .lopusta = 1								\
@@ -114,7 +114,7 @@ void asetelma() {
 #define RIVEJA 3
   avaa_fontti(&tiedotol);
   tiedotol.lista = alusta_lista(RIVEJA);
-  tiedotol.lista->pit = RIVEJA;
+  jatka_listaa(tiedotol.lista, RIVEJA);
   for(int i=0; i<RIVEJA; i++)
     tiedotol.lista->taul[i] = malloc(32);
   tiedotol.sij.y = kauntiol.sij.y;

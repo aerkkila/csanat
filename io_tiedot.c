@@ -34,8 +34,8 @@ const char* tiedot = ".tiedotCsanat";
 const char* sanat = ".sanatCsanat";
 
 void tallenna() {
-  tallenna_uusia_sanoja();
   tallenna_vanhoja_sanoja();
+  tallenna_uusia_sanoja();
 }
 
 void tallenna_uusia_sanoja() {
@@ -72,9 +72,9 @@ void tallenna_uusia_sanoja() {
 }
 
 void tallenna_vanhoja_sanoja() {
-  FILE *f = fopen(tiedot, "r+");
+  FILE *f = fopen(tiedot, "a+");
   if(!f) {
-    TEE("Ei avattu tiedostoa %s eikä siten tallennettu", tiedot);
+    VIESTIKSI("Ei avattu tiedostoa %s eikä siten tallennettu", tiedot);
     return;
   }
   int sij0 = snsto->sij;

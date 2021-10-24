@@ -47,7 +47,7 @@ void komento(const char* restrict suote) {
 	if(STREND(tmpc) == '\n')
 	  STREND(tmpc) = '\0';
 	jatka_listaa(viestiol.lista, 1);
-	*NYT_OLEVA(viestiol.lista) = strdup(tmpc);
+	*VIIMEINEN(viestiol.lista) = strdup(tmpc);
 	viestiol.lista->sij++;
       }
       pclose(p);
@@ -148,7 +148,7 @@ void komento(const char* restrict suote) {
 	uusi_kierros();
 	continue;
       }
-      avaa(knnot);
+      lue(knnot);
     }
     knnot->sij++;
   }
@@ -159,6 +159,7 @@ static void avaa(lista* knnot) {
   int kpl;
   if(!sscanf(*NYT_OLEVA(knnot), "%i", &kpl)) {
     VIESTIKSI("Ei luettu sanojen määrää, argumentti = %s", *NYT_OLEVA(knnot));
+    VIESTIKSI_PERAAN("Tiedosto avataan komennolla \".lue\"");
     return;
   }
   avaa_sanoja(kpl);

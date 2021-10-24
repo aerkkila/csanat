@@ -19,8 +19,7 @@ void* tuhoa_clista(clista* l) {
 lista* alusta_lista(unsigned patka) {
   lista* l = calloc(1, sizeof(lista));
   l->patka = patka;
-  l->taul = calloc(patka, sizeof(char**));
-  l->tilaa = patka;
+  l->tilaa = 0;
   l->koko = sizeof(char**);
   return l;
 }
@@ -28,8 +27,7 @@ lista* alusta_lista(unsigned patka) {
 clista* alusta_clista(unsigned patka) {
   clista* l = calloc(1, sizeof(clista));
   l->patka = patka;
-  l->taul = calloc(patka, 1);
-  l->tilaa = patka;
+  l->tilaa = 0;
   l->koko = 1;
   return l;
 }
