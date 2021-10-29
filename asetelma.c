@@ -11,6 +11,7 @@ const int ikkuna_w0 = 600;
 const int ikkuna_h0 = 400;
 const char* ohjelman_nimi = "csanat";
 const char* kotihak = "/home/aerk";
+const char* aloituskomentotiedosto = "aloituskomennot.txt";
 
 int ikkuna_x;
 int ikkuna_y;

@@ -30,9 +30,15 @@ int main(int argc, char** argv) {
   tmpc[0] = '\0';
 
   asetelma();
-  /*komennot komentoriviltä tähän*/
-  char* apuc;
+  /*luetaan mahdollinen aloituskomentotiedosto*/
   tmpc[0] = '\0';
+  char* apuc=tmpc; FILE* f; char c;
+  if( aloituskomentotiedosto && (f=fopen(aloituskomentotiedosto, "r")) ) {
+    while( (c = fgetc(f)) != EOF )
+      *apuc++ = c;
+    fclose(f);
+  }
+  /*luetaan komennot komentoriviltä*/
   for(int i=1; i<argc; i++) {
     apuc = tmpc + strlen(tmpc);
     sprintf(apuc, " %s", argv[i]);

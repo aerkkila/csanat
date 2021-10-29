@@ -25,20 +25,31 @@ int lue_tiedosto(const char* nimi) {
       continue;
     jatka_listaa(snsto, 3);
     fseek(f,-1,SEEK_CUR);
-    if(!fgets(tmpc, maxpit_suote, f)) //sana
+    if(!fgets(tmpc, maxpit_suote, f)) //sana luetaan
       break;
-    STRPAATE(tmpc) = 0; //rivinvaihto pois lopusta
-    snsto->taul[snsto->pit-3] = strdup(tmpc);
-    
-    if(!fgets(tmpc, maxpit_suote, f)) //käännös
+    if(STRPAATE(tmpc) == '\n')
+      STRPAATE(tmpc) = 0;
+    /*erotin sanan ja käännöksen välillä voi olla mikä tahansa välilyöntiä pienempi merkki*/
+    for(int i=0; tmpc[i]; i++)
+      if((unsigned char)tmpc[i] < ' ') {
+	tmpc[i] = 0;
+	snsto->taul[snsto->pit-3] = strdup(tmpc); //sana kirjoitetaan
+	while((unsigned char)tmpc[++i] <= ' ');
+	snsto->taul[snsto->pit-2] = strdup(tmpc+i); //käännös kirjoitetaan
+	goto METAOSUUS;
+      }
+    /*edellä ei ollut erotinta, joten erottimena oli rivinvaihto*/
+    snsto->taul[snsto->pit-3] = strdup(tmpc); //sana kirjoitetaan
+    if(!fgets(tmpc, maxpit_suote, f)) //käännös luetaan
       fprintf(stderr, "Virhe: Ei luettu käännöstä\n");
     if(STRPAATE(tmpc) == '\n')
       STRPAATE(tmpc) = 0;
-    snsto->taul[snsto->pit-2] = strdup(tmpc);
+    snsto->taul[snsto->pit-2] = strdup(tmpc); //käännös kirjoitetaan
 
     /*3:nteen tulee:
       (int)parin numero; (int)tiedoston numero; (int)montako kierrosta; (int)osaamisten määrä;
       (uint64)bittimaski osaamisista, viimeisin kierros vähiten merkitsevänä*/
+  METAOSUUS:
     snsto->taul[snsto->pit-1] = calloc(24, 1);
     *((int*)(snsto->taul[snsto->pit-1])+META_ID) = sanoja--;
     *((int*)(snsto->taul[snsto->pit-1])+META_TIEDOSTONRO) = tiedostonro;
