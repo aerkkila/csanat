@@ -6,7 +6,12 @@
 #include "menetelmiä.h"
 #include "asetelma.h"
 
-/*Tässä tiedostossa on sanojen osaamistietojen tallentaminen ja lukeminen.
+/*Tämä on pahasti kesken. Ajatus on kerätä harjoitusdataa sanojen osaamisista,
+  jotta voidaan koneoppimista käyttäen valita ohjelmaan avattavaksi ne sanat,
+  joita luultavimmin ei osata. Luulisin tekeväni tämän valmiiksi keväällä 2022.
+  Tämä tiedosto on kirjoitettu ennen kuin olin opiskellut koneoppimista lainkaan.
+
+  Tässä tiedostossa on sanojen osaamistietojen tallentaminen ja lukeminen.
   Kaikki, mikä liittyy tiedostoihin .tiedotCsanat tai .sanatCsanat on täällä.
 
   Tiedostossa ".tiedotCsanat" on tiedot kaikista sanoista:

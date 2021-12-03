@@ -17,6 +17,7 @@ const unsigned kaikkilaitot =  0xffff;
 
 unsigned laitot = 0xffff;
 extern SDL_Renderer* rend;
+extern SDL_Texture* tausta;
 extern char* tmpc;
 static char* apusuote = NULL; //syöte tallennetaan tähän, kun nuolilla selataan aiempia syötteitä
 
@@ -166,7 +167,9 @@ void kaunnista() {
 	ikkuna_w = tapaht.window.data1;
 	ikkuna_h = tapaht.window.data2;
 	aseta_vari(taustavari);
-	SDL_RenderClear(rend);
+	SDL_DestroyTexture(tausta);
+	tausta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w, ikkuna_h);
+	//SDL_RenderClear(rend);
 	laitot = kaikkilaitot;
 	break;
       }
@@ -202,9 +205,13 @@ inline void __attribute__((always_inline)) putsaa(tekstiolio_s* o) {
 #define CASE(a) case a ## _enum
 
 inline void __attribute__((always_inline)) paivita() {
-  if(!laitot)
+  if(!laitot) {
+    SDL_RenderCopy(rend,tausta,NULL,NULL);
+    SDL_RenderPresent(rend);
     return;
+  }
   aseta_vari(taustavari);
+  SDL_SetRenderTarget(rend,tausta);
   /*putsataan kaikki kerralla ennen laittamista*/
   for(int i=0; i<laitot_enum_pituus; i++) {
     if( !((laitot >> i) & 0x01) )
@@ -261,6 +268,8 @@ inline void __attribute__((always_inline)) paivita() {
       break;
     }
   }
+  SDL_SetRenderTarget(rend,NULL);
+  SDL_RenderCopy(rend,tausta,NULL,NULL);
   laitot = 0;
   SDL_RenderPresent(rend);
 }

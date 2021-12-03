@@ -8,6 +8,7 @@
 
 SDL_Window *ikkuna;
 SDL_Renderer *rend;
+SDL_Texture* tausta;
 char* tmpc;
 
 void kaunnista();
@@ -26,6 +27,7 @@ int main(int argc, char** argv) {
   ikkuna = SDL_CreateWindow\
     (ohjelman_nimi, ikkuna_x0, ikkuna_y0, ikkuna_w0, ikkuna_h0, SDL_WINDOW_RESIZABLE);
   rend = SDL_CreateRenderer(ikkuna, -1, SDL_RENDERER_TARGETTEXTURE);
+  tausta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w, ikkuna_h);
   tmpc = malloc(maxpit_suote);
   tmpc[0] = '\0';
 
