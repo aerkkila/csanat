@@ -2,7 +2,8 @@
 #include <string.h>
 #include "lista.h"
 
-void* tuhoa_lista(lista* l) {
+void* tuhoa_lista(void* vl) {
+  lista *l = vl;
   for(unsigned i=0; i<l->pit; i++)
     free(l->taul[i]);
   free(l->taul);
@@ -10,7 +11,8 @@ void* tuhoa_lista(lista* l) {
   return NULL;
 }
 
-void* tuhoa_clista(clista* l) {
+void* tuhoa_clista(void* vl) {
+  clista* l = vl;
   free(l->taul);
   free(l);
   return NULL;
@@ -24,11 +26,11 @@ lista* alusta_lista(unsigned patka) {
   return l;
 }
 
-clista* alusta_clista(unsigned patka) {
+clista* alusta_clista(unsigned patka, int koko) {
   clista* l = calloc(1, sizeof(clista));
   l->patka = patka;
   l->tilaa = 0;
-  l->koko = 1;
+  l->koko = koko;
   return l;
 }
 

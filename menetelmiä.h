@@ -6,20 +6,30 @@
 
 extern char* tmpc;
 
+/*
 #define META_ID 0
 #define META_TIEDOSTONRO 1
 #define META_KIERROKSIA 2
 #define META_OSAAMISIA 3
-#define META_OSAAMISET 4
+#define META_LISTA 4
+#define SANAMETA(i,meta_id) ((int*)(snsto->taul[i])+(meta_id))*/
+typedef struct {
+  int id;
+  int tiedostonro;
+  int kierroksia;
+  int osaamisia;
+  clista* lista; //tähän tulee (lista(uint32), jolla on kierroksilta)(hetki | osattu?<<31)
+} sanameta_s;
 #define NYT_OLEVA(l) ((l)->taul+(l)->sij)
 #define VIIMEINEN(l) ((l)->taul+(l)->pit-1)
 #define TOISEKSI_VIIM (kysynnat->taul[kysynnat->pit-2])
-#define METATIEDOT         ((int*)NYT_OLEVA(snsto)[2])
-#define ID_SANALLA         (METATIEDOT + META_ID)
-#define TIEDOSTO_NYT       (METATIEDOT + META_TIEDOSTONRO)
-#define KIERROKSIA_SANALLA (METATIEDOT + META_KIERROKSIA)
-#define OSAAMISKERRAT      (METATIEDOT + META_OSAAMISIA)
-#define SANAN_OSAAMISET ((uint64_t*)(METATIEDOT + META_OSAAMISET))
+#define SANAMETA(i,jasen) ( ((sanameta_s*)(snsto->taul[i]))->jasen )
+#define METATIEDOT        (*(sanameta_s*)NYT_OLEVA(snsto)[2])
+#define ID_TASSA         (METATIEDOT.id)
+#define TIEDOSTO_TASSA   (METATIEDOT.tiedostonro)
+#define KIERROKSIA_TASSA (METATIEDOT.kierroksia)
+#define OSAAMISIA_TASSA  (METATIEDOT.osaamisia)
+#define OSLISTA_TASSA    (METATIEDOT.lista)
 
 #define FOR_LISTA(l,i) for((l)->sij=0; (l)->sij<(l)->pit; (l)->sij+=i)
 #define VAIHDA(a, b, tyyppi) do {	\

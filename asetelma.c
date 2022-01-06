@@ -4,6 +4,7 @@
 #include "lista.h"
 #include "grafiikka.h"
 #include "asetelma.h"
+#include "menetelmiä.h"
 
 const int ikkuna_x0 = 150;
 const int ikkuna_y0 = 200;
@@ -144,6 +145,8 @@ void tuhoa_asetelma() {
   if(viestiol.lista)
     viestiol.lista = tuhoa_lista(viestiol.lista);
   tiedotol.lista = tuhoa_lista(tiedotol.lista);
+  for(int i=2; i<snsto->pit/3; i+=3)
+    tuhoa_clista( SANAMETA(i,lista) );
   snsto = tuhoa_lista(snsto);
   kysynnat = tuhoa_lista(kysynnat);
   tiedostot = tuhoa_lista(tiedostot);

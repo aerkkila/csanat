@@ -46,13 +46,11 @@ int lue_tiedosto(const char* nimi) {
       STRPAATE(tmpc) = 0;
     snsto->taul[snsto->pit-2] = strdup(tmpc); //käännös kirjoitetaan
 
-    /*3:nteen tulee:
-      (int)parin numero; (int)tiedoston numero; (int)montako kierrosta; (int)osaamisten määrä;
-      (uint64)bittimaski osaamisista, viimeisin kierros vähiten merkitsevänä*/
   METAOSUUS:
-    snsto->taul[snsto->pit-1] = calloc(24, 1);
-    *((int*)(snsto->taul[snsto->pit-1])+META_ID) = sanoja--;
-    *((int*)(snsto->taul[snsto->pit-1])+META_TIEDOSTONRO) = tiedostonro;
+    snsto->taul[snsto->pit-1] = calloc(sizeof(sanameta_s), 1);
+    SANAMETA(snsto->pit-1,id) = sanoja--;
+    SANAMETA(snsto->pit-1,tiedostonro) = tiedostonro;
+    SANAMETA(snsto->pit-1,lista) = alusta_clista(2,4);
     /*loput ovat alussa nollia*/
   }
   fclose(f);
@@ -91,14 +89,14 @@ void tee_tiedot() {
   /*nykyiseen asti ei muuteta sijaintia kierroksella*/
   for(; i<sij0; i+=3) {
     snsto->sij=i;
-    if(*OSAAMISKERRAT >= osaamisraja) //osattiin
+    if(OSAAMISIA_TASSA >= osaamisraja) //osattiin
       osattuja++;
   }
   
   /*nykysijainnista eteenpäin vähennetään sijaintia_kierroksella*/
   for(; i<snsto->pit; i+=3) {
     snsto->sij = i;
-    if(*OSAAMISKERRAT < osaamisraja) { //ei osattu
+    if(OSAAMISIA_TASSA < osaamisraja) { //ei osattu
       sijainti_kierroksella--;
       continue;
     }
@@ -112,7 +110,7 @@ void tee_tiedot() {
   sprintf(tiedotol.lista->taul[0], "Sijainti: %i / %i", sijainti_kierroksella, kierroksen_pituus);
   sprintf(tiedotol.lista->taul[1], "Osattuja %i / %i", osattuja, snsto->pit/3);
   if(snsto->sij < snsto->pit)
-    sprintf(tiedotol.lista->taul[2], "Tiedosto: \"%s\"", tiedostot->taul[*TIEDOSTO_NYT]);
+    sprintf(tiedotol.lista->taul[2], "Tiedosto: \"%s\"", tiedostot->taul[TIEDOSTO_TASSA]);
   else
     tiedotol.lista->taul[2][0] = '\0';
 }
@@ -123,10 +121,10 @@ void edellinen_osatuksi() {
     return;
   int sij0 = snsto->sij;
   snsto->sij = edellinen_sij;
-  if(!(*SANAN_OSAAMISET & 0x01)) {
-    (*OSAAMISKERRAT)++;
-    *SANAN_OSAAMISET += 1;
-  }
+  uint32_t* osaaminen = CLISTALTA(OSLISTA_TASSA,uint32_t*,CLISTA_LOPUSTA,-1);
+  if( !(*osaaminen>>31) )
+    OSAAMISIA_TASSA += 1;
+  *osaaminen |= 1<<31;
   TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x01;
   snsto->sij = sij0;
 }
@@ -209,7 +207,7 @@ void uusi_kierros() {
 
 void osaamaton() {
   while(snsto->sij < snsto->pit) {
-    if( *OSAAMISKERRAT < osaamisraja) {
+    if( OSAAMISIA_TASSA < osaamisraja) {
       kysymysol.teksti = *NYT_OLEVA(snsto);
       return;
     }

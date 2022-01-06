@@ -149,7 +149,7 @@ void kaunnista() {
 	break;
       case SDLK_PAUSE:
 	if(vaihto)
-	  asm("int $0x03"); //jäljityspisteansa (breakpoint debuggerille)
+	  asm("int $3"); //jäljityspisteansa
 	break;
       }
       break; //keydown

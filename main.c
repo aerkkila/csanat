@@ -40,6 +40,12 @@ int main(int argc, char** argv) {
       *apuc++ = c;
     fclose(f);
   }
+  if(apuc != tmpc) {
+    if(*(apuc-1) == '\n')
+      *(apuc-1) = '\0';
+    else
+      *apuc = '\0';
+  }
   /*luetaan komennot komentoriviltä*/
   for(int i=1; i<argc; i++) {
     apuc = tmpc + strlen(tmpc);

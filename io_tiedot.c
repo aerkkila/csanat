@@ -60,10 +60,10 @@ void tallenna_uusia_sanoja() {
   int sij0 = snsto->sij;
   char** apuc;
   FOR_LISTA(snsto,3) {
-    if(*ID_SANALLA >= 0) //vanha sana
+    if(ID_TASSA >= 0) //vanha sana
       continue;
     memset(kirjoite, 0, TIETOPIT);
-    *ID_SANALLA = id; //asetetaan nämä tunnisteet myös aukiolevaan sanastoon
+    ID_TASSA = id; //asetetaan nämä tunnisteet myös aukiolevaan sanastoon
     kirjoite[0] = id;
     fwrite(kirjoite, TIETOPIT, 1, f); //laitetaan vain tunniste, ei aikoja tässä funktiossa
     /*sanan ja käännöksen kirjoittaminen*/
@@ -87,9 +87,9 @@ void tallenna_vanhoja_sanoja() {
   uint32_t kirjoite[TIETOPIT4-1]; //id:tä ei kirjoiteta uudestaan
   uint32_t hetki = time(NULL);
   FOR_LISTA(snsto,3) {
-    if(*ID_SANALLA < 0) //uusi sana
+    if(ID_TASSA < 0) //uusi sana
       continue;
-    if(fseek(f, *ID_SANALLA*TIETOPIT, SEEK_SET)) {
+    if(fseek(f, ID_TASSA*TIETOPIT, SEEK_SET)) {
       TEE("Sanaa %i ei löytynyt eikä tallennettu. (%s)", snsto->sij/3, *NYT_OLEVA(snsto));
       continue;
     }
@@ -97,22 +97,22 @@ void tallenna_vanhoja_sanoja() {
       TEE("Sanan %i id:tä ei luettu eikä tallennettu. (%s)", snsto->sij/3, *NYT_OLEVA(snsto));
       continue;
     }
-    if(idtarkistus != *ID_SANALLA) {
-      TEE("Id ei täsmää sanalla %i: %i, mutta luettiin %i.", snsto->sij/3, *ID_SANALLA, idtarkistus);
+    if(idtarkistus != ID_TASSA) {
+      TEE("Id ei täsmää sanalla %i: %i, mutta luettiin %i.", snsto->sij/3, ID_TASSA, idtarkistus);
       continue;
     }
     int maara = 0;
     do
       fread(kirjoite, 4, 1, f);
-    while(*kirjoite && ++maara < TIETOPIT4-1); //ohitetaan tallennetut kohdat ja tarkistetaan mahtuminen
-    if(maara + *KIERROKSIA_SANALLA >= TIETOPIT4) {
+    while(*kirjoite && ++maara < TIETOPIT4-1); //ohitetaan tallennetut kohdat (kirjoite ≠ 0) ja tarkistetaan mahtuminen
+    if(maara + KIERROKSIA_TASSA >= TIETOPIT4) {
       TEE("Sanan \"%s\" tiedot ovat täynnä", *NYT_OLEVA(snsto));
       continue;
     }
     fseek(f, -4, SEEK_CUR); //viimeisin oli tyhjä, joten kirjoitetaan sen päälle
     *kirjoite = 0;
-    for(int j=0; j<*KIERROKSIA_SANALLA; j++)
-      kirjoite[j] = hetki | (*SANAN_OSAAMISET >> j & 1) << 31; //suurimpaan bittiin osaaminen
+    for(int j=0; j<KIERROKSIA_TASSA; j++)
+      kirjoite[j] = hetki | (OSAAMISIA_TASSA >> j & 1) << 31; //suurimpaan bittiin osaaminen
     fwrite(kirjoite, TIETOPIT-4-maara, 1, f);
   }
   fclose(f);
@@ -160,7 +160,7 @@ void avaa_sanoja(int kpl) {
   Avataan viime kerran perusteella:
   ei-osatut ensin, sitten kauimmin sitten olleet
   Samanaikaisista valitaan ne, joissa on ollut virheitä
-  ja sitten  satunnaisesti, jos niitä on liikaa.*/
+  ja sitten satunnaisesti, jos niitä on liikaa.*/
 static int* valitse_sanat(int kpl, FILE* f, int yht) {
   const uint64_t alkunolla = 0x00000000ffffffff;
   const int aikasiirto = 14; //noin 4,5 tunnin sisään (2^14 s) pidetään samanaikaisina

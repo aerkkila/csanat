@@ -65,9 +65,9 @@ void komento(const char* restrict suote) {
 
     } else if(knto(.uudesti)) {                                   //uudesti
       for(snsto->sij=0; snsto->sij<snsto->pit; snsto->sij+=3) {
-	*OSAAMISKERRAT = 0;
-	*KIERROKSIA_SANALLA = 0;
-	*SANAN_OSAAMISET = 0;
+	KIERROKSIA_TASSA = 0;
+	OSAAMISIA_TASSA = 0;
+	OSLISTA_TASSA = tuhoa_lista(OSLISTA_TASSA);
       }
       uusi_kierros();
 
@@ -120,12 +120,12 @@ void komento(const char* restrict suote) {
 	TOISEKSI_VIIM = malloc(strlen(kysymysol.teksti) + 2);
 	strcpy(TOISEKSI_VIIM, kysymysol.teksti); //nollatavun jälkeen tulee osaattiinko
 	*VIIMEINEN(kysynnat) = strdup(suote);
-	*SANAN_OSAAMISET <<= 1;
+	OSAAMISIA_TASSA <<= 1;
 	if(!strcmp(NYT_OLEVA(snsto)[1], suote)) { //osattiin
 	  apuvari = suoteol.vari;
 	  suoteol.vari = oikeavari;
-	  *SANAN_OSAAMISET += 1;
-	  (*OSAAMISKERRAT)++;
+	  OSAAMISIA_TASSA += 1;
+	  (OSAAMISIA_TASSA)++;
 	  TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x01; //kysyntään merkintä tämän kierroksen osaamisesta
 	} else {
 	  strcpy(suoteol.teksti, *(NYT_OLEVA(snsto)+1));
@@ -133,7 +133,7 @@ void komento(const char* restrict suote) {
 	  suoteol.vari = virhevari;
 	  TOISEKSI_VIIM[strlen(TOISEKSI_VIIM)+1] = 0x00;
 	}
-	(*KIERROKSIA_SANALLA)++;
+	KIERROKSIA_TASSA++;
 	suoteviesti = 1;
 	edellinen_sij = snsto->sij;
 	snsto->sij+=3;
