@@ -95,9 +95,9 @@ static void avaa_fontti(tekstiolio_s* olio) {
 }
 
 void asetelma() {
-  snsto = alusta_lista(11*3);
-  kysynnat = alusta_lista(11*2);
-  tiedostot = alusta_lista(1);
+  snsto = alusta_lista(11,snsto_s);
+  kysynnat = alusta_lista(11,kysynta_s);
+  tiedostot = alusta_lista(1,char**);
 
   suoteol.teksti = calloc(maxpit_suote, 1);
   avaa_fontti(&suoteol);
@@ -115,10 +115,10 @@ void asetelma() {
 
 #define RIVEJA 3
   avaa_fontti(&tiedotol);
-  tiedotol.lista = alusta_lista(RIVEJA);
+  tiedotol.lista = alusta_lista(RIVEJA,char**);
   jatka_listaa(tiedotol.lista, RIVEJA);
   for(int i=0; i<RIVEJA; i++)
-    tiedotol.lista->taul[i] = malloc(32);
+    *LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,i) = malloc(32);
   tiedotol.sij.y = kauntiol.sij.y;
 #undef RIVEJA
 
@@ -134,20 +134,4 @@ void asetelma() {
   kohdistinsij.w /= 10;
   if(!kohdistinsij.w)
     kohdistinsij.w = 1;
-}
-
-void tuhoa_asetelma() {
-  free(suoteol.teksti);
-  TTF_CloseFont(suoteol.font);
-  TTF_CloseFont(kauntiol.font);
-  TTF_CloseFont(viestiol.font);
-  TTF_CloseFont(tiedotol.font);
-  if(viestiol.lista)
-    viestiol.lista = tuhoa_lista(viestiol.lista);
-  tiedotol.lista = tuhoa_lista(tiedotol.lista);
-  for(int i=2; i<snsto->pit/3; i+=3)
-    tuhoa_clista( SANAMETA(i,lista) );
-  snsto = tuhoa_lista(snsto);
-  kysynnat = tuhoa_lista(kysynnat);
-  tiedostot = tuhoa_lista(tiedostot);
 }

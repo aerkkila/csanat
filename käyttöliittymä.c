@@ -32,6 +32,7 @@ void kaunnista() {
     komento(suote);
     suote[0] = '\0';
   }
+  while(SDL_PollEvent(&tapaht)); //tyhjennetään
  TOISTOLAUSE:
   while(SDL_PollEvent(&tapaht)) {
     switch(tapaht.type) {
@@ -65,7 +66,6 @@ void kaunnista() {
 	if(vaihto) {
 	  edellinen_osatuksi();
 	  laita(kaunti);
-	  tee_tiedot();
 	  laita(tiedot);
 	  break;
 	}
@@ -107,7 +107,7 @@ void kaunnista() {
 	  break;
 	else
 	  kysynnat->sij -= 2;
-	strcpy(suote, *NYT_OLEVA(kysynnat));
+	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,LISTA_ALUSTA,kysynnat->sij)->suote);
 	laita(suote);
 	break;
       case SDLK_UP:
@@ -128,7 +128,7 @@ void kaunnista() {
 	kysynnat->sij += 2;
 	if(kysynnat->sij >= kysynnat->pit)
 	  printf("Varoitus: kysyntöjen sijainti on %i ja pituus on %i\n", kysynnat->sij, kysynnat->pit);
-	strcpy(suote, *NYT_OLEVA(kysynnat));
+	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,LISTA_ALUSTA,kysynnat->sij)->suote);
 	laita(suote);
 	break;
       case SDLK_LEFT:
@@ -296,7 +296,7 @@ void ennen_komentoa() {
     suoteviesti = 0;
   }
   if(viestiol.lista)
-    viestiol.lista = tuhoa_lista(viestiol.lista);
+    viestiol.lista = tuhoa_lista2(viestiol.lista);
 }
 
 static inline int xy_alueella(int x, int y, SDL_Rect* alue) {

@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   kaunnista();
 
   free(tmpc);
-  tuhoa_asetelma();
+  lopeta();
   SDL_DestroyRenderer(rend);
   SDL_DestroyWindow(ikkuna);
   TTF_Quit();

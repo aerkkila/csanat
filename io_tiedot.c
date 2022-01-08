@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <stdint.h>
+#include <time.h>
 #include "menetelmiä.h"
 #include "asetelma.h"
 
@@ -45,7 +45,7 @@ void tallenna() {
 
 void tallenna_uusia_sanoja() {
   FILE *f = fopen(tiedot, "a+");
-  int id=0;
+  int32_t id=0;
   if(!fseek(f,-TIETOPIT,SEEK_END)) {
     if(fread(&id, 4, 1, f) != 1) {
       TEE("Lukeminen epäonnistui eikä siten tallennettu");
@@ -56,19 +56,21 @@ void tallenna_uusia_sanoja() {
   }
   FILE *sanatied = fopen(sanat, "a");
   fseek(f,0,SEEK_END);
-  int32_t kirjoite[TIETOPIT4] = {0};
   int sij0 = snsto->sij;
-  char** apuc;
-  FOR_LISTA(snsto,3) {
-    if(ID_TASSA >= 0) //vanha sana
+  FOR_LISTA(snsto) {
+    snsto_s* sns = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij);
+    if(sns->meta.id >= 0) //vanha sana
       continue;
-    memset(kirjoite, 0, TIETOPIT);
-    ID_TASSA = id; //asetetaan nämä tunnisteet myös aukiolevaan sanastoon
-    kirjoite[0] = id;
-    fwrite(kirjoite, TIETOPIT, 1, f); //laitetaan vain tunniste, ei aikoja tässä funktiossa
+    sns->meta.id = id; //asetetaan luodut tunnisteet myös aukiolevaan sanastoon
+    fwrite(&id, 4, 1, f);
+    int pit = sns->meta.hetket->pit;
+    if(pit > TIETOPIT4) //tuskin tapahtuu
+      pit = TIETOPIT4;
+    fwrite(sns->meta.hetket->taul, 4, pit, f);
+    for(int i=0; i<(TIETOPIT4-pit)*4; i++)
+      fputc(0,f);
     /*sanan ja käännöksen kirjoittaminen*/
-    apuc = NYT_OLEVA(snsto);
-    fprintf(sanatied, "%i\036%s\036%s\n", id, apuc[0], apuc[1]);
+    fprintf(sanatied, "%i\036%s\036%s\n", id, sns->sana, sns->kaan);
     id++;
   }
   fclose(f);
@@ -82,41 +84,35 @@ void tallenna_vanhoja_sanoja() {
     VIESTIKSI("Ei avattu tiedostoa %s eikä siten tallennettu", tiedot);
     return;
   }
-  int sij0 = snsto->sij;
-  int idtarkistus;
-  uint32_t kirjoite[TIETOPIT4-1]; //id:tä ei kirjoiteta uudestaan
-  uint32_t hetki = time(NULL);
-  FOR_LISTA(snsto,3) {
-    if(ID_TASSA < 0) //uusi sana
+  int testi;
+  for(int i=0; i<snsto->pit; i++) {
+    snsto_s* sns = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i);
+    if(sns->meta.id < 0) //uusi sana
       continue;
-    if(fseek(f, ID_TASSA*TIETOPIT, SEEK_SET)) {
-      TEE("Sanaa %i ei löytynyt eikä tallennettu. (%s)", snsto->sij/3, *NYT_OLEVA(snsto));
+    if(fseek(f, sns->meta.id*TIETOPIT, SEEK_SET)) {
+      TEE("Sanaa %i ei löytynyt eikä tallennettu. (%s | %s)", i, sns->sana, sns->kaan);
       continue;
     }
-    if(fread(&idtarkistus, 4, 1, f) != 1) {
-      TEE("Sanan %i id:tä ei luettu eikä tallennettu. (%s)", snsto->sij/3, *NYT_OLEVA(snsto));
+    if(fread(&testi, 4, 1, f) != 1) {
+      TEE("Sanan %i id:tä ei luettu eikä tallennettu. (%s | %s)", i, sns->sana, sns->kaan);
       continue;
     }
-    if(idtarkistus != ID_TASSA) {
-      TEE("Id ei täsmää sanalla %i: %i, mutta luettiin %i.", snsto->sij/3, ID_TASSA, idtarkistus);
+    if(testi != sns->meta.id) {
+      TEE("Id ei täsmää sanalla %i: %i, mutta luettiin %i.", i, sns->meta.id, testi);
       continue;
     }
-    int maara = 0;
+    int maara = 1; //0. on tunniste
     do
-      fread(kirjoite, 4, 1, f);
-    while(*kirjoite && ++maara < TIETOPIT4-1); //ohitetaan tallennetut kohdat (kirjoite ≠ 0) ja tarkistetaan mahtuminen
-    if(maara + KIERROKSIA_TASSA >= TIETOPIT4) {
-      TEE("Sanan \"%s\" tiedot ovat täynnä", *NYT_OLEVA(snsto));
+      fread(&testi, 4, 1, f);
+    while(testi && ++maara < TIETOPIT4); //ohitetaan tallennetut kohdat (kirjoite ≠ 0) ja tarkistetaan mahtuminen
+    if(maara + sns->meta.kierroksia >= TIETOPIT4) {
+      TEE("Sanan \"%s\" | \"%s\" tiedot ovat täynnä", sns->sana, sns->kaan);
       continue;
     }
     fseek(f, -4, SEEK_CUR); //viimeisin oli tyhjä, joten kirjoitetaan sen päälle
-    *kirjoite = 0;
-    for(int j=0; j<KIERROKSIA_TASSA; j++)
-      kirjoite[j] = hetki | (OSAAMISIA_TASSA >> j & 1) << 31; //suurimpaan bittiin osaaminen
-    fwrite(kirjoite, TIETOPIT-4-maara, 1, f);
+    fwrite(sns->meta.hetket->taul, TIETOPIT4-maara, 4, f);
   }
   fclose(f);
-  snsto->sij = sij0;
 }
 
 void avaa_sanoja(int kpl) {
@@ -142,15 +138,14 @@ void avaa_sanoja(int kpl) {
     while((c = fgetc(f)) != '\036') //luetaan sana
       tmpc[j++] = c;
     tmpc[j] = 0;
-    listalle_kopioiden(snsto, tmpc);
+    listalle_kopioiden_mjon(snsto, tmpc);
     j=0;
     while((c = fgetc(f)) != '\n') //luetaan käännös
       tmpc[j++] = c;
     tmpc[j] = 0;
-    listalle_kopioiden(snsto, tmpc);
+    listalle_kopioiden_mjon(snsto, tmpc);
     jatka_listaa(snsto, 1);
-    *VIIMEINEN(snsto) = calloc(METAPIT,1);
-    *(int32_t*)*VIIMEINEN(snsto) = idt[i];
+    LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->meta.id = idt[i];
   }
   fclose(f);
   free(idt);

@@ -5,6 +5,7 @@
 #include "asetelma.h"
 #include "lista.h"
 #include "grafiikka.h"
+#include "menetelmiä.h"
 
 float skaala = 1.0;
 extern SDL_Renderer* rend;
@@ -81,7 +82,7 @@ int laita_tekstilista(tekstiolio_s *o) {
   int oy = o->sij.y;
   int raja = (mahtuu < yht)? mahtuu : yht;
   for(int i=0; i<raja; i++) {
-    o->teksti = l->taul[i+o->alku];
+    o->teksti = *LISTALLA(l,char**,LISTA_ALUSTA,i+o->alku);
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;
@@ -101,8 +102,8 @@ inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
   return lev;
 }
 
-/*vähän niin kuin laita_tekstilista, mutta tässä joka toinen laitetaan viereen
-  ja tämä laitetaan lopusta alkuun*/
+/*On vähän niin kuin laita_tekstilista, mutta kysynta_s-tietueelle, missä vastaukset laitetaan viereen.
+  Lisäksi tämä laitetaan lopusta alkuun.*/
 void laita_kaunti() {
   lista* l = kauntiol.lista;
   if(l->pit == 0)
@@ -111,27 +112,29 @@ void laita_kaunti() {
   int rvali = TTF_FontLineSkip(o->font);
   int vali = leveys(o->font, ' ')*4;
   int mahtuu = o->sij.h / rvali;
-  int yht = l->pit/2 - o->rullaus*2;
+  int yht = l->pit - o->rullaus;
   int leveystot = 0;
 
   if(suoteol.toteutuma.h)
     o->sij.y = suoteol.toteutuma.h + suoteol.toteutuma.y + rvali;
   int oy = o->sij.y;
   o->alku = yht-1;
-  int alaraja = (yht-mahtuu)*2*(mahtuu<yht); //0, paitsi jos erotus ≥ 0
+  int alaraja = (yht-mahtuu)*(mahtuu<yht); //0, paitsi jos erotus ≥ 0
 
   /*kysynnät*/
   SDL_Color ovari = o->vari;
   o->vari = (SDL_Color){0,0,0,0};
-  for(int i=o->alku*2; i>=alaraja; i-=2) {
-    o->teksti = l->taul[i];
-    if(o->teksti[strlen(o->teksti)+1]) //sana osattiin
-      tekstin_taustavari = oikea_taustavari;
-    else
-      tekstin_taustavari = virhe_taustavari;
-    laita_teksti_ttf(o);
-    if(o->toteutuma.w > leveystot)
-      leveystot = o->toteutuma.w;
+  for(int i=o->alku; i>=alaraja; i--) {
+    kysynta_s* kys = LISTALLA(l,kysynta_s*,LISTA_ALUSTA,i);
+    if((o->teksti = kys->kysym)) {
+      if(*kys->hetki>>31) //sana osattiin
+	tekstin_taustavari = oikea_taustavari;
+      else
+	tekstin_taustavari = virhe_taustavari;
+      laita_teksti_ttf(o);
+      if(o->toteutuma.w > leveystot)
+	leveystot = o->toteutuma.w;
+    }
     (o->sij.y) += rvali;
   }
   tekstin_taustavari = taustavari;
@@ -142,8 +145,8 @@ void laita_kaunti() {
   o->sij.x += leveystot + vali;
   
   /*syötteet*/
-  for(int i=o->alku*2+1; i>=alaraja+1; i-=2) {
-    o->teksti = l->taul[i];
+  for(int i=o->alku; i>=alaraja+1; i--) {
+    o->teksti = LISTALLA(l,kysynta_s*,LISTA_ALUSTA,i)->suote;
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;
