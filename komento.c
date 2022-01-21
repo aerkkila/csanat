@@ -5,7 +5,7 @@
 #include <time.h>
 #include "lista.h"
 #include "asetelma.h"
-#include "menetelmiä.h"
+#include "csanat.h"
 
 #define TAMA_KOMENTO (*LISTALLA(knnot,char**,LISTA_ALUSTA,knnot->sij))
 #define knto(a) (!strcmp(TAMA_KOMENTO, #a))
@@ -27,7 +27,7 @@ void komento(const char* restrict suote) {
       if(chdir(TAMA_KOMENTO))
 	TEE("Virhe: %s", strerror(errno));
     } else if(knto(cd) || knto(cd;)) {
-      if(chdir(kotihak))
+      if(chdir(getenv("HOME")))
 	TEE("Virhe: %s", strerror(errno));
       
     } else if(knto(ls) || knto(ls;)) {                            //ls

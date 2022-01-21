@@ -5,10 +5,92 @@
 #include "asetelma.h"
 #include "lista.h"
 #include "grafiikka.h"
-#include "menetelmiä.h"
+#include "csanat.h" //tarviiko
 
 float skaala = 1.0;
+extern SDL_Texture* tausta;
 extern SDL_Renderer* rend;
+
+static inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
+  int lev;
+  TTF_GlyphMetrics(f, c, NULL, NULL, NULL, NULL, &lev);
+  return lev;
+}
+static inline void __attribute__((always_inline)) putsaa(tekstiolio_s* o) {
+  SDL_RenderFillRect(rend, &o->toteutuma);
+}
+
+#define CASE(a) case a ## _enum
+void paivita(unsigned laitot) {
+  if(!laitot) {
+    SDL_RenderCopy(rend,tausta,NULL,NULL);
+    SDL_RenderPresent(rend);
+    return;
+  }
+  aseta_vari(taustavari);
+  SDL_SetRenderTarget(rend,tausta);
+  /*putsataan kaikki kerralla ennen laittamista*/
+  for(int i=0; i<laitot_enum_pituus; i++) {
+    if( !((laitot >> i) & 0x01) )
+      continue;
+    switch(i) {
+    CASE(kysymys):
+      putsaa(&kysymysol);
+      break;
+    CASE(suote):
+      putsaa(&suoteol);
+      SDL_RenderFillRect(rend, &kohdistinsij);
+      break;
+    CASE(kaunti):
+      putsaa(&kauntiol);
+      break;
+    CASE(tiedot):
+      putsaa(&tiedotol);
+      break;
+    CASE(viesti):
+      putsaa(&viestiol);
+      break;
+    }
+  }
+  for(int i=0; i<laitot_enum_pituus; i++) {
+    if( !((laitot >> i) & 0x01) )
+      continue;
+    switch(i) {
+    CASE(kysymys):
+      laita_teksti_ttf(&kysymysol);
+      break;
+    CASE(suote):
+      laita_teksti_ttf(&suoteol);
+      if(kohdistin) {
+	aseta_vari(kohdistinvari);
+	kohdistinsij.x = xsijainti(&suoteol, strlen(suoteol.teksti)-kohdistin);
+	SDL_RenderFillRect(rend, &kohdistinsij);
+      }
+      break;
+    CASE(kaunti):
+      laita_kaunti();
+      break;
+    CASE(tiedot):
+      tee_tiedot();
+      tiedotol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
+      tiedotol.sij.w = ikkuna_w - tiedotol.sij.x;
+      laita_tekstilista(&tiedotol);
+      break;
+    CASE(viesti):
+      viestiol.sij.x = kauntiol.toteutuma.x + kauntiol.toteutuma.w + 4*leveys(viestiol.font, ' ');
+      viestiol.sij.y = tiedotol.toteutuma.y + tiedotol.toteutuma.h + TTF_FontLineSkip(viestiol.font);
+      viestiol.sij.h = ikkuna_h - viestiol.sij.y;
+      viestiol.sij.w = ikkuna_w - viestiol.sij.x;
+      laita_tekstilista(&viestiol);
+      break;
+    }
+  }
+  SDL_SetRenderTarget(rend,NULL);
+  SDL_RenderCopy(rend,tausta,NULL,NULL);
+  laitot = 0;
+  SDL_RenderPresent(rend);
+}
+#undef CASE
 
 void laita_teksti_ttf(tekstiolio_s *o) {
   if(!o->teksti || !strcmp(o->teksti, "")) {
@@ -96,11 +178,6 @@ int laita_tekstilista(tekstiolio_s *o) {
   return raja;
 }
 
-inline int __attribute__((always_inline)) leveys(TTF_Font* f, char c) {
-  int lev;
-  TTF_GlyphMetrics(f, c, NULL, NULL, NULL, NULL, &lev);
-  return lev;
-}
 
 /*On vähän niin kuin laita_tekstilista, mutta kysynta_s-tietueelle, missä vastaukset laitetaan viereen.
   Lisäksi tämä laitetaan lopusta alkuun.*/

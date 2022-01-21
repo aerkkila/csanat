@@ -10,7 +10,7 @@ typedef struct {
   char ttflaji; //mitä ttf-kirjaston funktiota käytetään (katso laita_teksti_ttf())
   TTF_Font* font;
   int fonttikoko;
-  char* fonttied;
+  const char* fonttied;
   SDL_Rect sij; //tälle varattu maksimitila
   SDL_Rect toteutuma; //mikä tila oikeasti käytetään
   SDL_Color vari;
@@ -21,6 +21,7 @@ typedef struct {
   SDL_Texture *ttuuri; //osoitin olkoon listan lopussa
 } tekstiolio_s;
 
+void paivita(unsigned laitot);
 void laita_teksti_ttf(tekstiolio_s*);
 int laita_tekstilista(tekstiolio_s*);
 void laita_kaunti();

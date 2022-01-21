@@ -9,7 +9,6 @@ extern const int ikkuna_y0;
 extern const int ikkuna_w0;
 extern const int ikkuna_h0;
 extern const char* ohjelman_nimi;
-extern const char* kotihak;
 extern const char* aloituskomentotiedosto;
 
 extern int ikkuna_x;

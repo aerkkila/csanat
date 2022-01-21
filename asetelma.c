@@ -4,14 +4,13 @@
 #include "lista.h"
 #include "grafiikka.h"
 #include "asetelma.h"
-#include "menetelmiä.h"
+#include "csanat.h"
 
 const int ikkuna_x0 = 150;
 const int ikkuna_y0 = 200;
 const int ikkuna_w0 = 600;
 const int ikkuna_h0 = 400;
 const char* ohjelman_nimi = "csanat";
-const char* kotihak = "/home/aerk";
 const char* aloituskomentotiedosto = "aloituskomennot.txt";
 
 int ikkuna_x;
@@ -32,14 +31,11 @@ SDL_Color tekstin_taustavari;
 SDL_Color apuvari;
 int suoteviesti = 0;
 
-//#define PAAFONTTI "/usr/share/fonts/gnu-free/FreeSans.otf"
-//#define PAAFONTTI "/usr/share/fonts/truetype/verdana.ttf"
-#define PAAFONTTI "/usr/share/fonts/noto/NotoSerif-Regular.ttf"
+static const char* paafontti = "MAKE_LIITÄ_SERIFFONTTI";
 
 tekstiolio_s suoteol = {			\
   .ttflaji = 1,					\
-  .fonttied = PAAFONTTI,			\
-  .fonttikoko = 45,				\
+  .fonttikoko = 60,				\
   .vari = (SDL_Color){255,255,255,255},		\
   .sij = {0,0,700,100}				\
 };
@@ -52,8 +48,7 @@ tekstiolio_s kysymysol = {		    \
 
 tekstiolio_s kauntiol = {			\
   .ttflaji = 1,					\
-  .fonttied = PAAFONTTI,			\
-  .fonttikoko = 17,				\
+  .fonttikoko = 20,				\
   .vari = {255,255,255,255},			\
   .sij = {0,0,600,1000},			\
   .lopusta = 0             			\
@@ -61,8 +56,7 @@ tekstiolio_s kauntiol = {			\
 
 tekstiolio_s tiedotol = {						\
   .ttflaji = 1,								\
-  .fonttied = PAAFONTTI,						\
-  .fonttikoko = 17,							\
+  .fonttikoko = 20,							\
   .vari = (SDL_Color){255,255,255,255},					\
   .lopusta = 0,								\
   .sij = (SDL_Rect){200,0,200,300}					\
@@ -70,7 +64,6 @@ tekstiolio_s tiedotol = {						\
 
 tekstiolio_s viestiol = {						\
   .ttflaji = 1,								\
-  .fonttied = PAAFONTTI,						\
   .fonttikoko = 17,							\
   .vari = {255,255,255,255},						\
   .sij = {320,0},							\
@@ -87,7 +80,9 @@ int alussa = 0;
 int edellinen_sij = -1;
 
 static void avaa_fontti(tekstiolio_s* olio) {
-  olio->font = TTF_OpenFont(olio->fonttied, olio->fonttikoko);	
+  if(!olio->fonttied)
+    olio->fonttied = paafontti;
+  olio->font = TTF_OpenFont(olio->fonttied, olio->fonttikoko);
   if(!olio->font) {
     fprintf(stderr, "Ei avattu fonttia \"%s\"\n%s\n", olio->fonttied, TTF_GetError());
     exit(1);

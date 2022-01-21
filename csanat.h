@@ -7,9 +7,9 @@ extern char* tmpc;
 
 #define STRPAATE(mjon) (mjon+strlen(mjon)-1)
 #define VAIHDA(a, b, tyyppi) do {	\
-    tyyppi it205ox49fi = a;		\
+    tyyppi MAKRO_APU_VAIHDA = a;	\
     a = b;				\
-    b = it205ox49fi;			\
+    b = MAKRO_APU_VAIHDA;		\
   } while(0)
 #define TEE(...) do {		       	\
     sprintf(tmpc, __VA_ARGS__);		\
@@ -52,7 +52,6 @@ enum laitot_enum {
   viesti_enum,
   laitot_enum_pituus //lukuarvo kertoo pituuden
 };
-
 int lue_tiedosto(const char* restrict);
 void lopeta();
 void tee_tiedot();
@@ -65,5 +64,4 @@ int xsijainti(tekstiolio_s*, int);
 void viestiksi(const char* restrict);
 void uusi_kierros();
 void osaamaton();
-
 #endif

@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include "menetelmiä.h"
+#include "csanat.h"
 #include "asetelma.h"
 
 /*Tämä on pahasti kesken. Ajatus on kerätä harjoitusdataa sanojen osaamisista,
