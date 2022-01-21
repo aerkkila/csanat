@@ -27,48 +27,18 @@ const SDL_Color virhevari        = {255,20, 20, 255};
 const SDL_Color oikea_taustavari = {20, 255,60, 255};
 const SDL_Color virhe_taustavari = {255,80, 50, 255};
 const SDL_Color kohdistinvari    = {255,255,255,255};
-SDL_Color tekstin_taustavari;
+SDL_Color tekstin_taustavari; // = taustavari
 SDL_Color apuvari;
 int suoteviesti = 0;
 
 static const char* paafontti = "MAKE_LIITÄ_SERIFFONTTI";
 
-tekstiolio_s suoteol = {			\
-  .ttflaji = 1,					\
-  .fonttikoko = 60,				\
-  .vari = (SDL_Color){255,255,255,255},		\
-  .sij = {0,0,700,100}				\
-};
-
-tekstiolio_s kysymysol = {		    \
-  .ttflaji = 1,				    \
-  .vari = (SDL_Color){255,255,255,255},	    \
-  .sij = {0,0,700,100}			    \
-};
-
-tekstiolio_s kauntiol = {			\
-  .ttflaji = 1,					\
-  .fonttikoko = 20,				\
-  .vari = {255,255,255,255},			\
-  .sij = {0,0,600,1000},			\
-  .lopusta = 0             			\
-};
-
-tekstiolio_s tiedotol = {						\
-  .ttflaji = 1,								\
-  .fonttikoko = 20,							\
-  .vari = (SDL_Color){255,255,255,255},					\
-  .lopusta = 0,								\
-  .sij = (SDL_Rect){200,0,200,300}					\
-};
-
-tekstiolio_s viestiol = {						\
-  .ttflaji = 1,								\
-  .fonttikoko = 17,							\
-  .vari = {255,255,255,255},						\
-  .sij = {320,0},							\
-  .lopusta = 1								\
-};
+#define VALKOINEN {255,255,255,255}
+tekstiolio_s suoteol =   {.vari=VALKOINEN,.fonttikoko=60};
+tekstiolio_s kysymysol = {.vari=VALKOINEN};
+tekstiolio_s kauntiol =  {.vari=VALKOINEN,.fonttikoko=20};
+tekstiolio_s tiedotol =  {.vari=VALKOINEN,.fonttikoko=20,.sij={.x=200}};
+tekstiolio_s viestiol =  {.vari=VALKOINEN,.fonttikoko=17,.sij={.x=320},.lopusta=1};
 
 lista* snsto;
 lista* kysynnat;
@@ -90,39 +60,47 @@ static void avaa_fontti(tekstiolio_s* olio) {
 }
 
 void asetelma() {
-  snsto = alusta_lista(11,snsto_s);
-  kysynnat = alusta_lista(11,kysynta_s);
+  snsto     = alusta_lista(11,snsto_s);
+  kysynnat  = alusta_lista(11,kysynta_s);
   tiedostot = alusta_lista(1,char**);
-
-  suoteol.teksti = calloc(maxpit_suote, 1);
+  
   avaa_fontti(&suoteol);
-  suoteol.sij.y = TTF_FontLineSkip(suoteol.font);
-
+  avaa_fontti(&kauntiol);
+  avaa_fontti(&viestiol);
+  avaa_fontti(&tiedotol);
   kysymysol.font = suoteol.font;
 
+  #define RIVEJA 3 //tiedoissa on kolme riviä
+  suoteol.teksti = calloc(maxpit_suote, 1);
   kauntiol.lista = kysynnat;
-  avaa_fontti(&kauntiol);
-  kauntiol.sij.y = 2*TTF_FontLineSkip(suoteol.font);
-  
-  viestiol.sij.w = ikkuna_w0 - viestiol.sij.x;
-  viestiol.sij.h = ikkuna_h0;
-  avaa_fontti(&viestiol);
-
-#define RIVEJA 3
-  avaa_fontti(&tiedotol);
   tiedotol.lista = alusta_lista(RIVEJA,char**);
   jatka_listaa(tiedotol.lista, RIVEJA);
   for(int i=0; i<RIVEJA; i++)
     *LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,i) = malloc(32);
-  tiedotol.sij.y = kauntiol.sij.y;
-#undef RIVEJA
-
-  ikkuna_x = ikkuna_x0;
-  ikkuna_y = ikkuna_y0;
-  ikkuna_w = ikkuna_w0;
-  ikkuna_h = ikkuna_h0;
+  #undef RIVEJA
+  
   tekstin_taustavari = taustavari;
+}
 
+void aseta_sijainnit() {
+  suoteol.sij.y   = TTF_FontLineSkip(kysymysol.font);
+  kauntiol.sij.y  = suoteol.sij.y + TTF_FontLineSkip(suoteol.font);
+  tiedotol.sij.y  = kauntiol.sij.y;
+  
+  suoteol.sij.w   = ikkuna_w - suoteol.sij.x;
+  kysymysol.sij.w = ikkuna_w - kysymysol.sij.x;
+  viestiol.sij.w  = ikkuna_w - viestiol.sij.x;
+  tiedotol.sij.w  = ikkuna_w - tiedotol.sij.x;
+  kauntiol.sij.w  = ikkuna_w - kauntiol.sij.x;
+  
+  kysymysol.sij.h = ikkuna_h - TTF_FontLineSkip(suoteol.font);
+  suoteol.sij.h   = ikkuna_h - kysymysol.toteutuma.h;
+  viestiol.sij.h  = ikkuna_h;
+  kauntiol.sij.h  = ikkuna_h - kauntiol.sij.y;
+  tiedotol.sij.h  = ikkuna_h;
+}
+
+void saada_kohdistin() {
   kohdistinsij.y = suoteol.sij.y;
   kohdistinsij.h = TTF_FontLineSkip(suoteol.font);
   TTF_GlyphMetrics(suoteol.font, ' ', NULL, NULL, NULL, NULL, &kohdistinsij.w);

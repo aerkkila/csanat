@@ -46,4 +46,6 @@ extern int edellinen_sij;
 
 void asetelma();
 void tuhoa_asetelma();
+void aseta_sijainnit();
+void saada_kohdistin();
 #endif

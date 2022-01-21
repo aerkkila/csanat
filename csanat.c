@@ -19,8 +19,6 @@ static void rullaustapahtuma_lopusta(tekstiolio_s*, int);
 
 const unsigned kaikkilaitot =  0xffff;
 unsigned laitot = 0xffff;
-extern SDL_Renderer* rend;
-extern SDL_Texture* tausta;
 static char* apusuote = NULL; //syöte tallennetaan tähän, kun nuolilla selataan aiempia syötteitä
 SDL_Window *ikkuna;
 SDL_Texture* tausta;
@@ -470,6 +468,9 @@ int main(int argc, char** argv) {
   tmpc[0] = '\0';
 
   asetelma();
+  SDL_GetWindowSize(ikkuna,&ikkuna_w,&ikkuna_h);
+  aseta_sijainnit();
+  saada_kohdistin();
   /*luetaan mahdollinen aloituskomentotiedosto*/
   tmpc[0] = '\0';
   char* apuc=tmpc; FILE* f; char c;

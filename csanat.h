@@ -4,6 +4,9 @@
 #include "lista.h"
 #include "grafiikka.h"
 extern char* tmpc;
+extern SDL_Window *ikkuna;
+extern SDL_Texture* tausta;
+extern SDL_Renderer *rend;
 
 #define STRPAATE(mjon) (mjon+strlen(mjon)-1)
 #define VAIHDA(a, b, tyyppi) do {	\

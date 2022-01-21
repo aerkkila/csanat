@@ -97,22 +97,7 @@ void laita_teksti_ttf(tekstiolio_s *o) {
     o->toteutuma = (SDL_Rect){0,0,0,0};
     return;
   }
-  SDL_Surface *pinta;
-  switch(o->ttflaji) {
-  case 0:
-  OLETUSLAJI:
-    pinta = TTF_RenderUTF8_Solid(o->font, o->teksti, o->vari);
-    break;
-  case 1:
-    pinta = TTF_RenderUTF8_Shaded(o->font, o->teksti, o->vari, tekstin_taustavari);
-    break;
-  case 2:
-    pinta = TTF_RenderUTF8_Blended(o->font, o->teksti, o->vari);
-    break;
-  default:
-    printf("Varoitus: tekstin laittamisen laji on tuntematon, käytetään oletusta\n");
-    goto OLETUSLAJI;
-  }
+  SDL_Surface *pinta = TTF_RenderUTF8_Shaded(o->font, o->teksti, o->vari, tekstin_taustavari);
   if(!pinta) {
     fprintf(stderr, "Virhe tekstin luomisessa: %s\n", TTF_GetError());
     return;
@@ -121,9 +106,7 @@ void laita_teksti_ttf(tekstiolio_s *o) {
   if(!ttuuri)
     fprintf(stderr, "Virhe tekstuurin luomisessa: %s\n", SDL_GetError());
 
-  /*kuvan koko on luodun pinnan koko, mutta enintään objektille määritelty koko
-    tulostetaan vain se osa lopusta, joka mahtuu kuvaan*/
-
+  /*tulostetaan vain se osa lopusta, joka mahtuu kuvaan*/
   o->toteutuma = (SDL_Rect){o->sij.x*skaala,				\
 			    o->sij.y*skaala,				\
 			    (pinta->w < o->sij.w)? pinta->w : o->sij.w, \
@@ -140,8 +123,6 @@ void laita_teksti_ttf(tekstiolio_s *o) {
   fflush(stdout);
   SDL_FreeSurface(pinta);
   SDL_DestroyTexture(ttuuri);
-  
-  return;
 }
 
 int laita_tekstilista(tekstiolio_s *o) {
