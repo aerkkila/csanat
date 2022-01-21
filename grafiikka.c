@@ -61,11 +61,9 @@ void paivita(unsigned laitot) {
       break;
     CASE(suote):
       laita_teksti_ttf(&suoteol);
-      if(kohdistin) {
-	aseta_vari(kohdistinvari);
-	kohdistinsij.x = xsijainti(&suoteol, strlen(suoteol.teksti)-kohdistin);
-	SDL_RenderFillRect(rend, &kohdistinsij);
-      }
+      aseta_vari(kohdistinvari);
+      kohdistinsij.x = xsijainti(&suoteol, strlen(suoteol.teksti)-kohdistin);
+      SDL_RenderFillRect(rend, &kohdistinsij);
       break;
     CASE(kaunti):
       laita_kaunti();
