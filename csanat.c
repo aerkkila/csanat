@@ -180,25 +180,6 @@ void sekoita() {
   }
 }
 
-/*näissä siirrytään eteen- tai taakespäin koko utf-8-merkin verran*/
-int edellinen_kohta(const char* restrict suote, int* id) {
-  int jatka = 1;
-  int pit = strlen(suote);
-  int r = 0;
-  while(jatka && pit > *id) {
-    r=1;
-    jatka = (suote[pit- ++(*id)] & 0xc0) == 0x80;
-  }
-  return r;
-}
-
-int seuraava_kohta(const char* restrict suote, int* id) {
-  int pit = strlen(suote);
-  int r = 0;
-  while(*id && (r=1) && ((suote[pit- --(*id)] & 0xc0) == 0x80));
-  return r;
-}
-
 int xsijainti(tekstiolio_s* o, int p) {
   int lev;
   char c0 = o->teksti[p];
@@ -238,6 +219,34 @@ void osaamaton() {
     snsto->sij++;
   }
   kysymysol.teksti = NULL;
+}
+
+/*näissä siirrytään eteen- tai taakespäin koko utf-8-merkin verran*/
+int edellinen_kohta(const char* restrict suote, int* id) {
+  int jatka = 1;
+  int pit = strlen(suote);
+  int r = 0;
+  while(jatka && pit > *id) {
+    r=1;
+    jatka = (suote[pit- ++(*id)] & 0xc0) == 0x80;
+  }
+  return r;
+}
+
+int seuraava_kohta(const char* restrict suote, int* id) {
+  int pit = strlen(suote);
+  int r = 0;
+  while(*id && (r=1) && ((suote[pit- --(*id)] & 0xc0) == 0x80));
+  return r;
+}
+
+inline void __attribute__((always_inline)) pyyhi(char* suote) {
+  int pit = strlen(suote);
+  int id0 = kohdistin;
+  strcpy(tmpc, suote+pit-kohdistin);
+  edellinen_kohta(suote, &kohdistin);
+  strcpy(suote+pit-kohdistin, tmpc);
+  kohdistin = id0;
 }
 
 void kaunnista() {
@@ -409,15 +418,6 @@ void kaunnista() {
   paivita(laitot);
   SDL_Delay(uniaika);
   goto TOISTOLAUSE;
-}
-
-inline void __attribute__((always_inline)) pyyhi(char* suote) {
-  int pit = strlen(suote);
-  int id0 = kohdistin;
-  strcpy(tmpc, suote+pit-kohdistin);
-  edellinen_kohta(suote, &kohdistin);
-  strcpy(suote+pit-kohdistin, tmpc);
-  kohdistin = id0;
 }
 
 void ennen_komentoa() {
