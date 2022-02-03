@@ -331,10 +331,10 @@ void kaunnista() {
 	  if(!(apusuote = strdup(suote)))
 	    printf("Varoitus: apusyötettä ei alustettu\n");
 	  kysynnat->sij = kysynnat->pit-1; //kysynnat->sij on tavallisesti määrittelemätön
-	} else if(kysynnat->sij < 3)
+	} else if(!kysynnat->sij)
 	  break;
 	else
-	  kysynnat->sij -= 2;
+	  kysynnat->sij--;
 	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
 	laita(suote);
 	break;
@@ -353,7 +353,7 @@ void kaunnista() {
 	  laita(suote);
 	  break;
 	}
-	kysynnat->sij += 2;
+	kysynnat->sij++;
 	if(kysynnat->sij >= kysynnat->pit)
 	  printf("Varoitus: kysyntöjen sijainti on %i ja pituus on %i\n", kysynnat->sij, kysynnat->pit);
 	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);

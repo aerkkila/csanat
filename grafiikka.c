@@ -157,7 +157,6 @@ int laita_tekstilista(tekstiolio_s *o) {
   return raja;
 }
 
-
 /*On vähän niin kuin laita_tekstilista, mutta kysynta_s-tietueelle, missä vastaukset laitetaan viereen.
   Lisäksi tämä laitetaan lopusta alkuun.*/
 void laita_kaunti() {
@@ -201,7 +200,7 @@ void laita_kaunti() {
   o->sij.x += leveystot + vali;
   
   /*syötteet*/
-  for(int i=o->alku; i>=alaraja+1; i--) {
+  for(int i=o->alku; i>=alaraja; i--) {
     o->teksti = LISTALLA(l,kysynta_s*,i)->suote;
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
