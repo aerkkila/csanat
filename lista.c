@@ -10,7 +10,7 @@ void* tuhoa_lista(lista* l) {
 
 void* tuhoa_lista2(lista* l) {
   for(int i=0; i<l->pit; i++)
-    free(*LISTALLA(l,void**,LISTA_ALUSTA,i));
+    free(*LISTALLA(l,void**,i));
   free(l->taul);
   free(l);
   return NULL;
@@ -36,5 +36,5 @@ void jatka_listaa(lista* l, int n) {
 
 void listalle_kopioiden_mjon(lista* l, const char* restrict s) {
   jatka_listaa(l, 1);
-  *LISTALLA(l,char**,LISTA_LOPUSTA,-1) = strdup(s);
+  *LISTALLA_LOPUSTA(l,char**,-1) = strdup(s);
 }

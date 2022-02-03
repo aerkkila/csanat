@@ -47,20 +47,20 @@ int lue_tiedosto(const char* restrict nimi) {
     for(int i=0; tmpc[i]; i++) //tämä hakee erottimen sanan ja käännöksen välillä ja sitten kopioi molemmat ja poistuu
       if((unsigned char)tmpc[i] < ' ') {
 	tmpc[i] = 0;
-	LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->sana = strdup(tmpc); //sana kirjoitetaan
+	LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->sana = strdup(tmpc); //sana kirjoitetaan
 	while((unsigned char)tmpc[++i] <= ' ');
-	LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->kaan = strdup(tmpc+i); //käännös kirjoitetaan
+	LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->kaan = strdup(tmpc+i); //käännös kirjoitetaan
 	goto METAOSUUS;
       }
     /*jos for-silmukasta ei hypätty tämän ohi, erotin on rivinvaihto eli pitää lukea uusi rivi*/
-    LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->sana = strdup(tmpc);
+    LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->sana = strdup(tmpc);
     if(!fgets(tmpc, maxpit_suote, f))
-      TEE("Virhe: Ei luettu seuraavalta riviltä käännöstä sanalle %s", LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,1)->sana);
+      TEE("Virhe: Ei luettu seuraavalta riviltä käännöstä sanalle %s", LISTALLA_LOPUSTA(snsto,snsto_s*,1)->sana);
     if(*STRPAATE(tmpc) == '\n')
       *STRPAATE(tmpc) = 0;
-    LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->kaan = strdup(tmpc);
+    LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->kaan = strdup(tmpc);
   METAOSUUS:
-#define A LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->meta
+#define A LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->meta
     A.id = sanoja--; //negatiivinen tunniste
     A.tiedostonro = tiedostonro;
     A.kierroksia = 0;
@@ -86,14 +86,14 @@ void lopeta() {
   tiedotol.lista = tuhoa_lista2(tiedotol.lista);
   tiedostot = tuhoa_lista2(tiedostot);
   for(int i=0; i<kysynnat->pit; i++) {
-    free(LISTALLA(kysynnat,kysynta_s*,LISTA_ALUSTA,i)->kysym);
-    free(LISTALLA(kysynnat,kysynta_s*,LISTA_ALUSTA,i)->suote);
+    free(LISTALLA(kysynnat,kysynta_s*,i)->kysym);
+    free(LISTALLA(kysynnat,kysynta_s*,i)->suote);
   }
   kysynnat = tuhoa_lista(kysynnat);
   for(int i=0; i<snsto->pit; i++) {
-    tuhoa_lista(LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i)->meta.hetket);
-    free(LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i)->sana);
-    free(LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i)->kaan);
+    tuhoa_lista(LISTALLA(snsto,snsto_s*,i)->meta.hetket);
+    free(LISTALLA(snsto,snsto_s*,i)->sana);
+    free(LISTALLA(snsto,snsto_s*,i)->kaan);
   }
   snsto = tuhoa_lista(snsto);
 }
@@ -101,7 +101,7 @@ void lopeta() {
 void tee_tiedot() {
   if(snsto->pit == 0) {
     for(int i=0; i<3; i++)
-      LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,i)[0][0] = '\0';
+      LISTALLA(tiedotol.lista,char**,i)[0][0] = '\0';
     return;
   }
   /*sijainti n / m: m:ää ei päivitetä joka kerralla, vaan ainoastaan kierroksen alussa*/
@@ -115,12 +115,12 @@ void tee_tiedot() {
   
   /*nykyiseen asti ei muuteta sijaintia kierroksella*/
   for(; i<snsto->sij; i++)
-    if( LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i)->meta.osaamisia >= osaamisraja ) //osattiin
+    if( LISTALLA(snsto,snsto_s*,i)->meta.osaamisia >= osaamisraja ) //osattiin
       osattuja++;
   
   /*nykysijainnista eteenpäin vähennetään sijaintia_kierroksella*/
   for(; i<snsto->pit; i++) {
-    if( LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i)->meta.osaamisia < osaamisraja ) { //ei osattu
+    if( LISTALLA(snsto,snsto_s*,i)->meta.osaamisia < osaamisraja ) { //ei osattu
       sijainti_kierroksella--;
       continue;
     }
@@ -131,21 +131,21 @@ void tee_tiedot() {
     alussa = 0;
   }
   sijainti_kierroksella += kierroksen_pituus;
-  sprintf(*LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,0), "Sijainti: %i / %i", sijainti_kierroksella, kierroksen_pituus);
-  sprintf(*LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,1), "Osattuja %i / %i", osattuja, snsto->pit);
+  sprintf(*LISTALLA(tiedotol.lista,char**,0), "Sijainti: %i / %i", sijainti_kierroksella, kierroksen_pituus);
+  sprintf(*LISTALLA(tiedotol.lista,char**,1), "Osattuja %i / %i", osattuja, snsto->pit);
   if(snsto->sij < snsto->pit)
-    sprintf(*LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,2), "Tiedosto: \"%s\"",
-	    *LISTALLA(tiedostot,char**,LISTA_ALUSTA,LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.tiedostonro));
+    sprintf(*LISTALLA(tiedotol.lista,char**,2), "Tiedosto: \"%s\"",
+	    *LISTALLA(tiedostot,char**,LISTALLA(snsto,snsto_s*,snsto->sij)->meta.tiedostonro));
   else
-    LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,2)[0][0] = '\0';
+    LISTALLA(tiedotol.lista,char**,2)[0][0] = '\0';
 }
 
 void edellinen_osatuksi() {
   extern int edellinen_sij;
   if(edellinen_sij < 0)
     return;
-  sanameta_s* tiedot = &LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,edellinen_sij)->meta;
-  uint32_t* osaaminen = LISTALLA(tiedot->hetket,uint32_t*,LISTA_LOPUSTA,-1);
+  sanameta_s* tiedot = &LISTALLA(snsto,snsto_s*,edellinen_sij)->meta;
+  uint32_t* osaaminen = LISTALLA_LOPUSTA(tiedot->hetket,uint32_t*,-1);
   if( !(*osaaminen>>31) )
     tiedot->osaamisia += 1;
   *osaaminen |= 1<<31;
@@ -160,11 +160,11 @@ lista* pilko_sanoiksi(const char* restrict str) {
     osoit += strlen(tmpc);
     /*välien yli*/
     jatka_listaa(r, 1);
-    *LISTALLA(r,char**,LISTA_LOPUSTA,-1) = strdup(tmpc);
+    *LISTALLA_LOPUSTA(r,char**,-1) = strdup(tmpc);
   }
   if(r->pit == 0) { //myös tyhjästä syötteestä tehdään lista
     jatka_listaa(r, 1);
-    *LISTALLA(r,char**,LISTA_LOPUSTA,-1) = strdup("");
+    *LISTALLA_LOPUSTA(r,char**,-1) = strdup("");
   }
   return r;
 }
@@ -174,9 +174,9 @@ void sekoita() {
   for(int jaljella=snsto->pit-snsto->sij; jaljella>1; jaljella--) {
     int sij = rand() % jaljella;
     /*vaihdetaan sijainti ja viimeinen keskenään, viimeinen siirtyy aina lähemmäs*/
-    snsto_s apu = *LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij+jaljella-1);
-    *LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij+jaljella-1) = *LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij+sij);
-    *LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij+sij) = apu;
+    snsto_s apu = *LISTALLA(snsto,snsto_s*,snsto->sij+jaljella-1);
+    *LISTALLA(snsto,snsto_s*,snsto->sij+jaljella-1) = *LISTALLA(snsto,snsto_s*,snsto->sij+sij);
+    *LISTALLA(snsto,snsto_s*,snsto->sij+sij) = apu;
   }
 }
 
@@ -195,7 +195,7 @@ void viestiksi(const char* restrict s) {
     tuhoa_lista2(viestiol.lista);
   viestiol.lista = alusta_lista(1,char**);
   jatka_listaa(viestiol.lista, 1);
-  *LISTALLA(viestiol.lista,char**,LISTA_LOPUSTA,-1) = strdup(s);
+  *LISTALLA_LOPUSTA(viestiol.lista,char**,-1) = strdup(s);
   laita(viesti);
 }
 
@@ -206,12 +206,12 @@ void uusi_kierros() {
   osaamaton();
   alussa = 1;
   jatka_listaa(kysynnat, 1);
-  memset(LISTALLA(kysynnat,kysynta_s*,LISTA_LOPUSTA,-1), 0, kysynnat->koko);
+  memset(LISTALLA_LOPUSTA(kysynnat,kysynta_s*,-1), 0, kysynnat->koko);
 }
 
 void osaamaton() {
   while(snsto->sij < snsto->pit) {
-    snsto_s* sns = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij);
+    snsto_s* sns = LISTALLA(snsto,snsto_s*,snsto->sij);
     if( sns->meta.osaamisia < osaamisraja) {
       kysymysol.teksti = sns->sana;
       return;
@@ -335,7 +335,7 @@ void kaunnista() {
 	  break;
 	else
 	  kysynnat->sij -= 2;
-	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,LISTA_ALUSTA,kysynnat->sij)->suote);
+	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
 	laita(suote);
 	break;
       case SDLK_UP:
@@ -356,7 +356,7 @@ void kaunnista() {
 	kysynnat->sij += 2;
 	if(kysynnat->sij >= kysynnat->pit)
 	  printf("Varoitus: kysyntöjen sijainti on %i ja pituus on %i\n", kysynnat->sij, kysynnat->pit);
-	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,LISTA_ALUSTA,kysynnat->sij)->suote);
+	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
 	laita(suote);
 	break;
       case SDLK_LEFT:

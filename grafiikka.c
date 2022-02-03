@@ -143,7 +143,7 @@ int laita_tekstilista(tekstiolio_s *o) {
   int oy = o->sij.y;
   int raja = (mahtuu < yht)? mahtuu : yht;
   for(int i=0; i<raja; i++) {
-    o->teksti = *LISTALLA(l,char**,LISTA_ALUSTA,i+o->alku);
+    o->teksti = *LISTALLA(l,char**,i+o->alku);
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;
@@ -181,7 +181,7 @@ void laita_kaunti() {
   SDL_Color ovari = o->vari;
   o->vari = (SDL_Color){0,0,0,0};
   for(int i=o->alku; i>=alaraja; i--) {
-    kysynta_s* kys = LISTALLA(l,kysynta_s*,LISTA_ALUSTA,i);
+    kysynta_s* kys = LISTALLA(l,kysynta_s*,i);
     if((o->teksti = kys->kysym)) {
       if(*kys->hetki>>31) //sana osattiin
 	tekstin_taustavari = oikea_taustavari;
@@ -202,7 +202,7 @@ void laita_kaunti() {
   
   /*syötteet*/
   for(int i=o->alku; i>=alaraja+1; i--) {
-    o->teksti = LISTALLA(l,kysynta_s*,LISTA_ALUSTA,i)->suote;
+    o->teksti = LISTALLA(l,kysynta_s*,i)->suote;
     laita_teksti_ttf(o);
     if(o->toteutuma.w > leveystot)
       leveystot = o->toteutuma.w;

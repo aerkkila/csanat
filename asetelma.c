@@ -76,7 +76,7 @@ void asetelma() {
   tiedotol.lista = alusta_lista(RIVEJA,char**);
   jatka_listaa(tiedotol.lista, RIVEJA);
   for(int i=0; i<RIVEJA; i++)
-    *LISTALLA(tiedotol.lista,char**,LISTA_ALUSTA,i) = malloc(32);
+    *LISTALLA(tiedotol.lista,char**,i) = malloc(32);
   #undef RIVEJA
   
   tekstin_taustavari = taustavari;

@@ -7,7 +7,7 @@
 #include "asetelma.h"
 #include "csanat.h"
 
-#define TAMA_KOMENTO (*LISTALLA(knnot,char**,LISTA_ALUSTA,knnot->sij))
+#define TAMA_KOMENTO (*LISTALLA(knnot,char**,knnot->sij))
 #define knto(a) (!strcmp(TAMA_KOMENTO, #a))
 #define EI_LOPUSSA(lista) (lista->sij+1 < lista->pit)
 
@@ -49,29 +49,29 @@ void komento(const char* restrict suote) {
 	if(*STRPAATE(tmpc) == '\n')
 	  *STRPAATE(tmpc) = '\0';
 	jatka_listaa(viestiol.lista, 1);
-	*LISTALLA(viestiol.lista,char**,LISTA_LOPUSTA,-1) = strdup(tmpc);
+	*LISTALLA_LOPUSTA(viestiol.lista,char**,-1) = strdup(tmpc);
 	viestiol.lista->sij++;
       }
       pclose(p);
 
     } else if(knto(.osaamisrajaksi) && EI_LOPUSSA(knnot)) {       //osaamisrajaksi
-      if(sscanf(*LISTALLA(knnot,char**,LISTA_ALUSTA,knnot->sij+1), "%u", &osaamisraja))
+      if(sscanf(*LISTALLA(knnot,char**,knnot->sij+1), "%u", &osaamisraja))
 	knnot->sij++;
       else
 	break;
       
     } else if(knto(.tyhjennä) || knto(thj)) {                     //tyhjennä
       for(int i=0; i<snsto->pit; i++)
-	tuhoa_lista(LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i)->meta.hetket);
+	tuhoa_lista(LISTALLA(snsto,snsto_s*,i)->meta.hetket);
       tuhoa_lista(snsto);
       snsto = alusta_lista(11,snsto_s);
       kysymysol.teksti = NULL;
 
     } else if(knto(.uudesti)) {                                   //uudesti
       for(snsto->sij=0; snsto->sij<snsto->pit; snsto->sij+=3) {
-	LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.kierroksia = 0;
-	LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.osaamisia = 0;
-	LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.hetket->pit=0;
+	LISTALLA(snsto,snsto_s*,snsto->sij)->meta.kierroksia = 0;
+	LISTALLA(snsto,snsto_s*,snsto->sij)->meta.osaamisia = 0;
+	LISTALLA(snsto,snsto_s*,snsto->sij)->meta.hetket->pit=0;
       }
       uusi_kierros();
 
@@ -94,7 +94,7 @@ void komento(const char* restrict suote) {
 	VIESTIKSI("Virheellinen sijainti (%i) väliltä [0,%i[", sij, snsto->pit);
 	break;
       }
-      char** paikka = LISTALLA(snsto,char**,LISTA_ALUSTA,sij);
+      char** paikka = LISTALLA(snsto,char**,sij);
       sprintf(tmpc, "Korjattiin paikallisesti \"%s\" --> ", *paikka);
       free(*paikka);
       *paikka = strdup(TAMA_KOMENTO);
@@ -119,7 +119,7 @@ void komento(const char* restrict suote) {
 
     } else if(knto(.käännä)) {                                    //käännä
       for(int i=0; i<snsto->pit; i++) {
-	snsto_s* sns = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i);
+	snsto_s* sns = LISTALLA(snsto,snsto_s*,i);
 	VAIHDA(sns->sana, sns->kaan, char*);
       }
 
@@ -130,24 +130,24 @@ void komento(const char* restrict suote) {
       if(snsto_eiole_lopussa) {
 	/*verrataan käännökseen, laitetaan uusi sana ja poistutaan*/
 	jatka_listaa(kysynnat, 1);
-	LISTALLA(kysynnat,kysynta_s*,LISTA_LOPUSTA,-1)->kysym = strdup(kysymysol.teksti);
-	LISTALLA(kysynnat,kysynta_s*,LISTA_LOPUSTA,-1)->suote = strdup(suote);
-	lista* osaam = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.hetket;
+	LISTALLA_LOPUSTA(kysynnat,kysynta_s*,-1)->kysym = strdup(kysymysol.teksti);
+	LISTALLA_LOPUSTA(kysynnat,kysynta_s*,-1)->suote = strdup(suote);
+	lista* osaam = LISTALLA(snsto,snsto_s*,snsto->sij)->meta.hetket;
 	jatka_listaa(osaam,1);
-	*LISTALLA(osaam,uint32_t*,LISTA_LOPUSTA,-1) = time(NULL);
-	LISTALLA(kysynnat,kysynta_s*,LISTA_LOPUSTA,-1)->hetki = LISTALLA(osaam,uint32_t*,LISTA_LOPUSTA,-1);
-	LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.kierroksia++;
-	if( !strcmp(LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->kaan, suote) ) { //osattiin
+	*LISTALLA_LOPUSTA(osaam,uint32_t*,-1) = time(NULL);
+	LISTALLA_LOPUSTA(kysynnat,kysynta_s*,-1)->hetki = LISTALLA_LOPUSTA(osaam,uint32_t*,-1);
+	LISTALLA(snsto,snsto_s*,snsto->sij)->meta.kierroksia++;
+	if( !strcmp(LISTALLA(snsto,snsto_s*,snsto->sij)->kaan, suote) ) { //osattiin
 	  apuvari = suoteol.vari;
 	  suoteol.vari = oikeavari;
-	  *LISTALLA(osaam,uint32_t*,LISTA_LOPUSTA,-1) |= 1<<31;
-	  LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->meta.osaamisia++;
+	  *LISTALLA_LOPUSTA(osaam,uint32_t*,-1) |= 1<<31;
+	  LISTALLA(snsto,snsto_s*,snsto->sij)->meta.osaamisia++;
 	} else {
-	  strcpy(suoteol.teksti, LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij)->kaan);
+	  strcpy(suoteol.teksti, LISTALLA(snsto,snsto_s*,snsto->sij)->kaan);
 	  apuvari = suoteol.vari;
 	  suoteol.vari = virhevari;
-	  *LISTALLA(osaam,uint32_t*,LISTA_LOPUSTA,-1) <<= 1;
-	  *LISTALLA(osaam,uint32_t*,LISTA_LOPUSTA,-1) >>= 1;
+	  *LISTALLA_LOPUSTA(osaam,uint32_t*,-1) <<= 1;
+	  *LISTALLA_LOPUSTA(osaam,uint32_t*,-1) >>= 1;
 	}
 	suoteviesti = 1;
 	edellinen_sij = snsto->sij;
@@ -175,7 +175,7 @@ static void avaa(lista* knnot) {
   if(!sscanf(TAMA_KOMENTO, "%i", &kpl)) {
     VIESTIKSI("Ei luettu sanojen määrää, argumentti = %s", TAMA_KOMENTO);
     jatka_listaa(viestiol.lista,1);
-    *LISTALLA(viestiol.lista,char**,LISTA_LOPUSTA,-1) = strdup("Tiedosto avataan komennolla \".lue\"");
+    *LISTALLA_LOPUSTA(viestiol.lista,char**,-1) = strdup("Tiedosto avataan komennolla \".lue\"");
     return;
   }
   avaa_sanoja(kpl);

@@ -58,7 +58,7 @@ void tallenna_uusia_sanoja() {
   fseek(f,0,SEEK_END);
   int sij0 = snsto->sij;
   FOR_LISTA(snsto) {
-    snsto_s* sns = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,snsto->sij);
+    snsto_s* sns = LISTALLA(snsto,snsto_s*,snsto->sij);
     if(sns->meta.id >= 0) //vanha sana
       continue;
     sns->meta.id = id; //asetetaan luodut tunnisteet myös aukiolevaan sanastoon
@@ -86,7 +86,7 @@ void tallenna_vanhoja_sanoja() {
   }
   int testi;
   for(int i=0; i<snsto->pit; i++) {
-    snsto_s* sns = LISTALLA(snsto,snsto_s*,LISTA_ALUSTA,i);
+    snsto_s* sns = LISTALLA(snsto,snsto_s*,i);
     if(sns->meta.id < 0) //uusi sana
       continue;
     if(fseek(f, sns->meta.id*TIETOPIT, SEEK_SET)) {
@@ -145,7 +145,7 @@ void avaa_sanoja(int kpl) {
     tmpc[j] = 0;
     listalle_kopioiden_mjon(snsto, tmpc);
     jatka_listaa(snsto, 1);
-    LISTALLA(snsto,snsto_s*,LISTA_LOPUSTA,-1)->meta.id = idt[i];
+    LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->meta.id = idt[i];
   }
   fclose(f);
   free(idt);

@@ -1,9 +1,8 @@
 #ifndef __lista_h__
 #define __lista_h__
 
-#define LISTA_LOPUSTA 1
-#define LISTA_ALUSTA 0
-#define LISTALLA(l,tyyppi,lopustako,sij) ( (tyyppi)(l)->taul + (l)->pit*lopustako+sij )
+#define LISTALLA(l,tyyppi,sij) ( (tyyppi)(l)->taul + sij )
+#define LISTALLA_LOPUSTA(l,tyyppi,sij) ( (tyyppi)(l)->taul + (l)->pit+sij )
 #define alusta_lista(patka,tyyppi) _alusta_lista(patka,sizeof(tyyppi))
 
 typedef struct {
