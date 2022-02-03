@@ -9,6 +9,7 @@
 #include "asetelma.h"
 #include "csanat.h"
 #include "grafiikka.h"
+#include "modkeys.h"
 
 void komento(const char* restrict suote);
 void pyyhi(char* suote);
@@ -254,7 +255,7 @@ void kaunnista() {
   int hiirix=0, hiiriy=0;
   char* const suote = suoteol.teksti;
   SDL_StartTextInput();
-  char vaihto = 0;
+  unsigned modkey = 0;
   if(strlen(tmpc)) { //alussa komentoriviargumentit
     strcpy(suote, tmpc); //pilko_sanoiksi käyttää tmpc-muuttujaa
     komento(suote);
@@ -268,6 +269,8 @@ void kaunnista() {
       if(apusuote) {free(apusuote); apusuote=NULL;}
       return;
     case SDL_TEXTINPUT:
+      if(modkey & (WIN|ALT|CTRL))
+	break;
       if(suoteviesti) { //syötteen paikalla voi olla viestinä edellisen oikea vastaus
 	suote[0] = '\0';
 	suoteol.vari = apuvari;
@@ -285,13 +288,11 @@ void kaunnista() {
       break;
     case SDL_KEYDOWN:
       switch(tapaht.key.keysym.sym) {
-      case SDLK_LSHIFT:
-      case SDLK_RSHIFT:
-	vaihto = 1;
-	break;
+#define _MODKEYS_SWITCH_KEYDOWN
+#include "modkeys.h"
       case SDLK_RETURN:
       case SDLK_KP_ENTER:
-	if(vaihto) {
+	if(modkey & VAIHTO) {
 	  edellinen_osatuksi();
 	  laita(kaunti);
 	  laita(tiedot);
@@ -319,6 +320,9 @@ void kaunnista() {
 	kysymysol.teksti = NULL;
 	laita(kysymys);
 	break;
+      case SDLK_a:
+	if(!(modkey & ALT))
+	  break;
       case SDLK_DOWN:
 	if(suoteviesti) {
 	  suoteviesti = 0;
@@ -338,6 +342,9 @@ void kaunnista() {
 	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
 	laita(suote);
 	break;
+      case SDLK_i:
+	if(!(modkey & ALT))
+	  break;
       case SDLK_UP:
 	if(suoteviesti) {
 	  suoteviesti = 0;
@@ -359,10 +366,16 @@ void kaunnista() {
 	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
 	laita(suote);
 	break;
+      case SDLK_g:
+	if(!(modkey & ALT))
+	  break;
       case SDLK_LEFT:
 	edellinen_kohta(suote, &kohdistin);
 	laita(suote);
 	break;
+      case SDLK_o:
+	if(!(modkey & ALT))
+	  break;
       case SDLK_RIGHT:
 	seuraava_kohta(suote, &kohdistin);
 	laita(suote);
@@ -376,17 +389,15 @@ void kaunnista() {
 	laita(suote);
 	break;
       case SDLK_PAUSE:
-	if(vaihto)
+	if(modkey & VAIHTO)
 	  asm("int $3"); //jäljityspisteansa
 	break;
       }
       break; //keydown
     case SDL_KEYUP:
       switch(tapaht.key.keysym.sym) {
-      case SDLK_LSHIFT:
-      case SDLK_RSHIFT:
-	vaihto = 0;
-	break;
+#define _MODKEYS_SWITCH_KEYUP
+#include "modkeys.h"
       }
       break; //keyup 
     case SDL_WINDOWEVENT:
