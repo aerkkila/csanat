@@ -17,7 +17,7 @@
   Tiedostossa ".tiedotCsanat" on tiedot kaikista sanoista:
   int32_t id, uint32_t[127] [1.bitti: osattiinko, ajankohta]
 
-  Tiedostossa ".sanatCsanat on %i id, \036, sana, \036, käännös, \n
+  Tiedostossa ".sanatCsanat on %x id, \036, sana, \036, käännös, \n
 
   Molemmissa oletetaan, että id:t ovat 0,1,2,3,4,...
   eli sinänsä id:tä ei tarvitsisi edes kirjoittaa näkyviin*/
@@ -70,7 +70,7 @@ void tallenna_uusia_sanoja() {
     for(int i=0; i<(TIETOPIT4-pit)*4; i++)
       fputc(0,f);
     /*sanan ja käännöksen kirjoittaminen*/
-    fprintf(sanatied, "%i\036%s\036%s\n", id, sns->sana, sns->kaan);
+    fprintf(sanatied, "%x\036%s\036%s\n", id, sns->sana, sns->kaan);
     id++;
   }
   fclose(f);
@@ -227,7 +227,7 @@ static void siirry_sanan_kohtaan(int id, FILE* f, int pit, int sanoja) {
  SILMUKKA:;
   int kohta = ftell(f);
   fscanf(f, "%*[^\n]\n");
-  if(fscanf(f, "%i\036", &idluenta) != 1)
+  if(fscanf(f, "%x\036", &idluenta) != 1)
     TEE("Virhe id:n %i lukemisessa", id);
   if(idluenta == id)
     return;
@@ -247,7 +247,7 @@ static void _siirry_jarjestuksessa(int id, int siirto, FILE* f) {
   int idluenta;
   for(int i=0; i<siirto; i++)
     fscanf(f, "%*[^\n]\n");
-  if(fscanf(f, "%i\036", &idluenta) != 1)
+  if(fscanf(f, "%x\036", &idluenta) != 1)
     TEE("Virhe sanan (id=%i) id:n lukemisessa", id);
   if(idluenta != id)
     TEE("Luettiin väärä id: tavoite = %i, luettiin %i", id, idluenta);
