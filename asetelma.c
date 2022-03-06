@@ -19,7 +19,7 @@ int ikkuna_w;
 int ikkuna_h;
 
 const unsigned uniaika = 10;
-const unsigned maxpit_suote = 2000;
+const unsigned maxpit_suote = 2048;
 
 const SDL_Color taustavari       = {0,  0,  0,  255};
 const SDL_Color oikeavari        = {20, 255,20, 255};
