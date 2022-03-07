@@ -4,15 +4,17 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include "lista.h"
-//#include "asetelma.h"
+#include "näkymä.h"
 #include "modkeys.h"
+
+void paivita_kuva(unsigned laitot); //grafiikka.c
 
 #define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
 enum laitot_enum {
   kysymys_enum,
-  suote_enum,
+  syote_enum,
   kaunti_enum,
   tiedot_enum,
   viesti_enum,
@@ -29,7 +31,7 @@ typedef struct {
 
 typedef struct {
   char* kysym;
-  char* suote;
+  char* syote;
 } kysynnat_1;
 
 typedef union {
@@ -58,10 +60,10 @@ char* globchar;
 
 void aja();
 void lopeta(Arg turha);
-void jatka_suotetta(Arg char_p);
+void jatka_syotetta(Arg char_p);
 void napp_alas(Arg turha);
 void napp_ylos(Arg turha);
-void pyyhi_suotetta(Arg i_maara);
+void pyyhi_syotetta(Arg i_maara);
 
 int utf8_siirto_eteen( const char* restrict str );
 int utf8_siirto_taakse( const char* restrict str, int rmax );
@@ -69,14 +71,14 @@ void liita_teksti( char* s, char* liitos );
 
 Sidonta sid_tapaht[] = {
   { SDL_QUIT,       0, lopeta,         {0}                    },
-  { SDL_TEXTINPUT,  0, jatka_suotetta, {.v=&tapaht.text.text} },
+  { SDL_TEXTINPUT,  0, jatka_syotetta, {.v=&tapaht.text.text} },
   { SDL_KEYDOWN,    0, napp_alas,      {0}                    },
   { SDL_KEYUP,      0, napp_ylos,      {0}                    },
 };
 
 Sidonta sid_napp_alas[] = {
-  { SDLK_BACKSPACE, 0, pyyhi_suotetta, {.i=-1} },
-  { SDLK_DELETE,    0, pyyhi_suotetta, {.i=1}  },
+  { SDLK_BACKSPACE, 0, pyyhi_syotetta, {.i=-1} },
+  { SDLK_DELETE,    0, pyyhi_syotetta, {.i=1}  },
 };
 
 void aja() {
@@ -122,30 +124,30 @@ void lopeta(Arg turha) {
   exit(EXIT_SUCCESS);
 }
 
-void pyyhi_suotetta(Arg maara) {
-  int pit = strlen(suoteol.teksti);
+void pyyhi_syotetta(Arg maara) {
+  int pit = strlen(syoteol.teksti);
   if(maara.i>0) {
-    kohdistin -= utf8_siirto_eteen( suoteol.teksti+pit-kohdistin );
+    kohdistin -= utf8_siirto_eteen( syoteol.teksti+pit-kohdistin );
     maara.i = -maara.i;
   }
-  char* p2 = suoteol.teksti+pit-kohdistin-1;
-  char* p1 = p2 - utf8_siirto_taakse( suoteol.teksti+pit-kohdistin, pit-kohdistin );
+  char* p2 = syoteol.teksti+pit-kohdistin-1;
+  char* p1 = p2 - utf8_siirto_taakse( syoteol.teksti+pit-kohdistin, pit-kohdistin );
   while(( *++p1 = *++p2 ));
-  LAITA(suote);
+  LAITA(syote);
 }
 
-void jatka_suotetta(Arg arg_char_p) {
+void jatka_syotetta(Arg arg_char_p) {
   char* mjon = arg_char_p.v;
-  if(suoteviesti) { //syötteen paikalla voi olla viesti
-    suoteol.teksti[0] = '\0';
-    suoteviesti = 0;
-    suotekohdan_vari = suotevari;
+  if(syoteviesti) { //syötteen paikalla voi olla viesti
+    syoteol.teksti[0] = '\0';
+    syoteviesti = 0;
+    syotekohdan_vari = syotevari;
   }
   if(!kohdistin)
-    strcat(suoteol.teksti,mjon);
+    strcat(syoteol.teksti,mjon);
   else
-    liita_teksti( suoteol.teksti+strlen(suoteol.teksti)-kohdistin, mjon );
-  LAITA(suote);
+    liita_teksti( syoteol.teksti+strlen(syoteol.teksti)-kohdistin, mjon );
+  LAITA(syote);
 }
 
 int utf8_siirto_eteen( const char* restrict str ) {
@@ -172,27 +174,8 @@ void liita_teksti( char* s, char* liitos ) {
 }
 
 int main(int argc, char** argv) {
-  if (SDL_Init(SDL_INIT_VIDEO)) {
-    fprintf(stderr, "Virhe: Ei voi alustaa SDL-grafiikkaa: %s\n", SDL_GetError());
-    return 1;
-  }
-  if (TTF_Init()) {
-    fprintf(stderr, "Virhe: Ei voi alustaa SDL_ttf-fonttikirjastoa: %s\n", \
-	    TTF_GetError());
-    SDL_Quit();
-    return 1;
-  }
-  ikkuna = SDL_CreateWindow\
-    (ohjelman_nimi, ikkuna_x0, ikkuna_y0, ikkuna_w0, ikkuna_h0, SDL_WINDOW_RESIZABLE);
-  rend = SDL_CreateRenderer(ikkuna, -1, SDL_RENDERER_TARGETTEXTURE);
-  tausta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w, ikkuna_h);
-  globchar = malloc(maxpit_suote);
-
-  //asetelma();
-  SDL_GetWindowSize(ikkuna,&ikkuna_w,&ikkuna_h);
-  asetelma_sijainnit(); //aseta_sijainnit();
-  asetelma_kohdistin(); //saada_kohdistin();
-
+  alusta_nakyma();
+  globchar = malloc(maxpit_syote);
   snsto     = alusta_lista(11,snsto_1   );
   kysynnat  = alusta_lista(11,kysynnat_1);
   tiedostot = alusta_lista(1, char**    );
