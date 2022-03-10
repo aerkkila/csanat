@@ -5,19 +5,18 @@
 #include <SDL2/SDL_ttf.h>
 #include "lista.h"
 #include "näkymä.h"
+#include "toiminta.h"
 #include "modkeys.h"
-
-void paivita_kuva(unsigned laitot); //grafiikka.c
 
 #define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
+/*järjestyksellä on väliä*/
 enum laitot_enum {
   kysymys_enum,
   syote_enum,
-  kaunti_enum,
-  tiedot_enum,
-  viesti_enum,
+  historia_enum,
+  tieto_enum,
   laitot_enum_pituus,
 };
 
@@ -29,10 +28,12 @@ typedef struct {
   lista* hetket; // (lista(uint32), jolla on kierroksilta)(hetki | osattu?<<31)
 } snsto_1;
 
+#if 0
 typedef struct {
   char* kysym;
   char* syote;
 } kysynnat_1;
+#endif
 
 typedef union {
   int i;
@@ -51,12 +52,14 @@ SDL_Window *ikkuna;
 SDL_Texture* tausta;
 SDL_Renderer *rend;
 lista* snsto;
-lista* kysynnat;
+lista* historia[3];
 lista* tiedostot;
 SDL_Event tapaht;
 unsigned modkey, laitot;
-int kohdistin;
-char* globchar;
+int kohdistin, syoteviesti;
+char globchar[maxpit_syote];
+char syotetxt[maxpit_syote];
+char kysymtxt[maxpit_syote];
 
 void aja();
 void lopeta(Arg turha);
@@ -112,10 +115,11 @@ void napp_ylos(Arg turha) {
 }
 
 void lopeta(Arg turha) {
+  /*sulkekaani myös fontit*/
   tiedostot = tuhoa_lista2(tiedostot);
   snsto     = tuhoa_lista(snsto);
-  kysynnat  = tuhoa_lista(kysynnat);
-  free(globchar);
+  historia  = listastolla(tuhoa_lista2,historia,2);
+  historia[2] = tuhoa_lista(historia);
   SDL_DestroyTexture(tausta);
   SDL_DestroyRenderer(rend);
   SDL_DestroyWindow(ikkuna);
@@ -125,13 +129,13 @@ void lopeta(Arg turha) {
 }
 
 void pyyhi_syotetta(Arg maara) {
-  int pit = strlen(syoteol.teksti);
+  int pit = strlen(syotetxt);
   if(maara.i>0) {
-    kohdistin -= utf8_siirto_eteen( syoteol.teksti+pit-kohdistin );
+    kohdistin -= utf8_siirto_eteen( syotetxt+pit-kohdistin );
     maara.i = -maara.i;
   }
-  char* p2 = syoteol.teksti+pit-kohdistin-1;
-  char* p1 = p2 - utf8_siirto_taakse( syoteol.teksti+pit-kohdistin, pit-kohdistin );
+  char* p2 = syotetxt+pit-kohdistin-1;
+  char* p1 = p2 - utf8_siirto_taakse( syotetxt+pit-kohdistin, pit-kohdistin );
   while(( *++p1 = *++p2 ));
   LAITA(syote);
 }
@@ -139,14 +143,14 @@ void pyyhi_syotetta(Arg maara) {
 void jatka_syotetta(Arg arg_char_p) {
   char* mjon = arg_char_p.v;
   if(syoteviesti) { //syötteen paikalla voi olla viesti
-    syoteol.teksti[0] = '\0';
+    syotetxt[0] = '\0';
     syoteviesti = 0;
-    syotekohdan_vari = syotevari;
   }
+  ASETA_VARI(etuvari);
   if(!kohdistin)
-    strcat(syoteol.teksti,mjon);
+    strcat(syotetxt,mjon);
   else
-    liita_teksti( syoteol.teksti+strlen(syoteol.teksti)-kohdistin, mjon );
+    liita_teksti( syotetxt+strlen(syotetxt)-kohdistin, mjon );
   LAITA(syote);
 }
 
@@ -175,10 +179,11 @@ void liita_teksti( char* s, char* liitos ) {
 
 int main(int argc, char** argv) {
   alusta_nakyma();
-  globchar = malloc(maxpit_syote);
-  snsto     = alusta_lista(11,snsto_1   );
-  kysynnat  = alusta_lista(11,kysynnat_1);
-  tiedostot = alusta_lista(1, char**    );
+  snsto       = alusta_lista(11,snsto_1);
+  historia[0] = alusta_lista(11,char*);
+  historia[1] = alusta_lista(11,char*);
+  historia[2] = alusta_lista(11,utime_t);
+  tiedostot   = alusta_lista(1, char**);
 
   /*luetaan mahdollinen aloituskomentotiedosto*/
   globchar[0] = '\0';
@@ -199,7 +204,7 @@ int main(int argc, char** argv) {
     globchar2 = globchar + strlen(globchar);
     sprintf(globchar2, " %s", argv[i]);
   }
-  aseta_vari(taustavari);
+  ASETA_VARI(taustavari);
   SDL_RenderClear(rend);
   SDL_RenderPresent(rend);
 

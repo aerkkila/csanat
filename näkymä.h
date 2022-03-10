@@ -1,16 +1,10 @@
 #ifndef __NAKYMA_H__
 #define __NAKYMA_H__
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 
-typedef struct {
-  int fkoko;
-  const SDL_Color* etuv;
-  const SDL_Color* taustav;
-  TTF_Font* font;
-  SDL_Rect alue;
-} nakyolio;
-
+/*
 extern SDL_Window* ikk;
 extern SDL_Renderer* rend;
 extern SDL_Texture* pohja;
@@ -27,8 +21,11 @@ extern nakyolio syoteol;
 extern nakyolio kysymol;
 extern nakyolio listaol;
 extern nakyolio tietool;
+*/
 
-void avaa_fontti(nakyolio*);
+#define ASETA_VARI(c) SDL_SetRenderDrawColor( rend, (c).r, (c).g, (c).b, (c).a )
 void paivita_sijainnit();
 void alusta_nakyma();
+void paivita_kuva(unsigned laitot);
+
 #endif
