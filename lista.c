@@ -16,13 +16,17 @@ void* tuhoa_lista2(lista* l) {
   return NULL;
 }
 
-lista* _alusta_lista(unsigned patka, size_t koko) {
-  lista* l = calloc(1, sizeof(lista));
+lista* _alusta_tama_lista(lista* l, unsigned patka, size_t koko) {
   l->patka = patka;
   l->tilaa = 0;
   l->koko = koko;
   l->pit = 0;
   return l;
+}
+
+lista* _alusta_lista(unsigned patka, size_t koko) {
+  lista* l = calloc(1, sizeof(lista));
+  return _alusta_tama_lista(l,patka,koko);
 }
 
 void jatka_listaa(lista* l, int n) {

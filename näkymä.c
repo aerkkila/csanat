@@ -1,4 +1,5 @@
 #include "näkymä.h"
+#include "csanat2.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -9,6 +10,11 @@ typedef struct {
   TTF_Font* font;
   SDL_Rect alue;
 } nakyolio;
+
+typedef struct {
+  void* teksti;
+  nakyolio* olio;
+} piirtoarg;
 
 SDL_Window* ikk;
 SDL_Renderer* rend;
@@ -69,82 +75,92 @@ void alusta_nakyma() {
   paivita_sijainnit();
 }
 
-int laita_teksti(nakyolio* ol, char* teksti) {
-  if( !teksti || !(strcmp(teksti,"")) ) {
-    ol->alue.w = 0;
-    ol->alue.h = TTF_FontLineSkip(ol->font);
-    return 2;
+void laita_teksti(piirtoarg arg) {
+  if( !arg.teksti || !(strcmp(arg.teksti,"")) ) {
+    arg.olio->alue.w = 0;
+    arg.olio->alue.h = TTF_FontLineSkip(arg.olio->font);
+    return;
   }
-  SDL_Surface *pinta =  TTF_RenderUTF8_Shaded( ol->font, teksti, *ol->etuvari, *ol->takavari );
+  SDL_Surface *pinta =  TTF_RenderUTF8_Shaded( arg.olio->font, arg.teksti, *arg.olio->etuvari, *arg.olio->takavari );
   if(!pinta) {
     fprintf(stderr, "Virhe TTF_RenderUTF8_Shaded: %s\n", TTF_GetError());
-    return 3;
+    return;
   }
   SDL_Texture *ttuuri =  SDL_CreateTextureFromSurface(rend, pinta);
   if(!ttuuri)
     fprintf(stderr, "Virhe SDL_CreateTextureFromSurface: %s\n", SDL_GetError());
 
-  ol->alue.w = ol->alue.x+pinta->w > ikk_w ? ikk_w - ol->alue.x : pinta->w;
-  int taynna = ol->alue.y+pinta->h > ikk_h;
-  if(taynna)
+  arg.olio->alue.w = arg.olio->alue.x+pinta->w > ikk_w ? ikk_w - arg.olio->alue.x : pinta->w;
+  if( arg.olio->alue.y+pinta->h > ikk_h )
     goto LOPPU;
-  ol->alue.h = pinta->h;
+  arg.olio->alue.h = pinta->h;
 
-  int w_minus = pinta->w - ol->alue.w;
-  int h_minus = pinta->h - ol->alue.h;
-  SDL_Rect kopioosa = { w_minus, h_minus, ol->alue.w, ol->alue.h };
-  SDL_RenderCopy( rend, ttuuri, &kopioosa, &ol->alue );
+  int w_minus = pinta->w - arg.olio->alue.w;
+  int h_minus = pinta->h - arg.olio->alue.h;
+  SDL_Rect kopioosa = { w_minus, h_minus, arg.olio->alue.w, arg.olio->alue.h };
+  SDL_RenderCopy( rend, ttuuri, &kopioosa, &arg.olio->alue );
  LOPPU:
   SDL_FreeSurface(pinta);
   SDL_DestroyTexture(ttuuri);
-  return taynna;
 }
 
-int laita_listan_jasen(nakyolio* ol, char* teksti) {
+void laita_listan_jasen(nakyolio* ol, char* teksti) {
   static int w, h;
   if(!teksti) {
     ol->alue.w = w;
     ol->alue.h = h;
     ol->alue.y -= h;
     w=0; h=0;
-    return -1;
+    return;
   }
-  if( laita_teksti(ol, teksti) )
-    return 1;
+  laita_teksti((piirtoarg){teksti,ol});
   if( ol->alue.w > w )
     w = ol->alue.w;
   ol->alue.y += ol->alue.h; //vaiko TTF_FontLineskip
   h += ol->alue.h;
-  return 0;
 }
 
-void laita_historia() {
+void laita_historia(piirtoarg turha) {
   int i;
-  for(i=historia[0].pit-1; i>=0;) {
-    histrol.takavari = vo_taustavari[ *LISTALLA(historia[2],uaika_t,i)>>sizeof(uaika_t)-1 ];
-    if(laita_listan_jasen( histrol, *LISTALLA(historia[0],char**,i--) ))
-      break;
+  int mahtuu = (ikk_h-histrol.alue.y) / TTF_FontLineSkip(histrol.font);
+  int pienin = (mahtuu < historia[0]->pit) * (historia[0]->pit - mahtuu);
+  for(i=historia[0]->pit-1; i>=pienin; i--) {
+    histrol.takavari = &vo_taustavari[ *LISTALLA(historia[2],uaika_t*,i)>>sizeof(uaika_t)-1 ];
+    laita_listan_jasen( &histrol, *LISTALLA(historia[0],char**,i) );
   }
-  laita_listan_jasen(histrol,NULL);
+  laita_listan_jasen(&histrol,NULL);
   SDL_Rect alue = histrol.alue;
-  histrol.x += histrol.w;
-  histrol.takavari = taustavari;
-  for(int j=historia[0].pit-1; j>i; j--)
-    laita_listan_jasen( histrol, *LISTALLA(historia[1],char**,j) );
-  laita_listan_jasen( histrol, NULL );
-  histrol.x = alue.x;
-  histrol.w += alue.w;
-  histrol.h = alue.h > histrol.alue.h ? alue.h : histrol.alue.h;
+  histrol.alue.x += histrol.alue.w;
+  histrol.takavari = &taustavari;
+  for(int j=historia[0]->pit-1; j>i; j--)
+    laita_listan_jasen( &histrol, *LISTALLA(historia[1],char**,j) );
+  laita_listan_jasen( &histrol, NULL );
+  histrol.alue.x = alue.x;
+  histrol.alue.w += alue.w;
+  histrol.alue.h = alue.h > histrol.alue.h ? alue.h : histrol.alue.h;
 }
 
-void (*piirtofunkt)(void**)[] = {
+void laita_lista(piirtoarg arg) {
+  int pit = ((lista*)arg.teksti)->pit;
+  int mahtuu = (ikk_w-arg.olio->alue.y) / TTF_FontLineSkip(arg.olio->font);
+  for(int i=0; i<mahtuu; i++)
+    laita_listan_jasen( arg.olio, *LISTALLA( ((lista*)arg.teksti), char**, i ) );
+  laita_listan_jasen( arg.olio, NULL );
+}
+
+void (*piirtofunkt[])(piirtoarg) = {
   laita_teksti,
   laita_teksti,
   laita_historia,
   laita_lista,
+  NULL,
 };
 
-nakyolio oliot[] = { &kysymol, &syoteol, NULL, &tietool };
+piirtoarg piirtoargs[] = { { kysymtxt,  &kysymol },
+			   { syotetxt,  &syoteol },
+			   { NULL,      NULL,    },
+			   { &tietolis, &tietool },
+};
 
 void paivita_kuva(unsigned laitot) {
   if(!laitot) {
@@ -154,5 +170,5 @@ void paivita_kuva(unsigned laitot) {
   }
   for(int i=0; i<laitot_enum_pituus; i++)
     if( !(laitot>>i & 1) )
-      piirtofunkt[i](oliot+i*2);
+      piirtofunkt[i]( piirtoargs[i] );
 }

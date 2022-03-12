@@ -7,18 +7,10 @@
 #include "näkymä.h"
 #include "toiminta.h"
 #include "modkeys.h"
+#include "csanat2.h"
 
 #define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
-
-/*järjestyksellä on väliä*/
-enum laitot_enum {
-  kysymys_enum,
-  syote_enum,
-  historia_enum,
-  tieto_enum,
-  laitot_enum_pituus,
-};
 
 typedef struct {
   char* sana;
@@ -51,9 +43,9 @@ typedef struct {
 SDL_Window *ikkuna;
 SDL_Texture* tausta;
 SDL_Renderer *rend;
-lista* snsto;
-lista* historia[3];
-lista* tiedostot;
+lista snsto;
+lista historia[3];
+lista tiedostot;
 SDL_Event tapaht;
 unsigned modkey, laitot;
 int kohdistin, syoteviesti;
@@ -116,10 +108,10 @@ void napp_ylos(Arg turha) {
 
 void lopeta(Arg turha) {
   /*sulkekaani myös fontit*/
-  tiedostot = tuhoa_lista2(tiedostot);
-  snsto     = tuhoa_lista(snsto);
-  historia  = listastolla(tuhoa_lista2,historia,2);
-  historia[2] = tuhoa_lista(historia);
+  tuhoa_tama_lista2(&tiedostot);
+  tuhoa_tama_lista(&snsto);
+  listastolla(tuhoa_lista2,historia,2);
+  tuhoa_tama_lista(historia+2);
   SDL_DestroyTexture(tausta);
   SDL_DestroyRenderer(rend);
   SDL_DestroyWindow(ikkuna);
@@ -179,11 +171,11 @@ void liita_teksti( char* s, char* liitos ) {
 
 int main(int argc, char** argv) {
   alusta_nakyma();
-  snsto       = alusta_lista(11,snsto_1);
-  historia[0] = alusta_lista(11,char*);
-  historia[1] = alusta_lista(11,char*);
-  historia[2] = alusta_lista(11,utime_t);
-  tiedostot   = alusta_lista(1, char**);
+  alusta_tama_lista(&snsto,11,snsto_1);
+  alusta_tama_lista(historia+0,11,char*);
+  alusta_tama_lista(historia+1,11,char*);
+  alusta_tama_lista(historia+2,11,uaika_t);
+  alusta_tama_lista(&tiedostot, 1, char**);
 
   /*luetaan mahdollinen aloituskomentotiedosto*/
   globchar[0] = '\0';
