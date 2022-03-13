@@ -9,6 +9,7 @@ extern lista tietolis;
 extern lista tiedostot;
 extern char syotetxt[];
 extern char kysymtxt[];
+extern int kohdistin;
 
 /*järjestyksellä on väliä*/
 enum laitot_enum {

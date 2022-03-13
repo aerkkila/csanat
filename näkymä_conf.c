@@ -6,6 +6,7 @@ const SDL_Color vo_vari[]       = { {20, 255,20, 255},
 const SDL_Color vo_taustavari[] = { {20, 255,60, 255},
 				    {255,80, 50, 255}, };
 const SDL_Color kohdistinvari   = {255,255,255,255};
+static SDL_Rect kohdistin_r = {.w = 3};
 nakyolio syoteol = { .fkoko=60, .etuvari=&etuvari, .takavari=&taustavari };
 nakyolio kysymol = { .fkoko=60, .etuvari=&etuvari, .takavari=&taustavari };
 nakyolio histrol = { .fkoko=20, .etuvari=&etuvari, .takavari=&taustavari };

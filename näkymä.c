@@ -16,14 +16,14 @@ typedef struct {
   nakyolio* olio;
 } piirtoarg;
 
-SDL_Window* ikk;
-SDL_Renderer* rend;
-SDL_Texture* pohja;
-void avaa_fontti(nakyolio*);
+static SDL_Window* ikk;
+static SDL_Renderer* rend;
+static SDL_Texture* pohja;
+static void avaa_fontti(nakyolio*);
 
 #include "näkymä_conf1.c"
 
-void avaa_fontti(nakyolio* olio) {
+static void avaa_fontti(nakyolio* olio) {
   olio->font = TTF_OpenFont( fonttied, olio->fkoko );
   if(!olio->font) {
     fprintf( stderr, "Ei avattu fonttia \"%s\"\n%s\n", fonttied, TTF_GetError() );
@@ -35,6 +35,7 @@ void paivita_sijainnit() {
   syoteol.alue.y = TTF_FontLineSkip(kysymol.font);
   histrol.alue.y = syoteol.alue.y + TTF_FontLineSkip(syoteol.font);
   tietool.alue.y = histrol.alue.y;
+  kohdistin_r = (SDL_Rect){.x=0, .y=syoteol.alue.y, .w=kohdistin_r.w, .h = TTF_FontLineSkip(syoteol.font)};
 }
 
 void paivita_ikkunan_koko() {
@@ -154,6 +155,16 @@ void laita_lista(piirtoarg arg) {
   laita_listan_jasen( arg.olio, NULL );
 }
 
+void laita_kohdistin() {
+  ASETA_VARI(kohdistinvari);
+  char* ptr = syotetxt+strlen(syotetxt)-kohdistin;
+  char apu = *ptr;
+  *ptr = '\0';
+  TTF_SizeUTF8(syoteol.font, syotetxt, &kohdistin_r.x, NULL);
+  *ptr = apu;
+  SDL_RenderFillRect(rend, &kohdistin_r);
+}
+
 void (*piirtofunkt[])(piirtoarg) = {
   laita_teksti,
   laita_teksti,
@@ -176,6 +187,7 @@ void paivita_kuva(unsigned laitot) {
     for(int i=0; i<laitot_enum_pituus; i++)
       if( (laitot>>i & 1) )
 	piirtofunkt[i]( piirtoargs[i] );
+    laita_kohdistin();
     SDL_SetRenderTarget(rend,NULL);
   }
   SDL_RenderCopy(rend,pohja,NULL,NULL);
