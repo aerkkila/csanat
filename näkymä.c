@@ -75,6 +75,18 @@ void alusta_nakyma() {
   paivita_sijainnit();
 }
 
+void tuhoa_nakyma() {
+  TTF_CloseFont(syoteol.font);
+  TTF_CloseFont(kysymol.font);
+  TTF_CloseFont(histrol.font);
+  TTF_CloseFont(tietool.font);
+  SDL_DestroyTexture(pohja);
+  SDL_DestroyRenderer(rend);
+  SDL_DestroyWindow(ikk);
+  TTF_Quit();
+  SDL_Quit();
+}
+
 void laita_teksti(piirtoarg arg) {
   if( !arg.teksti || !(strcmp(arg.teksti,"")) ) {
     arg.olio->alue.w = 0;
@@ -123,17 +135,17 @@ void laita_listan_jasen(nakyolio* ol, char* teksti) {
 void laita_historia(piirtoarg turha) {
   int i;
   int mahtuu = (ikk_h-histrol.alue.y) / TTF_FontLineSkip(histrol.font);
-  int pienin = (mahtuu < historia[0]->pit) * (historia[0]->pit - mahtuu);
-  for(i=historia[0]->pit-1; i>=pienin; i--) {
-    histrol.takavari = &vo_taustavari[ *LISTALLA(historia[2],uaika_t*,i)>>sizeof(uaika_t)-1 ];
-    laita_listan_jasen( &histrol, *LISTALLA(historia[0],char**,i) );
+  int pienin = (mahtuu < historia[0].pit) * (historia[0].pit - mahtuu);
+  for(i=historia[0].pit-1; i>=pienin; i--) {
+    histrol.takavari = &vo_taustavari[ *LISTALLA(historia+2,uaika_t*,i)>>sizeof(uaika_t)-1 ];
+    laita_listan_jasen( &histrol, *LISTALLA(historia,char**,i) );
   }
   laita_listan_jasen(&histrol,NULL);
   SDL_Rect alue = histrol.alue;
   histrol.alue.x += histrol.alue.w;
   histrol.takavari = &taustavari;
-  for(int j=historia[0]->pit-1; j>i; j--)
-    laita_listan_jasen( &histrol, *LISTALLA(historia[1],char**,j) );
+  for(int j=historia[0].pit-1; j>i; j--)
+    laita_listan_jasen( &histrol, *LISTALLA(historia+1,char**,j) );
   laita_listan_jasen( &histrol, NULL );
   histrol.alue.x = alue.x;
   histrol.alue.w += alue.w;

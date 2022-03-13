@@ -26,6 +26,7 @@ extern nakyolio tietool;
 #define ASETA_VARI(c) SDL_SetRenderDrawColor( rend, (c).r, (c).g, (c).b, (c).a )
 void paivita_sijainnit();
 void alusta_nakyma();
+void tuhoa_nakyma();
 void paivita_kuva(unsigned laitot);
 
 #endif

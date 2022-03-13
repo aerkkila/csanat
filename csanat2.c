@@ -40,9 +40,6 @@ typedef struct {
   Arg arg;
 } Sidonta;
 
-SDL_Window *ikkuna;
-SDL_Texture* tausta;
-SDL_Renderer *rend;
 lista snsto;
 lista historia[3];
 lista tiedostot;
@@ -107,16 +104,11 @@ void napp_ylos(Arg turha) {
 }
 
 void lopeta(Arg turha) {
-  /*sulkekaani myös fontit*/
+  tuhoa_nakyma();
   tuhoa_tama_lista2(&tiedostot);
   tuhoa_tama_lista(&snsto);
   listastolla(tuhoa_lista2,historia,2);
   tuhoa_tama_lista(historia+2);
-  SDL_DestroyTexture(tausta);
-  SDL_DestroyRenderer(rend);
-  SDL_DestroyWindow(ikkuna);
-  TTF_Quit();
-  SDL_Quit();
   exit(EXIT_SUCCESS);
 }
 
@@ -138,7 +130,6 @@ void jatka_syotetta(Arg arg_char_p) {
     syotetxt[0] = '\0';
     syoteviesti = 0;
   }
-  ASETA_VARI(etuvari);
   if(!kohdistin)
     strcat(syotetxt,mjon);
   else
@@ -196,10 +187,8 @@ int main(int argc, char** argv) {
     globchar2 = globchar + strlen(globchar);
     sprintf(globchar2, " %s", argv[i]);
   }
-  ASETA_VARI(taustavari);
-  SDL_RenderClear(rend);
-  SDL_RenderPresent(rend);
-
+  for(int i=0; i<laitot_enum_pituus; i++)
+    laitot |= 1<<i;
   aja();
 
   puts("Varoitus: aja-funktio palasi, vaikka ei olisi pitänyt.");
