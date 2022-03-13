@@ -54,6 +54,7 @@ char kysymtxt[maxpit_syote];
 void aja();
 void lopeta(Arg turha);
 void jatka_syotetta(Arg char_p);
+void ikkunatapahtuma(Arg turha);
 void napp_alas(Arg turha);
 void napp_ylos(Arg turha);
 void pyyhi_syotetta(Arg i_maara);
@@ -63,10 +64,11 @@ int utf8_siirto_taakse( const char* restrict str, int rmax );
 void liita_teksti( char* s, char* liitos );
 
 Sidonta sid_tapaht[] = {
-  { SDL_QUIT,       0, lopeta,         {0}                    },
-  { SDL_TEXTINPUT,  0, jatka_syotetta, {.v=&tapaht.text.text} },
-  { SDL_KEYDOWN,    0, napp_alas,      {0}                    },
-  { SDL_KEYUP,      0, napp_ylos,      {0}                    },
+  { SDL_QUIT,        0, lopeta,          {0}                    },
+  { SDL_WINDOWEVENT, 0, ikkunatapahtuma, {0}                    },
+  { SDL_TEXTINPUT,   0, jatka_syotetta,  {.v=&tapaht.text.text} },
+  { SDL_KEYDOWN,     0, napp_alas,       {0}                    },
+  { SDL_KEYUP,       0, napp_ylos,       {0}                    },
 };
 
 Sidonta sid_napp_alas[] = {
@@ -82,8 +84,14 @@ void aja() {
 	if( sid_tapaht[i].tyyppi == tapaht.type )
 	  sid_tapaht[i].funktio(sid_tapaht[i].arg);
     paivita_kuva(laitot);
+    laitot = 0;
     SDL_Delay(uniaika);
   }
+}
+
+void ikkunatapahtuma(Arg turha) {
+  if( tapaht.window.event == SDL_WINDOWEVENT_RESIZED )
+    paivita_ikkunan_koko();
 }
 
 void napp_alas(Arg turha) {

@@ -21,20 +21,7 @@ SDL_Renderer* rend;
 SDL_Texture* pohja;
 void avaa_fontti(nakyolio*);
 
-int ikk_x=300, ikk_y=0, ikk_w=600, ikk_h=400;
-const SDL_Color etuvari         = {255,255,255,255};
-const SDL_Color taustavari      = {0,  0,  0,  0  };
-const SDL_Color vo_vari[]       = { {20, 255,20, 255},
-				    {255,20, 20, 255}, };
-const SDL_Color vo_taustavari[] = { {20, 255,60, 255},
-				    {255,80, 50, 255}, };
-const SDL_Color kohdistinvari   = {255,255,255,255};
-nakyolio syoteol = { .fkoko=60, .etuvari=&etuvari, .takavari=&taustavari };
-nakyolio kysymol = { .fkoko=60, .etuvari=&etuvari, .takavari=&taustavari };
-nakyolio histrol = { .fkoko=20, .etuvari=&etuvari, .takavari=&taustavari };
-nakyolio tietool = { .fkoko=17, .etuvari=&etuvari, .takavari=&taustavari };
-static const char* fonttied = "MAKE_LIITÄ_MONOFONTTI";
-static const char* ohjelman_nimi = "csanat";
+#include "näkymä_conf1.c"
 
 void avaa_fontti(nakyolio* olio) {
   olio->font = TTF_OpenFont( fonttied, olio->fkoko );
@@ -48,6 +35,12 @@ void paivita_sijainnit() {
   syoteol.alue.y = TTF_FontLineSkip(kysymol.font);
   histrol.alue.y = syoteol.alue.y + TTF_FontLineSkip(syoteol.font);
   tietool.alue.y = histrol.alue.y;
+}
+
+void paivita_ikkunan_koko() {
+  SDL_GetWindowSize( ikk, &ikk_w, &ikk_h );
+  SDL_DestroyTexture(pohja);
+  pohja = SDL_CreateTexture( rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikk_w, ikk_h );
 }
 
 #define FUNK(fun,virhefun,...)						\
@@ -64,6 +57,7 @@ void alusta_nakyma() {
   FUNK(TTF_Init,TTF_GetError);
   ikk = SDL_CreateWindow( ohjelman_nimi, ikk_x, ikk_y, ikk_w, ikk_h, SDL_WINDOW_RESIZABLE );
   rend = SDL_CreateRenderer( ikk, -1, SDL_RENDERER_TARGETTEXTURE );
+  SDL_GetWindowSize( ikk, &ikk_w, &ikk_h );
   pohja = SDL_CreateTexture( rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikk_w, ikk_h );
 
   avaa_fontti(&syoteol);
@@ -71,7 +65,6 @@ void alusta_nakyma() {
   avaa_fontti(&histrol);
   avaa_fontti(&tietool);
 
-  SDL_GetWindowSize( ikk, &ikk_w, &ikk_h );
   paivita_sijainnit();
 }
 
@@ -92,7 +85,7 @@ void laita_teksti(piirtoarg arg) {
     arg.olio->alue.w = 0;
     arg.olio->alue.h = TTF_FontLineSkip(arg.olio->font);
     return;
-  }
+ } 
   SDL_Surface *pinta =  TTF_RenderUTF8_Shaded( arg.olio->font, arg.teksti, *arg.olio->etuvari, *arg.olio->takavari );
   if(!pinta) {
     fprintf(stderr, "Virhe TTF_RenderUTF8_Shaded: %s\n", TTF_GetError());
@@ -155,7 +148,8 @@ void laita_historia(piirtoarg turha) {
 void laita_lista(piirtoarg arg) {
   int pit = ((lista*)arg.teksti)->pit;
   int mahtuu = (ikk_w-arg.olio->alue.y) / TTF_FontLineSkip(arg.olio->font);
-  for(int i=0; i<mahtuu; i++)
+  int loppu = mahtuu < pit ? mahtuu : pit;
+  for(int i=0; i<loppu; i++)
     laita_listan_jasen( arg.olio, *LISTALLA( ((lista*)arg.teksti), char**, i ) );
   laita_listan_jasen( arg.olio, NULL );
 }
@@ -175,12 +169,15 @@ piirtoarg piirtoargs[] = { { kysymtxt,  &kysymol },
 };
 
 void paivita_kuva(unsigned laitot) {
-  if(!laitot) {
-    SDL_RenderCopy(rend,pohja,NULL,NULL);
-    SDL_RenderPresent(rend);
-    return;
+  if(laitot) {
+    SDL_SetRenderTarget(rend,pohja);
+    ASETA_VARI(taustavari);
+    SDL_RenderClear(rend);
+    for(int i=0; i<laitot_enum_pituus; i++)
+      if( (laitot>>i & 1) )
+	piirtofunkt[i]( piirtoargs[i] );
+    SDL_SetRenderTarget(rend,NULL);
   }
-  for(int i=0; i<laitot_enum_pituus; i++)
-    if( !(laitot>>i & 1) )
-      piirtofunkt[i]( piirtoargs[i] );
+  SDL_RenderCopy(rend,pohja,NULL,NULL);
+  SDL_RenderPresent(rend);
 }

@@ -1,3 +1,7 @@
 csanat
 *.txt
 asetelma1.c
+
+näkymä_conf1.c
+*.out
+*.o
