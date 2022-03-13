@@ -1,5 +1,5 @@
 #!/bin/sh
-cp asetelma.c $@
+cp näkymä.c $@
 sed -i 's@MAKE_LIITÄ_HOME@'"${HOME}"'@g' $@
 fontti=`fc-match -v monospace |grep file: |sed 's@.*"\(.*\)".*@\1@'`
 sed -i 's@MAKE_LIITÄ_MONOFONTTI@'"${fontti}"'@g' $@

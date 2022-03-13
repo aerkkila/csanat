@@ -30,7 +30,7 @@ lista* _alusta_lista(unsigned,size_t);
 void jatka_listaa(lista*, int);
 void* tuhoa_lista(lista*);
 void tuhoa_tama_lista(lista*);
-void* tuhoa_lista2(lista*);
+void tuhoa_tama_lista2(lista*);
 void tuhoa_tama_lista2(lista*);
 void listalle_kopioiden_mjon(lista* l, const char* restrict s);
 #endif

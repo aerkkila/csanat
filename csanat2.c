@@ -42,6 +42,7 @@ typedef struct {
 
 lista snsto;
 lista historia[3];
+lista tietolis;
 lista tiedostot;
 SDL_Event tapaht;
 unsigned modkey, laitot;
@@ -107,8 +108,9 @@ void lopeta(Arg turha) {
   tuhoa_nakyma();
   tuhoa_tama_lista2(&tiedostot);
   tuhoa_tama_lista(&snsto);
-  listastolla(tuhoa_lista2,historia,2);
+  listastolla(tuhoa_tama_lista2,historia,2);
   tuhoa_tama_lista(historia+2);
+  tuhoa_tama_lista2(&tietolis);
   exit(EXIT_SUCCESS);
 }
 
@@ -166,7 +168,8 @@ int main(int argc, char** argv) {
   alusta_tama_lista(historia+0,11,char*);
   alusta_tama_lista(historia+1,11,char*);
   alusta_tama_lista(historia+2,11,uaika_t);
-  alusta_tama_lista(&tiedostot, 1, char**);
+  alusta_tama_lista(&tiedostot, 1, char*);
+  alusta_tama_lista(&tietolis, 3, char*);
 
   /*luetaan mahdollinen aloituskomentotiedosto*/
   globchar[0] = '\0';
@@ -187,10 +190,11 @@ int main(int argc, char** argv) {
     globchar2 = globchar + strlen(globchar);
     sprintf(globchar2, " %s", argv[i]);
   }
+  
   for(int i=0; i<laitot_enum_pituus; i++)
     laitot |= 1<<i;
   aja();
 
-  puts("Varoitus: aja-funktio palasi, vaikka ei olisi pitänyt.");
+  puts("\033[1;33mVaroitus:\033[0m aja-funktio palasi, vaikka ei olisi pitänyt.");
   return 2;
 }

@@ -2,9 +2,9 @@
 #define __TOIMINTA_H__
 
 #define maxpit_syote 1024
-extern const char* ohjelman_nimi;
-extern const char* aloituskomentotiedosto;
-extern const int osaamisraja;
-extern const unsigned uniaika;
+const char* ohjelman_nimi = "csanat";
+const char* aloituskomentotiedosto = "./aloituskomennot.txt";
+const int osaamisraja = 1;
+const unsigned uniaika = 20;
 
 #endif

@@ -2,18 +2,14 @@
 #include <string.h>
 #include "lista.h"
 
-void* tuhoa_lista(lista* l) {
+void tuhoa_tama_lista(lista* l) {
   free(l->taul);
-  free(l);
-  return NULL;
 }
 
-void* tuhoa_lista2(lista* l) {
+void tuhoa_tama_lista2(lista* l) {
   for(int i=0; i<l->pit; i++)
     free(*LISTALLA(l,void**,i));
   free(l->taul);
-  free(l);
-  return NULL;
 }
 
 lista* _alusta_tama_lista(lista* l, unsigned patka, size_t koko) {
