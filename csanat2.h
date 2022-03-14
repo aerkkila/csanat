@@ -20,6 +20,14 @@ enum laitot_enum {
   laitot_enum_pituus,
 };
 
-typedef uint_fast64_t uaika_t;
+#define ETUV        0
+#define TAUSTV      1
+#define VAARAV      2
+#define OIKEAV      3
+#define VAARATAUSTV 4
+#define OIKEATAUSTV 5
+#define KOHDISTINV  6
+
+typedef int_fast64_t aika_t;
 
 #endif

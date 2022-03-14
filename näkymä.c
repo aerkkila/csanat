@@ -1,7 +1,8 @@
-#include "näkymä.h"
-#include "csanat2.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "csanat2.h"
 
 typedef struct {
   int fkoko;
@@ -16,10 +17,18 @@ typedef struct {
   nakyolio* olio;
 } piirtoarg;
 
+#define ASETA_VARI(c) SDL_SetRenderDrawColor( rend, (c).r, (c).g, (c).b, (c).a )
+#define ASETA_ASIAN_VARI(olio,ind) (olio ## ol).etuvari = varit+ind;
+
 static SDL_Window* ikk;
 static SDL_Renderer* rend;
 static SDL_Texture* pohja;
-static void avaa_fontti(nakyolio*);
+
+void paivita_sijainnit();
+void paivita_ikkunan_koko();
+void alusta_nakyma();
+void tuhoa_nakyma();
+void paivita_kuva(unsigned laitot);
 
 #include "näkymä_conf1.c"
 
@@ -131,13 +140,13 @@ void laita_historia(piirtoarg turha) {
   int mahtuu = (ikk_h-histrol.alue.y) / TTF_FontLineSkip(histrol.font);
   int pienin = (mahtuu < historia[0].pit) * (historia[0].pit - mahtuu);
   for(i=historia[0].pit-1; i>=pienin; i--) {
-    histrol.takavari = &vo_taustavari[ *LISTALLA(historia+2,uaika_t*,i)>>sizeof(uaika_t)-1 ];
+    histrol.takavari = varit + ( *LISTALLA(historia+2,aika_t*,i) < 0 ? OIKEATAUSTV : VAARATAUSTV );
     laita_listan_jasen( &histrol, *LISTALLA(historia,char**,i) );
   }
   laita_listan_jasen(&histrol,NULL);
   SDL_Rect alue = histrol.alue;
   histrol.alue.x += histrol.alue.w;
-  histrol.takavari = &taustavari;
+  histrol.takavari = varit+TAUSTV;
   for(int j=historia[0].pit-1; j>i; j--)
     laita_listan_jasen( &histrol, *LISTALLA(historia+1,char**,j) );
   laita_listan_jasen( &histrol, NULL );
@@ -156,7 +165,7 @@ void laita_lista(piirtoarg arg) {
 }
 
 void laita_kohdistin() {
-  ASETA_VARI(kohdistinvari);
+  ASETA_VARI(varit[KOHDISTINV]);
   char* ptr = syotetxt+strlen(syotetxt)-kohdistin;
   char apu = *ptr;
   *ptr = '\0';
@@ -182,7 +191,7 @@ piirtoarg piirtoargs[] = { { kysymtxt,  &kysymol },
 void paivita_kuva(unsigned laitot) {
   if(laitot) {
     SDL_SetRenderTarget(rend,pohja);
-    ASETA_VARI(taustavari);
+    ASETA_VARI(varit[TAUSTV]);
     SDL_RenderClear(rend);
     for(int i=0; i<laitot_enum_pituus; i++)
       if( (laitot>>i & 1) )

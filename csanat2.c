@@ -1,13 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include <time.h>
+#include "csanat2.h"
 #include "lista.h"
-#include "näkymä.h"
 #include "toiminta.h"
 #include "modkeys.h"
-#include "csanat2.h"
 
 #define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
@@ -44,7 +42,6 @@ lista snsto;
 lista historia[3];
 lista tietolis;
 lista tiedostot;
-SDL_Event tapaht;
 unsigned modkey, laitot;
 int kohdistin, syoteviesti;
 char globchar[maxpit_syote];
@@ -61,11 +58,22 @@ void pyyhi_syotetta_eteen(Arg turha);
 void pyyhi_syotetta_taakse(Arg turha);
 void kohdistin_eteen(Arg maara);
 void kohdistin_taakse(Arg maara);
+void kasittele_syote(Arg syote);
+void komento(Arg syote);
 
 int utf8_siirto_eteen( const char* restrict str );
 int utf8_siirto_taakse( const char* restrict str, int rmax );
 void liita_teksti( char* s, char* liitos );
+aika_t* sana_historiaan();
+void sana_oikein();
+void sana_vaarin();
 
+/*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
+  Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.
+  Tämä käyttää nyt kuitenkin SDL-tapahtumia täälläkin, mutta ehkä luon niistä makrot myöhemmin.*/
+#include "näkymä.c"
+
+SDL_Event tapaht;
 /*Näissä tarkistus lopetetaan ensimmäiseen täsmäävään. -1 on mikä tahansa*/
 Sidonta sid_tapaht[] = {
   { SDL_KEYDOWN,     -1,     napp_alas,       {0}                    },
@@ -77,17 +85,18 @@ Sidonta sid_tapaht[] = {
 };
 
 Sidonta sid_napp_alas[] = {
-  { SDLK_BACKSPACE, 0,   pyyhi_syotetta_taakse, {0}    },
-  { SDLK_DELETE,    0,   pyyhi_syotetta_eteen,  {0}    },
-  { SDLK_g,         ALT, kohdistin_taakse,      {.i=1} },
-  { SDLK_o,         ALT, kohdistin_eteen,       {.i=1} },
+  { SDLK_RETURN,    0,   kasittele_syote,       {.v=syotetxt} },
+  { SDLK_KP_ENTER,  0,   kasittele_syote,       {.v=syotetxt} },
+  { SDLK_BACKSPACE, 0,   pyyhi_syotetta_taakse, {0}           },
+  { SDLK_DELETE,    0,   pyyhi_syotetta_eteen,  {0}           },
+  { SDLK_g,         ALT, kohdistin_taakse,      {.i=1}        },
+  { SDLK_o,         ALT, kohdistin_eteen,       {.i=1}        },
 };
 
 void aja() {
   SDL_StartTextInput();
   while(1) {
     while(SDL_PollEvent(&tapaht)) {
-      static int kerta=0;
       for(int i=0; i<TAULPIT(sid_tapaht); i++)
 	if( sid_tapaht[i].tyyppi == tapaht.type &&
 	    ( sid_tapaht[i].mod == -1 || sid_tapaht[i].mod == modkey_tuplana(modkey) ) ) {
@@ -153,15 +162,29 @@ void pyyhi_syotetta_taakse(Arg turha) {
 
 void jatka_syotetta(Arg arg_char_p) {
   char* mjon = arg_char_p.v;
+  if( strlen(syotetxt)+strlen(mjon) >= maxpit_syote )
+    return;
   if(syoteviesti) { //syötteen paikalla voi olla viesti
     syotetxt[0] = '\0';
     syoteviesti = 0;
+    ASETA_ASIAN_VARI(syote,ETUV);
   }
   if(!kohdistin)
     strcat(syotetxt,mjon);
   else
     liita_teksti( syotetxt+strlen(syotetxt)-kohdistin, mjon );
   LAITA(syote);
+}
+
+void kasittele_syote(Arg syotearg) {
+  char* syote = syotearg.v-1;
+  while(*++syote<0x31);
+  if(*syote=='.')
+    komento((Arg){.v=syote+1});
+  else if( strcmp(kysymtxt,syotearg.v) )
+    sana_vaarin();
+  else
+    sana_oikein();
 }
 
 void kohdistin_eteen(Arg maara) {
@@ -171,6 +194,30 @@ void kohdistin_eteen(Arg maara) {
 
 void kohdistin_taakse(Arg maara) {
   for( int pit=strlen(syotetxt); maara.i--; kohdistin+=utf8_siirto_taakse( syotetxt+pit-kohdistin, pit-kohdistin ) );
+  LAITA(syote);
+}
+
+void komento(Arg syotearg) {
+  int sanoja = 0;
+  char* restrict syote = syotearg.v;
+  int luku;
+  while(*syote) { //lasketaan sanat
+    sanoja++;
+    sscanf( syote, "%*s%n", &luku );
+    syote += luku;
+  }
+  char* knnot[sanoja];
+  syote = syotearg.v;
+  for(int i=0; i<sanoja; i++) { //kopioidaan sanat
+    sscanf( syote, "%*s%n", &luku );
+    knnot[i] = malloc(luku+1);
+    sscanf( syote, "%s", knnot[i] );
+    syote += luku;
+  }
+  for(int i=0; i<sanoja; i++)
+    free(knnot[i]);
+
+  *((char*)syotearg.v) = '\0';
   LAITA(syote);
 }
 
@@ -197,12 +244,32 @@ void liita_teksti( char* s, char* liitos ) {
   strcat( s, loppu );
 }
 
+aika_t* sana_historiaan() {
+  jatka_listaa( historia+2, 1 );
+  aika_t *ptr = LISTALLA_LOPUSTA( historia+2, aika_t*, -1 );
+  time((time_t*)ptr);
+  listalle_kopioiden_mjon( historia+0, kysymtxt );
+  listalle_kopioiden_mjon( historia+1, syotetxt );
+  return ptr;
+}
+
+void sana_oikein() {
+  aika_t* ptr = sana_historiaan();
+  *ptr *= -1;
+  ASETA_ASIAN_VARI(syote,OIKEAV);
+}
+
+void sana_vaarin() {
+  sana_historiaan();
+  ASETA_ASIAN_VARI(syote,VAARAV);
+}
+
 int main(int argc, char** argv) {
   alusta_nakyma();
   alusta_tama_lista(&snsto,11,snsto_1);
   alusta_tama_lista(historia+0,11,char*);
   alusta_tama_lista(historia+1,11,char*);
-  alusta_tama_lista(historia+2,11,uaika_t);
+  alusta_tama_lista(historia+2,11,aika_t);
   alusta_tama_lista(&tiedostot, 1, char*);
   alusta_tama_lista(&tietolis, 3, char*);
 

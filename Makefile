@@ -7,11 +7,14 @@ all: csanat2
 csanat: ${tdstot} ${otsakkeet}
 	gcc -gdwarf-2 -g3 -Wall -o $@ ${tdstot} ${krjstot} -Og
 
-csanat2: csanat2.c lista.c näkymä.c näkymä_conf.c näkymä_conf1.c csanat2.h lista.h modkeys.h näkymä.h toiminta.h
-	gcc -Wall -o $@ csanat2.c lista.c näkymä.c -lSDL2 -lSDL2_ttf -g
-
-näkymä_conf1.c: näkymä_conf.c
+asetelma1.c: asetelma.c configure.sh
 	./configure.sh $@
 
-asetelma1.c: asetelma.c configure.sh
+tdstot2=csanat2.c lista.c
+otsakk2=lista.h modkeys.h toiminta.h
+
+csanat2: ${tdstot2} näkymä.c näkymä_conf.c näkymä_conf1.c csanat2.h ${otsakk2}
+	gcc -Wall -o $@ ${tdstot2} -lSDL2 -lSDL2_ttf -g
+
+näkymä_conf1.c: näkymä_conf.c
 	./configure.sh $@
