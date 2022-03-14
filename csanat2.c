@@ -137,7 +137,6 @@ void pyyhi_syotetta_eteen(Arg turha) {
   int pit = strlen(syotetxt);
   char* p1 = syotetxt+pit-kohdistin;
   kohdistin -= utf8_siirto_eteen(p1);
-  printf("%i\n", utf8_siirto_eteen(p1));
   char* p2 = syotetxt+pit-kohdistin;
   while(( *p1++ = *p2++ ));
   LAITA(syote);
@@ -178,7 +177,7 @@ int utf8_siirto_eteen( const char* restrict str ) {
   if(!*str)
     return 0;
   int r = 1;
-  while( *++str&0300 == 0200 )
+  while( (*++str&0300) == 0200 )
     r++;
   return r;
 }
@@ -186,7 +185,7 @@ int utf8_siirto_eteen( const char* restrict str ) {
 int utf8_siirto_taakse( const char* restrict str, int rmax ) {
   int r = 0;
   if( r != rmax )
-    while( r++ != rmax && *--str&0300 == 0200);
+    while( r++ != rmax && (*--str&0300) == 0200);
   return r;
 }
 
