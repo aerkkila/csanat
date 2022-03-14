@@ -69,28 +69,27 @@ void sana_oikein();
 void sana_vaarin();
 
 /*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
-  Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.
-  Tämä käyttää nyt kuitenkin SDL-tapahtumia täälläkin, mutta ehkä luon niistä makrot myöhemmin.*/
+  Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.*/
 #include "näkymä.c"
 
 SDL_Event tapaht;
 /*Näissä tarkistus lopetetaan ensimmäiseen täsmäävään. -1 on mikä tahansa*/
 Sidonta sid_tapaht[] = {
-  { SDL_KEYDOWN,     -1,     napp_alas,       {0}                    },
-  { SDL_KEYUP,       -1,     napp_ylos,       {0}                    },
-  { SDL_TEXTINPUT,   0,      jatka_syotetta,  {.v=&tapaht.text.text} },
-  { SDL_TEXTINPUT,   VAIHTO, jatka_syotetta,  {.v=&tapaht.text.text} },
-  { SDL_WINDOWEVENT, -1,     ikkunatapahtuma, {0}                    },
-  { SDL_QUIT,        -1,     lopeta,          {0}                    },
+  { TAPAHT( KEYDOWN ),     -1,     napp_alas,       {0}                    },
+  { TAPAHT( KEYUP ),       -1,     napp_ylos,       {0}                    },
+  { TAPAHT( TEXTINPUT ),   0,      jatka_syotetta,  {.v=&tapaht.text.text} },
+  { TAPAHT( TEXTINPUT ),   VAIHTO, jatka_syotetta,  {.v=&tapaht.text.text} },
+  { TAPAHT( WINDOWEVENT ), -1,     ikkunatapahtuma, {0}                    },
+  { TAPAHT( QUIT ),        -1,     lopeta,          {0}                    },
 };
 
 Sidonta sid_napp_alas[] = {
-  { SDLK_RETURN,    0,   kasittele_syote,       {.v=syotetxt} },
-  { SDLK_KP_ENTER,  0,   kasittele_syote,       {.v=syotetxt} },
-  { SDLK_BACKSPACE, 0,   pyyhi_syotetta_taakse, {0}           },
-  { SDLK_DELETE,    0,   pyyhi_syotetta_eteen,  {0}           },
-  { SDLK_g,         ALT, kohdistin_taakse,      {.i=1}        },
-  { SDLK_o,         ALT, kohdistin_eteen,       {.i=1}        },
+  { KEY( RETURN ),    0,   kasittele_syote,       {.v=syotetxt} },
+  { KEY( KP_ENTER ),  0,   kasittele_syote,       {.v=syotetxt} },
+  { KEY( BACKSPACE ), 0,   pyyhi_syotetta_taakse, {0}           },
+  { KEY( DELETE ),    0,   pyyhi_syotetta_eteen,  {0}           },
+  { KEY( g ),         ALT, kohdistin_taakse,      {.i=1}        },
+  { KEY( o ),         ALT, kohdistin_eteen,       {.i=1}        },
 };
 
 void aja() {
@@ -250,6 +249,9 @@ aika_t* sana_historiaan() {
   time((time_t*)ptr);
   listalle_kopioiden_mjon( historia+0, kysymtxt );
   listalle_kopioiden_mjon( historia+1, syotetxt );
+  *syotetxt = '\0';
+  LAITA(historia);
+  LAITA(syote);
   return ptr;
 }
 

@@ -19,6 +19,8 @@ typedef struct {
 
 #define ASETA_VARI(c) SDL_SetRenderDrawColor( rend, (c).r, (c).g, (c).b, (c).a )
 #define ASETA_ASIAN_VARI(olio,ind) (olio ## ol).etuvari = varit+ind;
+#define TAPAHT(a) SDL_ ## a
+#define KEY(a) SDLK_ ## a
 
 static SDL_Window* ikk;
 static SDL_Renderer* rend;
