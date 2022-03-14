@@ -68,11 +68,12 @@ void liita_teksti( char* s, char* liitos );
 
 /*Näissä tarkistus lopetetaan ensimmäiseen täsmäävään. -1 on mikä tahansa*/
 Sidonta sid_tapaht[] = {
-  { SDL_KEYDOWN,     -1, napp_alas,       {0}                    },
-  { SDL_KEYUP,       -1, napp_ylos,       {0}                    },
-  { SDL_TEXTINPUT,    0, jatka_syotetta,  {.v=&tapaht.text.text} },
-  { SDL_WINDOWEVENT, -1, ikkunatapahtuma, {0}                    },
-  { SDL_QUIT,        -1, lopeta,          {0}                    },
+  { SDL_KEYDOWN,     -1,     napp_alas,       {0}                    },
+  { SDL_KEYUP,       -1,     napp_ylos,       {0}                    },
+  { SDL_TEXTINPUT,   0,      jatka_syotetta,  {.v=&tapaht.text.text} },
+  { SDL_TEXTINPUT,   VAIHTO, jatka_syotetta,  {.v=&tapaht.text.text} },
+  { SDL_WINDOWEVENT, -1,     ikkunatapahtuma, {0}                    },
+  { SDL_QUIT,        -1,     lopeta,          {0}                    },
 };
 
 Sidonta sid_napp_alas[] = {
