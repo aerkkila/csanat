@@ -38,6 +38,11 @@ typedef struct {
   Arg arg;
 } Sidonta;
 
+typedef struct {
+  char* nimi;
+  void (*funkt)(char*);
+} Komento;
+
 lista snsto;
 lista historia[3];
 lista tietolis;
@@ -60,6 +65,8 @@ void kohdistin_eteen(Arg maara);
 void kohdistin_taakse(Arg maara);
 void kasittele_syote(Arg syote);
 void komento(Arg syote);
+
+void lue_komento(char**);
 
 int utf8_siirto_eteen( const char* restrict str );
 int utf8_siirto_taakse( const char* restrict str, int rmax );
@@ -90,6 +97,11 @@ Sidonta sid_napp_alas[] = {
   { KEY( DELETE ),    0,   pyyhi_syotetta_eteen,  {0}           },
   { KEY( g ),         ALT, kohdistin_taakse,      {.i=1}        },
   { KEY( o ),         ALT, kohdistin_eteen,       {.i=1}        },
+};
+
+#define KNTO(knto) .nimi = #knto, .funkt = knto ## _komento
+Komento knnot[] = {
+  { KNTO(lue) },
 };
 
 void aja() {
@@ -205,7 +217,7 @@ void komento(Arg syotearg) {
     sscanf( syote, "%*s%n", &luku );
     syote += luku;
   }
-  char* knnot[sanoja];
+  char* knnot[sanoja+1];
   syote = syotearg.v;
   for(int i=0; i<sanoja; i++) { //kopioidaan sanat
     sscanf( syote, "%*s%n", &luku );
@@ -213,6 +225,13 @@ void komento(Arg syotearg) {
     sscanf( syote, "%s", knnot[i] );
     syote += luku;
   }
+  knnot[sanoja] = NULL;
+  
+  for( int i<0; i<TAULPIT(komennot); i++ ) {
+    if( komennot[i].nimi == *knnot )
+      komennot[i].funkt( syotearg.v, knnot );
+  }
+
   for(int i=0; i<sanoja; i++)
     free(knnot[i]);
 
