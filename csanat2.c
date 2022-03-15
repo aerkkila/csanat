@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include "csanat2.h"
 #include "lista.h"
 #include "toiminta.h"
@@ -11,8 +15,7 @@
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
 typedef struct {
-  char* sana;
-  char* kaan;
+  char* sana[2];
   int id;
   int tiedostonro;
   lista* hetket; // (lista(uint32), jolla on kierroksilta)(hetki | osattu?<<31)
@@ -66,8 +69,10 @@ void kohdistin_taakse(Arg maara);
 void kasittele_syote(Arg syote);
 void komento(Arg syote);
 
-void lue_komento(char**);
+void komento_lue(char**);
 
+void lue_sanastoksi(char* tnimi);
+char* lue_tiedosto(char* tnimi);
 int utf8_siirto_eteen( const char* restrict str );
 int utf8_siirto_taakse( const char* restrict str, int rmax );
 void liita_teksti( char* s, char* liitos );
@@ -99,7 +104,7 @@ Sidonta sid_napp_alas[] = {
   { KEY( o ),         ALT, kohdistin_eteen,       {.i=1}        },
 };
 
-#define KNTO(knto) .nimi = #knto, .funkt = knto ## _komento
+#define KNTO(knto) .nimi = #knto, .funkt = komento_ ## knto
 Komento knnot[] = {
   { KNTO(lue) },
 };
@@ -209,34 +214,57 @@ void kohdistin_taakse(Arg maara) {
 }
 
 void komento(Arg syotearg) {
-  int sanoja = 0;
-  char* restrict syote = syotearg.v;
-  int luku;
-  while(*syote) { //lasketaan sanat
-    sanoja++;
-    sscanf( syote, "%*s%n", &luku );
-    syote += luku;
-  }
-  char* knnot[sanoja+1];
-  syote = syotearg.v;
-  for(int i=0; i<sanoja; i++) { //kopioidaan sanat
-    sscanf( syote, "%*s%n", &luku );
-    knnot[i] = malloc(luku+1);
-    sscanf( syote, "%s", knnot[i] );
-    syote += luku;
-  }
-  knnot[sanoja] = NULL;
-  
-  for( int i<0; i<TAULPIT(komennot); i++ ) {
+  for( int i<0; i<TAULPIT(komennot); i++ )
     if( komennot[i].nimi == *knnot )
-      komennot[i].funkt( syotearg.v, knnot );
-  }
-
-  for(int i=0; i<sanoja; i++)
-    free(knnot[i]);
-
+      komennot[i].funkt(syotearg.v);
   *((char*)syotearg.v) = '\0';
   LAITA(syote);
+}
+
+void komento_lue(char* syote) {
+  int luku;
+  sscanf(syote, "%*s%n", &luku);
+  syote += luku;
+  char sana[512];
+  while( sscanf(syote, "%512s%n", sana, &luku) == 1 ) {
+    lue_tiedosto(sana);
+    syote += luku;
+  }
+}
+
+void lue_sanastoksi(char* tnimi) {
+  int joko0tai1 = 0;
+  unsigned char* tied = lue_tiedosto(tnimi);
+  int i=-1;
+  goto ALKUKOHTA;
+  while(1) {
+    while(tied[++i] && tied[i] <= ' ');
+    if(!tied[i])
+      return;
+    jatka_listaa(&snsto,1);
+    LISTALLA_LOPUSTA(snsto,snsto_1*,-1)->sana[joko0tai1] = tied+i;
+    joko0tai1 = (joko0tai1+1) % 2;
+    while(tied[++i] >= ' ');
+    if(!tied[i])
+      return;
+    tied[i] = '\0';
+  }
+}
+
+char* lue_tiedosto(char* tnimi) {
+  int fd;
+  struct stat filestat;
+  char* tied = NULL;
+  if( fd = open(tnimi,O_RDONLY)        < 0 ||
+      fstat(fd,&filestat)              < 0 ||
+      (tied = malloc(filestat.st_size+1)) == NULL ||
+      read(fd,tied,filestat.st_size)   < 0 )
+    perror("lue_tiedosto");
+  else
+    tied[filestat.st_size] = '\0';
+  if( close(fd) < 0 )
+    perror("lue_tiedosto, close");
+  return tied;
 }
 
 int utf8_siirto_eteen( const char* restrict str ) {
