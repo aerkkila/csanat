@@ -177,7 +177,7 @@ void jatka_syotetta(Arg arg_char_p) {
 
 void kasittele_syote(Arg syotearg) {
   char* syote = syotearg.v-1;
-  while(*++syote<0x31);
+  while(*++syote<=' ');
   if(*syote=='.')
     komento((Arg){.v=syote+1});
   else if( strcmp(kysymtxt,syotearg.v) )
@@ -249,7 +249,7 @@ aika_t* sana_historiaan() {
   time((time_t*)ptr);
   listalle_kopioiden_mjon( historia+0, kysymtxt );
   listalle_kopioiden_mjon( historia+1, syotetxt );
-  *syotetxt = '\0';
+  syoteviesti = 1;
   LAITA(historia);
   LAITA(syote);
   return ptr;
