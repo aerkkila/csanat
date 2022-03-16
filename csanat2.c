@@ -68,6 +68,7 @@ void kohdistin_eteen(Arg maara);
 void kohdistin_taakse(Arg maara);
 void kasittele_syote(Arg syote);
 void komento(Arg syote);
+void shellkomento(Arg syote);
 
 void komento_lue(char*);
 
@@ -79,6 +80,7 @@ void liita_teksti( char* s, char* liitos );
 aika_t* sana_historiaan();
 void sana_oikein();
 void sana_vaarin();
+void viestiksi(char*);
 
 /*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
   Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.*/
@@ -195,8 +197,10 @@ void jatka_syotetta(Arg arg_char_p) {
 void kasittele_syote(Arg syotearg) {
   char* syote = syotearg.v-1;
   while(*++syote<=' ');
-  if(*syote=='.')
+  if(*syote == komentomerkki)
     komento((Arg){.v=syote+1});
+  else if(*syote == shellkomentomerkki)
+    shellkomento((Arg){.v=syote+1});
   else if( strcmp(kysymtxt,syotearg.v) )
     sana_vaarin();
   else
@@ -225,6 +229,33 @@ void komento(Arg syotearg) {
       knnot[i].funkt(syotearg.v);
   *((char*)syotearg.v) = '\0';
   LAITA(syote);
+}
+
+void shellkomento(Arg syotearg) {
+  char* syote = syotearg.v;
+  tuhoa_tama_lista2(&tietolis);
+  alusta_tama_lista(&tietolis,8,char**);
+  FILE *f = popen(syote,"r");
+  if(!f) {
+    viestiksi("Ei avattu prosessia \n");
+    return;
+  }
+  const int rivin_pituus = 8;
+  char sana[rivin_pituus];
+  int i=0;
+  while(!feof(f)) {
+    sana[i] = fgetc(f);
+    if( sana[i] != '\n' ) {
+      if( ++i < rivin_pituus )
+	continue;
+      fseek(f,-1,SEEK_CUR);
+    }
+    sana[i] = '\0';
+    listalle_kopioiden_mjon(&tietolis,sana);
+    i=0;
+  }
+  pclose(f);
+  LAITA(tieto);
 }
 
 void komento_lue(char* syote) {
@@ -318,6 +349,25 @@ void sana_oikein() {
 void sana_vaarin() {
   sana_historiaan();
   ASETA_ASIAN_VARI(syote,VAARAV);
+}
+
+void viestiksi(char* syote) {
+  tuhoa_tama_lista2(&tietolis);
+  alusta_tama_lista(&tietolis,4,char**);
+  char sana[tieto_nchar+1];
+  int j=0, i=0;
+  while(1) { //tätä pitää tarkastella vielä
+    sana[j] = syote[i];
+    if(++j == tieto_nchar || sana[j] == '\n') {
+      sana[j] = '\0';
+      j = 0;
+      listalle_kopioiden_mjon(&tietolis,sana);
+    }
+    if(syote[++i])
+      continue;
+    break;
+  }
+  LAITA(tieto);
 }
 
 int main(int argc, char** argv) {
