@@ -237,23 +237,25 @@ void shellkomento(Arg syotearg) {
   alusta_tama_lista(&tietolis,8,char**);
   FILE *f = popen(syote,"r");
   if(!f) {
+    perror("popen");
     viestiksi("Ei avattu prosessia \n");
-    return;
-  }
-  char sana[tieto_nchar];
-  int i=0;
-  while(!feof(f)) {
-    sana[i] = fgetc(f);
-    if( sana[i] != '\n' ) {
-      if( ++i < tieto_nchar )
-	continue;
-      fseek(f,-1,SEEK_CUR);
+  } else {
+    char sana[tieto_nchar];
+    int i=0;
+    while(!feof(f)) {
+      sana[i] = fgetc(f);
+      if( sana[i] != '\n' ) {
+	if( ++i < tieto_nchar )
+	  continue;
+	fseek(f,-1,SEEK_CUR);
+      }
+      sana[i] = '\0';
+      listalle_kopioiden_mjon(&tietolis,sana);
+      i=0;
     }
-    sana[i] = '\0';
-    listalle_kopioiden_mjon(&tietolis,sana);
-    i=0;
+    pclose(f);
   }
-  pclose(f);
+  *(char*)syotearg.v = '\0';
   LAITA(tieto);
 }
 
