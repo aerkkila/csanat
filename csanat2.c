@@ -69,7 +69,7 @@ void kohdistin_taakse(Arg maara);
 void kasittele_syote(Arg syote);
 void komento(Arg syote);
 
-void komento_lue(char**);
+void komento_lue(char*);
 
 void lue_sanastoksi(char* tnimi);
 char* lue_tiedosto(char* tnimi);
@@ -214,9 +214,15 @@ void kohdistin_taakse(Arg maara) {
 }
 
 void komento(Arg syotearg) {
-  for( int i<0; i<TAULPIT(komennot); i++ )
-    if( komennot[i].nimi == *knnot )
-      komennot[i].funkt(syotearg.v);
+  int pit;
+  sscanf(syotearg.v, "%*s%n", &pit);
+  char knto[pit+1];
+  memcpy(knto, syotearg.v, pit);
+  knto[pit] = 0;
+  pit = TAULPIT(knnot);
+  for( int i=0; i<pit; i++ )
+    if( !strcmp(knnot[i].nimi,knto) )
+      knnot[i].funkt(syotearg.v);
   *((char*)syotearg.v) = '\0';
   LAITA(syote);
 }
@@ -227,22 +233,23 @@ void komento_lue(char* syote) {
   syote += luku;
   char sana[512];
   while( sscanf(syote, "%512s%n", sana, &luku) == 1 ) {
-    lue_tiedosto(sana);
+    lue_sanastoksi(sana);
     syote += luku;
   }
 }
 
 void lue_sanastoksi(char* tnimi) {
   int joko0tai1 = 0;
-  unsigned char* tied = lue_tiedosto(tnimi);
+  unsigned char* tied = (unsigned char*)lue_tiedosto(tnimi);
+  if(!tied)
+    return;
   int i=-1;
-  goto ALKUKOHTA;
   while(1) {
     while(tied[++i] && tied[i] <= ' ');
     if(!tied[i])
       return;
     jatka_listaa(&snsto,1);
-    LISTALLA_LOPUSTA(snsto,snsto_1*,-1)->sana[joko0tai1] = tied+i;
+    LISTALLA_LOPUSTA(&snsto,snsto_1*,-1)->sana[joko0tai1] = (char*)tied+i;
     joko0tai1 = (joko0tai1+1) % 2;
     while(tied[++i] >= ' ');
     if(!tied[i])
@@ -255,7 +262,7 @@ char* lue_tiedosto(char* tnimi) {
   int fd;
   struct stat filestat;
   char* tied = NULL;
-  if( fd = open(tnimi,O_RDONLY)        < 0 ||
+  if( (fd = open(tnimi,O_RDONLY))      < 0 ||
       fstat(fd,&filestat)              < 0 ||
       (tied = malloc(filestat.st_size+1)) == NULL ||
       read(fd,tied,filestat.st_size)   < 0 )
