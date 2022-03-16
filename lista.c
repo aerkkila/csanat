@@ -10,6 +10,7 @@ void tuhoa_tama_lista2(lista* l) {
   for(int i=0; i<l->pit; i++)
     free(*LISTALLA(l,void**,i));
   free(l->taul);
+  l->taul = NULL;
 }
 
 lista* _alusta_tama_lista(lista* l, unsigned patka, size_t koko) {
@@ -17,6 +18,7 @@ lista* _alusta_tama_lista(lista* l, unsigned patka, size_t koko) {
   l->tilaa = 0;
   l->koko = koko;
   l->pit = 0;
+  l->taul = NULL;
   return l;
 }
 

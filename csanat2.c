@@ -240,13 +240,12 @@ void shellkomento(Arg syotearg) {
     viestiksi("Ei avattu prosessia \n");
     return;
   }
-  const int rivin_pituus = 8;
-  char sana[rivin_pituus];
+  char sana[tieto_nchar];
   int i=0;
   while(!feof(f)) {
     sana[i] = fgetc(f);
     if( sana[i] != '\n' ) {
-      if( ++i < rivin_pituus )
+      if( ++i < tieto_nchar )
 	continue;
       fseek(f,-1,SEEK_CUR);
     }
