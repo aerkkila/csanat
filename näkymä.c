@@ -107,7 +107,7 @@ static void laita_teksti(piirtoarg arg) {
   arg.olio->alue.h = pinta->h;
 
   int w_minus = pinta->w - arg.olio->alue.w;
-  SDL_Rect kopioosa = { w_minus, arg.olio->alue.y, arg.olio->alue.w, arg.olio->alue.h };
+  SDL_Rect kopioosa = { w_minus, 0, arg.olio->alue.w, arg.olio->alue.h };
   SDL_RenderCopy( rend, ttuuri, &kopioosa, &arg.olio->alue );
  LOPPU:
   SDL_FreeSurface(pinta);
@@ -236,12 +236,14 @@ void paivita_kuva(unsigned laitot) {
     SDL_SetRenderTarget(rend,pohja);
     ASETA_VARI(varit[TAUSTV]);
     SDL_RenderClear(rend);
-    for(int i=0; i<laitot_enum_pituus; i++)
+    for(int i=0; i<laitot_enum_pituus; i++) {
       if( (laitot>>i & 1) | uusi_pohjat ) {
 	valmista_nakyolion_tekstuuri(piirtoargs[i].olio);
 	piirtofunkt[i]( piirtoargs[i] );
-      } else
-	SDL_RenderCopy( rend, piirtoargs[i].olio->pohja, NULL, &piirtoargs[i].olio->alue );
+	SDL_SetRenderTarget(rend,pohja);
+      }
+      SDL_RenderCopy( rend, piirtoargs[i].olio->pohja, &piirtoargs[i].olio->alue, &piirtoargs[i].olio->alue );
+    }
     laita_kohdistin();
     SDL_SetRenderTarget(rend,NULL);
   }
