@@ -62,6 +62,7 @@ void pyyhi_syotetta_eteen(Arg turha);
 void pyyhi_syotetta_taakse(Arg turha);
 void kohdistin_eteen(Arg maara);
 void kohdistin_taakse(Arg maara);
+void sigtrap(Arg turha);
 void kasittele_syote(Arg syote);
 void komento(Arg syote);
 void shellkomento(Arg syote);
@@ -105,6 +106,7 @@ Sidonta sid_napp_alas[] = {
   { KEY( DELETE ),    0,   pyyhi_syotetta_eteen,  {0}           },
   { KEY( g ),         ALT, kohdistin_taakse,      {.i=1}        },
   { KEY( o ),         ALT, kohdistin_eteen,       {.i=1}        },
+  { KEY( PAUSE ),     ALT, sigtrap,               {0}           },
 };
 
 #define KNTO(knto) .nimi = #knto, .funkt = komento_ ## knto
@@ -201,16 +203,19 @@ void jatka_syotetta(Arg arg_char_p) {
 void kasittele_syote(Arg syotearg) {
   char* syote = syotearg.v-1;
   while(*++syote<=' ');
-  if(*syote == komentomerkki)
+  if(*syote == komentomerkki) {
     komento((Arg){.v=syote+1});
-  else if(*syote == shellkomentomerkki)
+    knto_historiaan(syote);
+  } else if(*syote == shellkomentomerkki) {
     shellkomento((Arg){.v=syote+1});
-  else if(snsto.pit) {
+    knto_historiaan(syote);
+  } else if(snsto.pit) {
     sana_historiaan( !strcmp(kysymtxt,--syote) );
     laita_kysymys(++kysymind);
-    return;
   }
-  knto_historiaan(syote);
+  kohdistin = 0;
+  ((char*)syotearg.v)[0] = '\0';
+  LAITA(syote);
 }
 
 void kohdistin_eteen(Arg maara) {
@@ -223,6 +228,10 @@ void kohdistin_taakse(Arg maara) {
   LAITA(syote);
 }
 
+void sigtrap(Arg turha) {
+  asm("int $3");
+}
+
 void komento(Arg syotearg) {
   int pit;
   sscanf(syotearg.v, "%*s%n", &pit);
@@ -233,8 +242,6 @@ void komento(Arg syotearg) {
   for( int i=0; i<pit; i++ )
     if( !strcmp(knnot[i].nimi,knto) )
       knnot[i].funkt(syotearg.v);
-  *((char*)syotearg.v) = '\0';
-  LAITA(syote);
 }
 
 void shellkomento(Arg syotearg) {
@@ -261,7 +268,6 @@ void shellkomento(Arg syotearg) {
     }
     pclose(f);
   }
-  *(char*)syotearg.v = '\0';
   LAITA(tieto);
 }
 
