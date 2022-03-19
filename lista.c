@@ -27,13 +27,14 @@ lista* _alusta_lista(unsigned patka, size_t koko) {
   return _alusta_tama_lista(l,patka,koko);
 }
 
-void jatka_listaa(lista* l, int n) {
+void* jatka_listaa(lista* l, int n) {
   l->pit += n;
   int uusi_patkia = l->pit / l->patka + !!(l->pit % l->patka);
   if(uusi_patkia != l->tilaa / l->patka) {
     l->tilaa = uusi_patkia*l->patka;
     l->taul = realloc(l->taul, l->tilaa*l->koko);
   }
+  return l->taul + (l->pit-1)*l->koko;
 }
 
 void listalle_kopioiden_mjon(lista* l, const char* restrict s) {

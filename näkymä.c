@@ -137,7 +137,7 @@ static void laita_historia(piirtoarg turha) {
 
   /*vasen lista*/
   for(i=historia[0].pit-1; i>=pienin; i--) {
-    histrol.takavari = varit + ( *LISTALLA(historia+2,aika_t*,i) < 0 ? OIKEATAUSTV : VAARATAUSTV );
+    histrol.takavari = varit + ( *LISTALLA(historia+2,aika_t*,i) & 1<<(sizeof(aika_t)-1) ? OIKEATAUSTV : VAARATAUSTV );
     laita_listan_jasen( &histrol, *LISTALLA(historia,char**,i) );
   }
   laita_listan_jasen(&histrol,NULL);

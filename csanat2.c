@@ -14,19 +14,14 @@
 #define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
+/* Tässä hetket viittaa lukuihin kuin historia+2, jotka luodaan historia+2-listaan.
+   Listalla on (aika_t)aika, jossa merkitsevimmät bitit ovat (osattiin,kumpi_kysyttiin)*/
 typedef struct {
   char* sana[2];
-  int id;
-  int tiedostonro;
-  lista* hetket; // (lista(uint32), jolla on kierroksilta)(hetki | osattu?<<31)
+  //int id;
+  //int tiedostonro;
+  lista hetket;
 } snsto_1;
-
-#if 0
-typedef struct {
-  char* kysym;
-  char* syote;
-} kysynnat_1;
-#endif
 
 typedef union {
   int i;
@@ -50,11 +45,12 @@ lista snsto;
 lista historia[3];
 lista tietolis;
 lista tiedostot;
-unsigned modkey, laitot;
-int kohdistin, syoteviesti;
+int *kysymjarj, kysymjarjpit;
 char globchar[maxpit_syote];
 char syotetxt[maxpit_syote];
 char kysymtxt[maxpit_syote];
+unsigned modkey, laitot;
+int kohdistin, syoteviesti, kumpi_kysym, kysymind;
 
 void aja();
 void lopeta(Arg turha);
@@ -70,23 +66,28 @@ void kasittele_syote(Arg syote);
 void komento(Arg syote);
 void shellkomento(Arg syote);
 
+/*Nämä funktiot lisätään knnot-taulukkoon, KNTO-makrolla.*/
 void komento_lue(char*);
 
 void lue_sanastoksi(char* tnimi);
-char* lue_tiedosto(char* tnimi);
+char* lue_tiedosto_merkkijonoksi(char* tnimi);
+void luo_uusi_jarjestys(int** jarj, int* jarjpit);
+int laske_osaamiset(lista* hetket);
 int utf8_siirto_eteen( const char* restrict str );
 int utf8_siirto_taakse( const char* restrict str, int rmax );
 void liita_teksti( char* s, char* liitos );
-aika_t* sana_historiaan();
-void sana_oikein();
-void sana_vaarin();
+void knto_historiaan(char* knto);
+void sana_historiaan(int oikeinko);
 void viestiksi(char*);
+void laita_kysymys(int ind);
+void laita_tiedot();
 
 /*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
-  Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.*/
+  Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.
+  Käytännössä ei taida oikein toteutua, mutta tuo on pyrkimys.*/
 #include "näkymä.c"
-
 SDL_Event tapaht;
+
 /*Näissä tarkistus lopetetaan ensimmäiseen täsmäävään. -1 on mikä tahansa*/
 Sidonta sid_tapaht[] = {
   { TAPAHT( KEYDOWN ),     -1,     napp_alas,       {0}                    },
@@ -154,10 +155,13 @@ void napp_ylos(Arg turha) {
 void lopeta(Arg turha) {
   tuhoa_nakyma();
   tuhoa_tama_lista2(&tiedostot);
+  for(int i=0; i<snsto.pit; i++)
+    tuhoa_tama_lista(&LISTALLA(&snsto,snsto_1*,i)->hetket);
   tuhoa_tama_lista(&snsto);
   listastolla(tuhoa_tama_lista2,historia,2);
   tuhoa_tama_lista(historia+2);
   tuhoa_tama_lista2(&tietolis);
+  free(kysymjarj);
   exit(EXIT_SUCCESS);
 }
 
@@ -201,10 +205,12 @@ void kasittele_syote(Arg syotearg) {
     komento((Arg){.v=syote+1});
   else if(*syote == shellkomentomerkki)
     shellkomento((Arg){.v=syote+1});
-  else if( strcmp(kysymtxt,syotearg.v) )
-    sana_vaarin();
-  else
-    sana_oikein();
+  else if(snsto.pit) {
+    sana_historiaan( !strcmp(kysymtxt,--syote) );
+    laita_kysymys(++kysymind);
+    return;
+  }
+  knto_historiaan(syote);
 }
 
 void kohdistin_eteen(Arg maara) {
@@ -264,24 +270,33 @@ void komento_lue(char* syote) {
   sscanf(syote, "%*s%n", &luku);
   syote += luku;
   char sana[512];
-  while( sscanf(syote, "%512s%n", sana, &luku) == 1 ) {
+  while( sscanf(syote, "%511s%n", sana, &luku) == 1 ) {
     lue_sanastoksi(sana);
     syote += luku;
   }
+  luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
+  kysymind = 0;
+  laita_kysymys(kysymind);
 }
 
 void lue_sanastoksi(char* tnimi) {
-  int joko0tai1 = 0;
-  unsigned char* tied = (unsigned char*)lue_tiedosto(tnimi);
+  unsigned char* tied = (unsigned char*)lue_tiedosto_merkkijonoksi(tnimi);
   if(!tied)
     return;
   int i=-1;
+  /*Tiedosto on nyt luettu yhdeksi merkkijonoksi.
+    Tässä ei enää kopioida mitään,
+    vaan laitetaan viitteet kyseisen merkkijonon sananalkukohtiin
+    ja muutetaan sanojen erotinmerkit nollatavuiksi.*/
+  int joko0tai1 = 0;
   while(1) {
     while(tied[++i] && tied[i] <= ' ');
     if(!tied[i])
       return;
-    jatka_listaa(&snsto,1);
-    LISTALLA_LOPUSTA(&snsto,snsto_1*,-1)->sana[joko0tai1] = (char*)tied+i;
+    /*sanan alku löytyi ja laitetaan listalle*/
+    snsto_1* jasen = jatka_listaa(&snsto,!joko0tai1); // if(!joko0tai1) jatka_listaa(lista,1)
+    jasen->sana[joko0tai1] = (char*)tied+i;
+    alusta_tama_lista(&jasen->hetket,4,aika_t**);
     joko0tai1 = (joko0tai1+1) % 2;
     while(tied[++i] >= ' ');
     if(!tied[i])
@@ -290,7 +305,7 @@ void lue_sanastoksi(char* tnimi) {
   }
 }
 
-char* lue_tiedosto(char* tnimi) {
+char* lue_tiedosto_merkkijonoksi(char* tnimi) {
   int fd;
   struct stat filestat;
   char* tied = NULL;
@@ -304,6 +319,27 @@ char* lue_tiedosto(char* tnimi) {
   if( close(fd) < 0 )
     perror("lue_tiedosto, close");
   return tied;
+}
+
+void luo_uusi_jarjestys(int** jarj, int* jarjpit) {
+  free(*jarj); *jarj = NULL;
+  lista jarjlis;
+  alusta_tama_lista(&jarjlis, 8, int);
+  for(int i=0; i<snsto.pit; i++)
+    if(laske_osaamiset(&LISTALLA(&snsto,snsto_1*,i)->hetket) < osaamisraja)
+      *(int*)jatka_listaa(&jarjlis,1) = i;
+  *jarj = jarjlis.taul; //listan kasamuistiosa sijoitetaan tähän, joten ei tarvitse vapauttaa
+  *jarjpit = jarjlis.pit;
+  //sekoittaminen puuttuu
+}
+
+int laske_osaamiset(lista* hetket) {
+  aika_t** taul = hetket->taul;
+  int osaamiset = 0;
+  for(int i=0; i<hetket->pit; i++)
+    if( *taul[i] & 1<<(sizeof(aika_t)-1) )
+      osaamiset++;
+  return osaamiset;
 }
 
 int utf8_siirto_eteen( const char* restrict str ) {
@@ -329,27 +365,29 @@ void liita_teksti( char* s, char* liitos ) {
   strcat( s, loppu );
 }
 
-aika_t* sana_historiaan() {
-  jatka_listaa( historia+2, 1 );
-  aika_t *ptr = LISTALLA_LOPUSTA( historia+2, aika_t*, -1 );
-  time((time_t*)ptr);
+void knto_historiaan(char* knto) {
+  *(char**)jatka_listaa(historia+0, 1) = NULL;
+  listalle_kopioiden_mjon(historia+1, knto);
+  time( (time_t*)jatka_listaa(historia+2, 1) );
+  LAITA(historia);
+}
+
+void sana_historiaan(int oikeinko) {
   listalle_kopioiden_mjon( historia+0, kysymtxt );
   listalle_kopioiden_mjon( historia+1, syotetxt );
+  /*historia+2 on lista hetkistä ja osaamisista*/
+  aika_t* ptr = jatka_listaa( historia+2, 1 );
+  time((time_t*)ptr);
+  *ptr |= oikeinko<<(sizeof(aika_t)-1);
+  *ptr |= kumpi_kysym<<(sizeof(aika_t)-2);
+  /*snsto_1.hetket viittaa samaan kuin historia+2*/
+  lista* snstohetk = &LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->hetket;
+  *(aika_t**)jatka_listaa(snstohetk,1) = ptr;
+  /*näkymän asiat*/
+  ASETA_ASIAN_VARI(syote,VAARAV+oikeinko);
   syoteviesti = 1;
   LAITA(historia);
   LAITA(syote);
-  return ptr;
-}
-
-void sana_oikein() {
-  aika_t* ptr = sana_historiaan();
-  *ptr *= -1;
-  ASETA_ASIAN_VARI(syote,OIKEAV);
-}
-
-void sana_vaarin() {
-  sana_historiaan();
-  ASETA_ASIAN_VARI(syote,VAARAV);
 }
 
 void viestiksi(char* syote) {
@@ -369,6 +407,22 @@ void viestiksi(char* syote) {
     break;
   }
   LAITA(tieto);
+}
+
+void laita_kysymys(int ind) {
+  if( ind == kysymjarjpit ) {
+    *kysymtxt = '\0';
+    return;
+  } else if( ind > kysymjarjpit ) {
+    ind = 0;
+    luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
+  }
+  char* kopioitava = LISTALLA(&snsto,snsto_1*,kysymjarj[ind])->sana[kumpi_kysym];
+  int i;
+  for(i=0; (i<maxpit_syote-1) & kopioitava[i]; i++)
+    kysymtxt[i] = kopioitava[i];
+  kysymtxt[i] = '\0';
+  LAITA(kysymys);
 }
 
 int main(int argc, char** argv) {
@@ -402,6 +456,8 @@ int main(int argc, char** argv) {
   
   for(int i=0; i<laitot_enum_pituus; i++)
     laitot |= 1<<i;
+  while(SDL_PollEvent(&tapaht)); //tyhjennetään
+  paivita_ikkunan_koko();
   aja();
 
   puts("\033[1;33mVaroitus:\033[0m aja-funktio palasi, vaikka ei olisi pitänyt.");

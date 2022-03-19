@@ -7,6 +7,6 @@ const int osaamisraja = 1;
 const unsigned uniaika = 20;
 const char komentomerkki = '.';
 const char shellkomentomerkki = ',';
-int tieto_nchar = 8; //pieni, jotta nähdään, toimiiko rivijako oikein
+int tieto_nchar = 38;
 
 #endif

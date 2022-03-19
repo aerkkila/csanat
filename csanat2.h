@@ -28,6 +28,6 @@ enum laitot_enum {
 #define OIKEATAUSTV 5
 #define KOHDISTINV  6
 
-typedef int_fast64_t aika_t;
+typedef uint_fast64_t aika_t;
 
 #endif

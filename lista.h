@@ -27,7 +27,7 @@ typedef struct {
 
 lista* _alusta_tama_lista(lista* l, unsigned patka, size_t koko);
 lista* _alusta_lista(unsigned,size_t);
-void jatka_listaa(lista*, int);
+void* jatka_listaa(lista*, int);
 void* tuhoa_lista(lista*);
 void tuhoa_tama_lista(lista*);
 void tuhoa_tama_lista2(lista*);
