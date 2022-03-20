@@ -202,6 +202,8 @@ void jatka_syotetta(Arg arg_char_p) {
 
 void kasittele_syote(Arg syotearg) {
   char* syote = syotearg.v-1;
+  kohdistin = 0;
+  LAITA(syote);
   while(*++syote<=' ');
   if(*syote == komentomerkki) {
     komento((Arg){.v=syote+1});
@@ -212,10 +214,9 @@ void kasittele_syote(Arg syotearg) {
   } else if(snsto.pit) {
     sana_historiaan( !strcmp(kysymtxt,--syote) );
     laita_kysymys(++kysymind);
+    return;
   }
-  kohdistin = 0;
   ((char*)syotearg.v)[0] = '\0';
-  LAITA(syote);
 }
 
 void kohdistin_eteen(Arg maara) {
@@ -425,7 +426,7 @@ void laita_kysymys(int ind) {
   }
   char* kopioitava = LISTALLA(&snsto,snsto_1*,kysymjarj[ind])->sana[kumpi_kysym];
   int i;
-  for(i=0; (i<maxpit_syote-1) & kopioitava[i]; i++)
+  for(i=0; (i<maxpit_syote-1) && kopioitava[i]; i++)
     kysymtxt[i] = kopioitava[i];
   kysymtxt[i] = '\0';
   LAITA(kysymys);
