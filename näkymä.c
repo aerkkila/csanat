@@ -31,7 +31,7 @@ static int uusi_pohjat;
 static void laita_teksti(piirtoarg);
 static void laita_historia(piirtoarg);
 static void laita_lista(piirtoarg);
-static void laita_listan_jasen(nakyolio*, char*);
+static void laita_listan_jasen(nakyolio*, char*, int);
 static void paivita_sijainnit();
 static void paivita_ikkunan_koko();
 static void valmista_nakyolion_tekstuuri(nakyolio*);
@@ -114,9 +114,9 @@ static void laita_teksti(piirtoarg arg) {
   SDL_DestroyTexture(ttuuri);
 }
 
-static void laita_listan_jasen(nakyolio* ol, char* teksti) {
+static void laita_listan_jasen(nakyolio* ol, char* teksti, int jatka) {
   static int w, h;
-  if(!teksti) {
+  if(!jatka) {
     ol->alue.w = w;
     ol->alue.h = h;
     ol->alue.y -= h;
@@ -138,9 +138,9 @@ static void laita_historia(piirtoarg turha) {
   /*vasen lista*/
   for(i=historia[0].pit-1; i>=pienin; i--) {
     histrol.takavari = varit + ( *LISTALLA(historia+2,aika_t*,i) & 1<<(sizeof(aika_t)-1) ? OIKEATAUSTV : VAARATAUSTV );
-    laita_listan_jasen( &histrol, *LISTALLA(historia,char**,i) );
+    laita_listan_jasen( &histrol, *LISTALLA(historia,char**,i), 1);
   }
-  laita_listan_jasen(&histrol,NULL);
+  laita_listan_jasen(&histrol,NULL,0);
   
   SDL_Rect alue = histrol.alue;
   histrol.alue.x += histrol.alue.w;
@@ -148,8 +148,8 @@ static void laita_historia(piirtoarg turha) {
   
   /*oikea lista*/
   for(int j=historia[0].pit-1; j>i; j--)
-    laita_listan_jasen( &histrol, *LISTALLA(historia+1,char**,j) );
-  laita_listan_jasen( &histrol, NULL );
+    laita_listan_jasen( &histrol, *LISTALLA(historia+1,char**,j), 1 );
+  laita_listan_jasen( &histrol, NULL, 0 );
   
   histrol.alue.x = alue.x;
   histrol.alue.w += alue.w;
@@ -161,8 +161,8 @@ static void laita_lista(piirtoarg arg) {
   int mahtuu = (ikk_w-arg.olio->alue.y) / TTF_FontLineSkip(arg.olio->font);
   int loppu = mahtuu < pit ? mahtuu : pit;
   for(int i=0; i<loppu; i++)
-    laita_listan_jasen( arg.olio, *LISTALLA( ((lista*)arg.teksti), char**, i ) );
-  laita_listan_jasen( arg.olio, NULL );
+    laita_listan_jasen( arg.olio, *LISTALLA( ((lista*)arg.teksti), char**, i ), 1 );
+  laita_listan_jasen( arg.olio, NULL, 0 );
   /*kopiointi varsinaiseen tekstuuriin*/
   SDL_SetRenderTarget( rend, pohja );
   SDL_RenderCopy( rend, arg.olio->pohja, &arg.olio->alue, &arg.olio->alue );

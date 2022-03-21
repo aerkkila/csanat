@@ -69,6 +69,7 @@ void shellkomento(Arg syote);
 
 /*Nämä funktiot lisätään knnot-taulukkoon, KNTO-makrolla.*/
 void komento_lue(char*);
+void komento_tulosta_historia(char*);
 
 void lue_sanastoksi(char* tnimi);
 char* lue_tiedosto_merkkijonoksi(char* tnimi);
@@ -112,6 +113,7 @@ Sidonta sid_napp_alas[] = {
 #define KNTO(knto) .nimi = #knto, .funkt = komento_ ## knto
 Komento knnot[] = {
   { KNTO(lue) },
+  { KNTO(tulosta_historia) },
 };
 
 void aja() {
@@ -212,8 +214,10 @@ void kasittele_syote(Arg syotearg) {
     shellkomento((Arg){.v=syote+1});
     knto_historiaan(syote);
   } else if(kysymind < kysymjarjpit) {
-    kasittele_yrite( !strcmp(LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[!kumpi_kysym], syote) );
+    kasittele_yrite(!strcmp(LISTALLA( &snsto,snsto_1*,kysymjarj[kysymind])->sana[!kumpi_kysym], syote ));
     laita_kysymys(++kysymind);
+    tuhoa_tama_lista2(&tietolis);
+    LAITA(tieto);
     return;
   } else if(snsto.pit) {
     laita_kysymys(++kysymind);
@@ -287,6 +291,16 @@ void komento_lue(char* syote) {
   luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
   kysymind = 0;
   laita_kysymys(kysymind);
+}
+
+void komento_tulosta_historia(char* syote) {
+  const char* a = "\033[94m";
+  const char* b = "\033[95m";
+  for(int i=0; i<historia[2].pit; i++)
+    printf( "%s%s\t%s%s\n",
+	    a, *LISTALLA(historia+0,char**,i),
+	    b, *LISTALLA(historia+1,char**,i) );
+  puts("\033[0m");
 }
 
 void lue_sanastoksi(char* tnimi) {
