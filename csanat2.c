@@ -78,7 +78,7 @@ int utf8_siirto_eteen( const char* restrict str );
 int utf8_siirto_taakse( const char* restrict str, int rmax );
 void liita_teksti( char* s, char* liitos );
 void knto_historiaan(char* knto);
-void sana_historiaan(int oikeinko);
+void kasittele_yrite(int oikeinko);
 void viestiksi(char*);
 void laita_kysymys(int ind);
 void laita_tiedot();
@@ -211,8 +211,11 @@ void kasittele_syote(Arg syotearg) {
   } else if(*syote == shellkomentomerkki) {
     shellkomento((Arg){.v=syote+1});
     knto_historiaan(syote);
+  } else if(kysymind < kysymjarjpit) {
+    kasittele_yrite( !strcmp(LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[!kumpi_kysym], syote) );
+    laita_kysymys(++kysymind);
+    return;
   } else if(snsto.pit) {
-    sana_historiaan( !strcmp(kysymtxt,--syote) );
     laita_kysymys(++kysymind);
     return;
   }
@@ -379,7 +382,7 @@ void knto_historiaan(char* knto) {
   LAITA(historia);
 }
 
-void sana_historiaan(int oikeinko) {
+void kasittele_yrite(int oikeinko) {
   listalle_kopioiden_mjon( historia+0, kysymtxt );
   listalle_kopioiden_mjon( historia+1, syotetxt );
   /*historia+2 on lista hetkistä ja osaamisista*/
