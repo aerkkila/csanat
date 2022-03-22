@@ -1,4 +1,4 @@
-int ikk_x=300, ikk_y=0, ikk_w=600, ikk_h=400;
+int ikk_x=SDL_WINDOWPOS_UNDEFINED, ikk_y=SDL_WINDOWPOS_UNDEFINED, ikk_w=600, ikk_h=400;
 
 SDL_Color const varit[] = {
   [ETUV]        = {255,255,255,255},

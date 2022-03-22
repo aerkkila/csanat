@@ -207,6 +207,13 @@ void kasittele_syote(Arg syotearg) {
   kohdistin = 0;
   LAITA(syote);
   while(*++syote<=' ');
+  char* seur = syote;
+  while(*seur && *seur != '\n')
+    seur++;
+  if(*seur == '\n') {
+    *seur = '\0';
+    seur++;
+  }
   if(*syote == komentomerkki) {
     komento((Arg){.v=syote+1});
     knto_historiaan(syote);
@@ -218,11 +225,11 @@ void kasittele_syote(Arg syotearg) {
     laita_kysymys(++kysymind);
     tuhoa_tama_lista2(&tietolis);
     LAITA(tieto);
-    return;
   } else if(snsto.pit) {
     laita_kysymys(++kysymind);
-    return;
   }
+  if(*seur)
+    kasittele_syote((Arg){.v=seur});
   ((char*)syotearg.v)[0] = '\0';
 }
 
@@ -466,22 +473,20 @@ int main(int argc, char** argv) {
       *globchar2++ = c;
     fclose(f);
   }
-  if(globchar2 != globchar) {
-    if(*(globchar2-1) == '\n')
-      *(globchar2-1) = '\0';
-    else
-      *globchar2 = '\0';
-  }
   /*luetaan komennot komentoriviltä*/
   for(int i=1; i<argc; i++) {
-    globchar2 = globchar + strlen(globchar);
-    sprintf(globchar2, " %s", argv[i]);
+    int n;
+    sprintf(globchar2, " %s%n", argv[i],&n);
+    globchar2 += n;
   }
+  *globchar2 = '\0';
   
   for(int i=0; i<laitot_enum_pituus; i++)
     laitot |= 1<<i;
   while(SDL_PollEvent(&tapaht)); //tyhjennetään
   paivita_ikkunan_koko();
+  if(strlen(globchar))
+    kasittele_syote((Arg){.v=globchar});
   aja();
 
   puts("\033[1;33mVaroitus:\033[0m aja-funktio palasi, vaikka ei olisi pitänyt.");
