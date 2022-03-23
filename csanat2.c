@@ -193,7 +193,7 @@ void jatka_syotetta(Arg arg_char_p) {
   if(syoteviesti) { //syötteen paikalla voi olla viesti
     syotetxt[0] = '\0';
     syoteviesti = 0;
-    ASETA_ASIAN_VARI(syote,ETUV);
+    ASETA_ASIAN_VARIT(syote,ETUV,TAUSTV);
   }
   if(!kohdistin)
     strcat(syotetxt,mjon);
@@ -415,7 +415,10 @@ void kasittele_yrite(int oikeinko) {
   lista* snstohetk = &LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->hetket;
   *(aika_t**)jatka_listaa(snstohetk,1) = ptr;
   /*näkymän asiat*/
-  ASETA_ASIAN_VARI(syote,VAARAV+oikeinko);
+  if(oikeinko)
+    ASETA_ASIAN_VARIT(syote,O_SYOTE1,O_SYOTE2);
+  else
+    ASETA_ASIAN_VARIT(syote,V_SYOTE1,V_SYOTE2);
   syoteviesti = 1;
   LAITA(historia);
   LAITA(syote);

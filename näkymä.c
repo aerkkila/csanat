@@ -19,7 +19,11 @@ typedef struct {
 } piirtoarg;
 
 #define ASETA_VARI(c) SDL_SetRenderDrawColor( rend, (c).r, (c).g, (c).b, (c).a )
-#define ASETA_ASIAN_VARI(olio,ind) (olio ## ol).etuvari = varit+ind;
+#define ASETA_ASIAN_VARI(olio,kumpi,ind) (olio ## ol).kumpi ##vari = varit+ind;
+#define ASETA_ASIAN_VARIT(olio,ind1,ind2) do {	\
+    (olio ## ol).etuvari = varit+ind1;		\
+    (olio ## ol).takavari = varit+ind2;		\
+  } while(0)
 #define TAPAHT(a) SDL_ ## a
 #define KEY(a) SDLK_ ## a
 
@@ -131,22 +135,27 @@ static void laita_listan_jasen(nakyolio* ol, char* teksti, int jatka) {
 }
 
 static void laita_historia(piirtoarg turha) {
-  int i;
+  int i, apu;
   int mahtuu = (ikk_h-histrol.alue.y) / TTF_FontLineSkip(histrol.font);
   int pienin = (mahtuu < historia[0].pit) * (historia[0].pit - mahtuu);
 
   /*vasen lista*/
   for(i=historia[0].pit-1; i>=pienin; i--) {
-    histrol.takavari = varit + ( *LISTALLA(historia+2,aika_t*,i) & 1<<(sizeof(aika_t)-1) ? OIKEATAUSTV : VAARATAUSTV );
+    if ( *LISTALLA(historia+2,aika_t*,i) & 1<<(sizeof(aika_t)-1) )
+      ASETA_ASIAN_VARIT(histr,O_HIST1,O_HIST2);
+    else
+      ASETA_ASIAN_VARIT(histr,V_HIST1,V_HIST2);
     laita_listan_jasen( &histrol, *LISTALLA(historia,char**,i), 1);
   }
   laita_listan_jasen(&histrol,NULL,0);
   
   SDL_Rect alue = histrol.alue;
-  histrol.alue.x += histrol.alue.w;
+  TTF_SizeUTF8(histrol.font,"  ",&apu,NULL);
+  histrol.alue.x += histrol.alue.w + 2*apu;
   histrol.takavari = varit+TAUSTV;
   
   /*oikea lista*/
+  ASETA_ASIAN_VARIT(histr,ETUV,TAUSTV);
   for(int j=historia[0].pit-1; j>i; j--)
     laita_listan_jasen( &histrol, *LISTALLA(historia+1,char**,j), 1 );
   laita_listan_jasen( &histrol, NULL, 0 );
