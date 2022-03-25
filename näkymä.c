@@ -141,7 +141,7 @@ static void laita_historia(piirtoarg turha) {
 
   /*vasen lista*/
   for(i=historia[0].pit-1; i>=pienin; i--) {
-    if ( *LISTALLA(historia+2,aika_t*,i) & 1<<(sizeof(aika_t)-1) )
+    if ( *LISTALLA(historia+2,aika_t*,i) & (aika_t)1<<(sizeof(aika_t)*8-1) )
       ASETA_ASIAN_VARIT(histr,O_HIST1,O_HIST2);
     else
       ASETA_ASIAN_VARIT(histr,V_HIST1,V_HIST2);

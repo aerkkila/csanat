@@ -81,7 +81,7 @@ void liita_teksti( char* s, char* liitos );
 void knto_historiaan(char* knto);
 void kasittele_yrite(int oikeinko);
 void viestiksi(char*);
-void laita_kysymys(int ind);
+void kasittele_kysymys();
 void laita_tiedot();
 
 /*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
@@ -203,9 +203,11 @@ void jatka_syotetta(Arg arg_char_p) {
 }
 
 void kasittele_syote(Arg syotearg) {
+  LAITA(syote);
+  LAITA(tieto);
+  LAITA(historia);
   char* syote = syotearg.v-1;
   kohdistin = 0;
-  LAITA(syote);
   while(*++syote<=' ');
   char* seur = syote;
   while(*seur && *seur != '\n')
@@ -217,20 +219,20 @@ void kasittele_syote(Arg syotearg) {
   if(*syote == komentomerkki) {
     komento((Arg){.v=syote+1});
     knto_historiaan(syote);
+    ((char*)syotearg.v)[0] = '\0';
   } else if(*syote == shellkomentomerkki) {
     shellkomento((Arg){.v=syote+1});
     knto_historiaan(syote);
-  } else if(kysymind < kysymjarjpit) {
-    kasittele_yrite(!strcmp(LISTALLA( &snsto,snsto_1*,kysymjarj[kysymind])->sana[!kumpi_kysym], syote ));
-    laita_kysymys(++kysymind);
-    tuhoa_tama_lista2(&tietolis);
-    LAITA(tieto);
+    ((char*)syotearg.v)[0] = '\0';
   } else if(snsto.pit) {
-    laita_kysymys(++kysymind);
+    if(kysymind < kysymjarjpit)
+      kasittele_yrite(!strcmp(LISTALLA( &snsto,snsto_1*,kysymjarj[kysymind] )->sana[!kumpi_kysym], syote));
+    kysymind++;
+    kasittele_kysymys();
+    tuhoa_tama_lista2(&tietolis);
   }
   if(*seur)
     kasittele_syote((Arg){.v=seur});
-  ((char*)syotearg.v)[0] = '\0';
 }
 
 void kohdistin_eteen(Arg maara) {
@@ -297,7 +299,7 @@ void komento_lue(char* syote) {
   }
   luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
   kysymind = 0;
-  laita_kysymys(kysymind);
+  kasittele_kysymys(kysymind);
 }
 
 void komento_tulosta_historia(char* syote) {
@@ -368,7 +370,7 @@ int laske_osaamiset(lista* hetket) {
   aika_t** taul = hetket->taul;
   int osaamiset = 0;
   for(int i=0; i<hetket->pit; i++)
-    if( *taul[i] & 1<<(sizeof(aika_t)-1) )
+    if( *taul[i] & (aika_t)1<<(sizeof(aika_t)*8-1) )
       osaamiset++;
   return osaamiset;
 }
@@ -409,8 +411,8 @@ void kasittele_yrite(int oikeinko) {
   /*historia+2 on lista hetkistä ja osaamisista*/
   aika_t* ptr = jatka_listaa( historia+2, 1 );
   time((time_t*)ptr);
-  *ptr |= oikeinko<<(sizeof(aika_t)-1);
-  *ptr |= kumpi_kysym<<(sizeof(aika_t)-2);
+  *ptr |= (aika_t)oikeinko<<(sizeof(aika_t)*8-1);
+  *ptr |= (aika_t)kumpi_kysym<<(sizeof(aika_t)*8-2);
   /*snsto_1.hetket viittaa samaan kuin historia+2*/
   lista* snstohetk = &LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->hetket;
   *(aika_t**)jatka_listaa(snstohetk,1) = ptr;
@@ -443,20 +445,23 @@ void viestiksi(char* syote) {
   LAITA(tieto);
 }
 
-void laita_kysymys(int ind) {
-  if( ind == kysymjarjpit ) {
+void kasittele_kysymys() {
+  LAITA(kysymys);
+  if( kysymind == kysymjarjpit ) {
     *kysymtxt = '\0';
     return;
-  } else if( ind > kysymjarjpit ) {
-    ind = 0;
+  } else if( kysymind > kysymjarjpit ) {
+    kysymind = 0;
     luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
   }
-  char* kopioitava = LISTALLA(&snsto,snsto_1*,kysymjarj[ind])->sana[kumpi_kysym];
+  if(kysymind >= kysymjarjpit)
+    return;
+  char* kopioitava = LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[kumpi_kysym];
   int i;
   for(i=0; (i<maxpit_syote-1) && kopioitava[i]; i++)
     kysymtxt[i] = kopioitava[i];
   kysymtxt[i] = '\0';
-  LAITA(kysymys);
+  return;
 }
 
 int main(int argc, char** argv) {
