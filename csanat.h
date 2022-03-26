@@ -34,4 +34,11 @@ enum laitot_enum {
 
 typedef uint_fast64_t aika_t;
 
+#define VAIHDA(a,b,tyyppi) do				\
+    {							\
+      tyyppi _taman_makron_sisainen_muuttuja = a;	\
+      a = b;						\
+      b = _taman_makron_sisainen_muuttuja;		\
+    } while(0)
+
 #endif

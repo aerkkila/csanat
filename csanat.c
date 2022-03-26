@@ -73,6 +73,7 @@ void komento_tulosta_historia(char*);
 
 void lue_sanastoksi(char* tnimi);
 char* lue_tiedosto_merkkijonoksi(char* tnimi);
+void sekoita(int* lista, int pit);
 void luo_uusi_jarjestys(int** jarj, int* jarjpit);
 int laske_osaamiset(lista* hetket);
 int utf8_siirto_eteen( const char* restrict str );
@@ -375,6 +376,15 @@ char* lue_tiedosto_merkkijonoksi(char* tnimi) {
   return tied;
 }
 
+void sekoita(int* lis, int pit) {
+  int *loppu = lis+pit;
+  while(lis < loppu-1) {
+    int sij = rand()%(loppu-lis);
+    VAIHDA(lis[0], lis[sij], int);
+    lis++;
+  }
+}
+
 void luo_uusi_jarjestys(int** jarj, int* jarjpit) {
   free(*jarj); *jarj = NULL;
   lista jarjlis;
@@ -384,7 +394,7 @@ void luo_uusi_jarjestys(int** jarj, int* jarjpit) {
       *(int*)jatka_listaa(&jarjlis,1) = i;
   *jarj = jarjlis.taul; //listan kasamuistiosa sijoitetaan tähän, joten ei tarvitse vapauttaa
   *jarjpit = jarjlis.pit;
-  //sekoittaminen puuttuu
+  sekoita(*jarj, *jarjpit);
 }
 
 int laske_osaamiset(lista* hetket) {
