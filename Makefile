@@ -14,7 +14,7 @@ tdstot2=csanat2.c lista.c
 otsakk2=lista.h modkeys.h toiminta.h
 
 csanat2: ${tdstot2} näkymä.c näkymä_conf.c näkymä_conf1.c csanat2.h ${otsakk2}
-	gcc -Wall -o $@ ${tdstot2} -lSDL2 -lSDL2_ttf -g
+	gcc -Wall -o $@ ${tdstot2} -lSDL2 -lSDL2_ttf -gdwarf-2 -g3
 
 näkymä_conf1.c: näkymä_conf.c
 	./configure.sh $@

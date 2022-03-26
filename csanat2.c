@@ -82,7 +82,7 @@ void knto_historiaan(char* knto);
 void kasittele_yrite(int oikeinko);
 void viestiksi(char*);
 void kasittele_kysymys();
-void laita_tiedot();
+void tee_tiedot();
 
 /*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
   Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.
@@ -229,11 +229,32 @@ void kasittele_syote(Arg syotearg) {
       kasittele_yrite(!strcmp(LISTALLA( &snsto,snsto_1*,kysymjarj[kysymind] )->sana[!kumpi_kysym], syote));
     kysymind++;
     kasittele_kysymys();
-    tuhoa_tama_lista2(&tietolis);
+    tee_tiedot();
   }
   if(*seur)
     kasittele_syote((Arg){.v=seur});
 }
+
+#define _LISTALLE(i,muoto,...)						\
+  {									\
+    sprintf(apuc, muoto, __VA_ARGS__);					\
+    *LISTALLA(&tietolis, char**, i) = strndup(apuc,tieto_nchar+1);	\
+    if(strlen(apuc) > tieto_nchar)					\
+      *LISTALLA(&tietolis, char**, i)[tieto_nchar] = '\0';		\
+  }
+void tee_tiedot() {
+  char apuc[256];
+  int osattuja = 0;
+  for(int i=0; i<snsto.pit; i++)
+    osattuja += laske_osaamiset(&LISTALLA(&snsto,snsto_1*,i)->hetket) >= osaamisraja;
+  tuhoa_tama_lista2(&tietolis);
+  jatka_listaa(&tietolis,3);
+  _LISTALLE(0, "Sijainti %i/%i", kysymind, kysymjarjpit);
+  _LISTALLE(1, "Osattuja %i/%i", osattuja, snsto.pit);
+  _LISTALLE(2, "Tiedosto: \"%s\"", "ei määritelty vielä");
+  LAITA(tieto);
+}
+#undef _LISTALLE
 
 void kohdistin_eteen(Arg maara) {
   for( int pit=strlen(syotetxt); maara.i--; kohdistin-=utf8_siirto_eteen(syotetxt+pit-kohdistin) );

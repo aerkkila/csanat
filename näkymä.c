@@ -246,7 +246,13 @@ void paivita_kuva(unsigned laitot) {
     ASETA_VARI(varit[TAUSTV]);
     SDL_RenderClear(rend);
     for(int i=0; i<laitot_enum_pituus; i++) {
-      if( (laitot>>i & 1) | uusi_pohjat ) {
+      if( (laitot & 1<<i) | uusi_pohjat ) {
+	if(i==tieto_enum) {
+	  nakyolio* ol = piirtoargs[historia_enum].olio;
+	  int apu;
+	  TTF_SizeUTF8(histrol.font,"  ",&apu,NULL);
+	  piirtoargs[i].olio->alue.x = ol->alue.x + ol->alue.w + apu;
+	}
 	valmista_nakyolion_tekstuuri(piirtoargs[i].olio);
 	piirtofunkt[i]( piirtoargs[i] );
 	SDL_SetRenderTarget(rend,pohja);
