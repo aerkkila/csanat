@@ -1,517 +1,523 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
-#include <stdint.h>
 #include <time.h>
-#include "lista.h"
-#include "asetelma.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include "csanat.h"
-#include "grafiikka.h"
+#include "lista.h"
+#include "toiminta.h"
 #include "modkeys.h"
 
-void komento(const char* restrict suote);
-void pyyhi(char* suote);
-void ennen_komentoa();
-void kaunnista();
-static int xy_alueella(int x, int y, SDL_Rect* alue);
-static void rullaustapahtuma_lopusta(tekstiolio_s*, int);
+#define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
+#define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
-const unsigned kaikkilaitot =  0xffff;
-unsigned laitot = 0xffff;
-static char* apusuote = NULL; //syöte tallennetaan tähän, kun nuolilla selataan aiempia syötteitä
-SDL_Window *ikkuna;
-SDL_Texture* tausta;
-SDL_Renderer *rend;
+/* Tässä hetket viittaa lukuihin kuin historia+2, jotka luodaan historia+2-listaan.
+   Listalla on (aika_t)aika, jossa merkitsevimmät bitit ovat (osattiin,kumpi_kysyttiin)*/
+typedef struct {
+  char* sana[2];
+  //int id;
+  //int tiedostonro;
+  lista hetket;
+} snsto_1;
 
-char* tmpc;
-int osattuja = 0;
+typedef union {
+  int i;
+  float f;
+  void* v;
+} Arg;
 
-int lue_tiedosto(const char* restrict nimi) {
-  FILE* f = fopen(nimi, "r");
-  if(!f)
-    return -1;
-  static int tiedostonro = -1;
-  tiedostonro++;
-  static int sanoja = -1; //luetusta tiedostosta otettujen sanojen tunnisteet ovat negatiivisia
+typedef struct {
+  int tyyppi;
+  unsigned mod;
+  void (*funktio)(Arg);
+  Arg arg;
+} Sidonta;
 
-  while (!feof(f)) {
-    if (fgetc(f) == '\n' || feof(f))
-      continue;
-    fseek(f,-1,SEEK_CUR);
-    if(!fgets(tmpc, maxpit_suote, f)) //sana luetaan
-      break;
-    if(*STRPAATE(tmpc) == '\n')
-      *STRPAATE(tmpc) = 0;
-    jatka_listaa(snsto, 1);
-    for(int i=0; tmpc[i]; i++) //tämä hakee erottimen sanan ja käännöksen välillä ja sitten kopioi molemmat ja poistuu
-      if((unsigned char)tmpc[i] < ' ') {
-	tmpc[i] = 0;
-	LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->sana = strdup(tmpc); //sana kirjoitetaan
-	while((unsigned char)tmpc[++i] <= ' ');
-	LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->kaan = strdup(tmpc+i); //käännös kirjoitetaan
-	goto METAOSUUS;
-      }
-    /*jos for-silmukasta ei hypätty tämän ohi, erotin on rivinvaihto eli pitää lukea uusi rivi*/
-    LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->sana = strdup(tmpc);
-    if(!fgets(tmpc, maxpit_suote, f))
-      TEE("Virhe: Ei luettu seuraavalta riviltä käännöstä sanalle %s", LISTALLA_LOPUSTA(snsto,snsto_s*,1)->sana);
-    if(*STRPAATE(tmpc) == '\n')
-      *STRPAATE(tmpc) = 0;
-    LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->kaan = strdup(tmpc);
-  METAOSUUS:
-#define A LISTALLA_LOPUSTA(snsto,snsto_s*,-1)->meta
-    A.id = sanoja--; //negatiivinen tunniste
-    A.tiedostonro = tiedostonro;
-    A.kierroksia = 0;
-    A.osaamisia = 0;
-    A.hetket = alusta_lista(2, uint32_t);
-#undef A
-  } //while not eof
+typedef struct {
+  char* nimi;
+  void (*funkt)(char*);
+} Komento;
 
-  fclose(f);
-  alussa = 1;
-  listalle_kopioiden_mjon(tiedostot, nimi);
-  return -sanoja-1;
-}
+lista snsto;
+lista historia[3];
+lista tietolis;
+lista tiedostot;
+int *kysymjarj, kysymjarjpit;
+char globchar[maxpit_syote];
+char syotetxt[maxpit_syote];
+char kysymtxt[maxpit_syote];
+unsigned modkey, laitot;
+int kohdistin, syoteviesti, kumpi_kysym, kysymind;
 
-void lopeta() {
-  free(suoteol.teksti);
-  TTF_CloseFont(suoteol.font);
-  TTF_CloseFont(kauntiol.font);
-  TTF_CloseFont(viestiol.font);
-  TTF_CloseFont(tiedotol.font);
-  if(viestiol.lista)
-    viestiol.lista = tuhoa_lista(viestiol.lista);
-  tiedotol.lista = tuhoa_lista2(tiedotol.lista);
-  tiedostot = tuhoa_lista2(tiedostot);
-  for(int i=0; i<kysynnat->pit; i++) {
-    free(LISTALLA(kysynnat,kysynta_s*,i)->kysym);
-    free(LISTALLA(kysynnat,kysynta_s*,i)->suote);
-  }
-  kysynnat = tuhoa_lista(kysynnat);
-  for(int i=0; i<snsto->pit; i++) {
-    tuhoa_lista(LISTALLA(snsto,snsto_s*,i)->meta.hetket);
-    free(LISTALLA(snsto,snsto_s*,i)->sana);
-    free(LISTALLA(snsto,snsto_s*,i)->kaan);
-  }
-  snsto = tuhoa_lista(snsto);
-}
+void aja();
+void lopeta(Arg turha);
+void jatka_syotetta(Arg char_p);
+void ikkunatapahtuma(Arg turha);
+void napp_alas(Arg turha);
+void napp_ylos(Arg turha);
+void pyyhi_syotetta_eteen(Arg turha);
+void pyyhi_syotetta_taakse(Arg turha);
+void kohdistin_eteen(Arg maara);
+void kohdistin_taakse(Arg maara);
+void sigtrap(Arg turha);
+void kasittele_syote(Arg syote);
+void komento(Arg syote);
+void shellkomento(Arg syote);
 
-void tee_tiedot() {
-  if(snsto->pit == 0) {
-    for(int i=0; i<3; i++)
-      LISTALLA(tiedotol.lista,char**,i)[0][0] = '\0';
-    return;
-  }
-  /*sijainti n / m: m:ää ei päivitetä joka kerralla, vaan ainoastaan kierroksen alussa*/
-  static int kierroksen_pituus = -1;
-  if(kierroksen_pituus == -1)
-    kierroksen_pituus = snsto->pit;
+/*Nämä funktiot lisätään knnot-taulukkoon, KNTO-makrolla.*/
+void komento_lue(char*);
+void komento_tulosta_historia(char*);
 
-  int sijainti_kierroksella = 0; //vähennetään tulossa olevien osaamattomien määrä ja lisätään kierroksen pituus
-  int i=0;
-  osattuja = 0;
-  
-  /*nykyiseen asti ei muuteta sijaintia kierroksella*/
-  for(; i<snsto->sij; i++)
-    if( LISTALLA(snsto,snsto_s*,i)->meta.osaamisia >= osaamisraja ) //osattiin
-      osattuja++;
-  
-  /*nykysijainnista eteenpäin vähennetään sijaintia_kierroksella*/
-  for(; i<snsto->pit; i++) {
-    if( LISTALLA(snsto,snsto_s*,i)->meta.osaamisia < osaamisraja ) { //ei osattu
-      sijainti_kierroksella--;
-      continue;
-    }
-    osattuja++;
-  }
-  if(alussa) {
-    kierroksen_pituus = snsto->pit - osattuja;
-    alussa = 0;
-  }
-  sijainti_kierroksella += kierroksen_pituus;
-  sprintf(*LISTALLA(tiedotol.lista,char**,0), "Sijainti: %i / %i", sijainti_kierroksella, kierroksen_pituus);
-  sprintf(*LISTALLA(tiedotol.lista,char**,1), "Osattuja %i / %i", osattuja, snsto->pit);
-  if(snsto->sij < snsto->pit)
-    sprintf(*LISTALLA(tiedotol.lista,char**,2), "Tiedosto: \"%s\"",
-	    *LISTALLA(tiedostot,char**,LISTALLA(snsto,snsto_s*,snsto->sij)->meta.tiedostonro));
-  else
-    LISTALLA(tiedotol.lista,char**,2)[0][0] = '\0';
-}
+void lue_sanastoksi(char* tnimi);
+char* lue_tiedosto_merkkijonoksi(char* tnimi);
+void luo_uusi_jarjestys(int** jarj, int* jarjpit);
+int laske_osaamiset(lista* hetket);
+int utf8_siirto_eteen( const char* restrict str );
+int utf8_siirto_taakse( const char* restrict str, int rmax );
+void liita_teksti( char* s, char* liitos );
+void knto_historiaan(char* knto);
+void kasittele_yrite(int oikeinko);
+void viestiksi(char*);
+void kasittele_kysymys();
+void tee_tiedot();
 
-void edellinen_osatuksi() {
-  extern int edellinen_sij;
-  if(edellinen_sij < 0)
-    return;
-  sanameta_s* tiedot = &LISTALLA(snsto,snsto_s*,edellinen_sij)->meta;
-  uint32_t* osaaminen = LISTALLA_LOPUSTA(tiedot->hetket,uint32_t*,-1);
-  if( !(*osaaminen>>31) )
-    tiedot->osaamisia += 1;
-  *osaaminen |= 1<<31;
-}
+/*Kaikki johonkin tiettyyn grafiikka-alustaan liittyvä sisällytetään toisesta tiedostosta.
+  Täällä taas käytetään vain alustasta (SDL, komentorivi, xlib, jne.) riippumattomia funktioita.
+  Käytännössä ei taida oikein toteutua, mutta tuo on pyrkimys.*/
+#include "näkymä.c"
+SDL_Event tapaht;
 
-lista* pilko_sanoiksi(const char* restrict str) {
-  const char* osoit = str;
-  lista* r = alusta_lista(2,char**);
-  while(sscanf(osoit, "%s", tmpc) == 1) {
-    while((unsigned char)osoit[0] <= 0x20)
-      osoit++; //välien yli ensin
-    osoit += strlen(tmpc);
-    /*välien yli*/
-    jatka_listaa(r, 1);
-    *LISTALLA_LOPUSTA(r,char**,-1) = strdup(tmpc);
-  }
-  if(r->pit == 0) { //myös tyhjästä syötteestä tehdään lista
-    jatka_listaa(r, 1);
-    *LISTALLA_LOPUSTA(r,char**,-1) = strdup("");
-  }
-  return r;
-}
+/*Näissä tarkistus lopetetaan ensimmäiseen täsmäävään. -1 on mikä tahansa*/
+Sidonta sid_tapaht[] = {
+  { TAPAHT( KEYDOWN ),     -1,     napp_alas,       {0}                    },
+  { TAPAHT( KEYUP ),       -1,     napp_ylos,       {0}                    },
+  { TAPAHT( TEXTINPUT ),   0,      jatka_syotetta,  {.v=&tapaht.text.text} },
+  { TAPAHT( TEXTINPUT ),   VAIHTO, jatka_syotetta,  {.v=&tapaht.text.text} },
+  { TAPAHT( WINDOWEVENT ), -1,     ikkunatapahtuma, {0}                    },
+  { TAPAHT( QUIT ),        -1,     lopeta,          {0}                    },
+};
 
-void sekoita() {
-  srand((unsigned)time(NULL));
-  for(int jaljella=snsto->pit-snsto->sij; jaljella>1; jaljella--) {
-    int sij = rand() % jaljella;
-    /*vaihdetaan sijainti ja viimeinen keskenään, viimeinen siirtyy aina lähemmäs*/
-    snsto_s apu = *LISTALLA(snsto,snsto_s*,snsto->sij+jaljella-1);
-    *LISTALLA(snsto,snsto_s*,snsto->sij+jaljella-1) = *LISTALLA(snsto,snsto_s*,snsto->sij+sij);
-    *LISTALLA(snsto,snsto_s*,snsto->sij+sij) = apu;
-  }
-}
+Sidonta sid_napp_alas[] = {
+  { KEY( RETURN ),    0,   kasittele_syote,       {.v=syotetxt} },
+  { KEY( KP_ENTER ),  0,   kasittele_syote,       {.v=syotetxt} },
+  { KEY( BACKSPACE ), 0,   pyyhi_syotetta_taakse, {0}           },
+  { KEY( DELETE ),    0,   pyyhi_syotetta_eteen,  {0}           },
+  { KEY( g ),         ALT, kohdistin_taakse,      {.i=1}        },
+  { KEY( o ),         ALT, kohdistin_eteen,       {.i=1}        },
+  { KEY( PAUSE ),     ALT, sigtrap,               {0}           },
+};
 
-int xsijainti(tekstiolio_s* o, int p) {
-  int lev;
-  char c0 = o->teksti[p];
-  o->teksti[p] = '\0';
-  TTF_SizeUTF8(o->font, o->teksti, &lev, NULL);
-  o->teksti[p] = c0;
-  return lev + o->toteutuma.x;
-}
+#define KNTO(knto) .nimi = #knto, .funkt = komento_ ## knto
+Komento knnot[] = {
+  { KNTO(lue) },
+  { KNTO(tulosta_historia) },
+};
 
-void viestiksi(const char* restrict s) {
-  extern unsigned laitot;
-  if(viestiol.lista)
-    tuhoa_lista2(viestiol.lista);
-  viestiol.lista = alusta_lista(1,char**);
-  jatka_listaa(viestiol.lista, 1);
-  *LISTALLA_LOPUSTA(viestiol.lista,char**,-1) = strdup(s);
-  laita(viesti);
-}
-
-void uusi_kierros() {
-  edellinen_sij = snsto->pit-1-osattuja;
-  snsto->sij = 0;
-  sekoita();
-  osaamaton();
-  alussa = 1;
-  jatka_listaa(kysynnat, 1);
-  memset(LISTALLA_LOPUSTA(kysynnat,kysynta_s*,-1), 0, kysynnat->koko);
-}
-
-void osaamaton() {
-  while(snsto->sij < snsto->pit) {
-    snsto_s* sns = LISTALLA(snsto,snsto_s*,snsto->sij);
-    if( sns->meta.osaamisia < osaamisraja) {
-      kysymysol.teksti = sns->sana;
-      return;
-    }
-    snsto->sij++;
-  }
-  kysymysol.teksti = NULL;
-}
-
-/*näissä siirrytään eteen- tai taakespäin koko utf-8-merkin verran*/
-int edellinen_kohta(const char* restrict suote, int* id) {
-  int jatka = 1;
-  int pit = strlen(suote);
-  int r = 0;
-  while(jatka && pit > *id) {
-    r=1;
-    jatka = (suote[pit- ++(*id)] & 0xc0) == 0x80;
-  }
-  return r;
-}
-
-int seuraava_kohta(const char* restrict suote, int* id) {
-  int pit = strlen(suote);
-  int r = 0;
-  while(*id && (r=1) && ((suote[pit- --(*id)] & 0xc0) == 0x80));
-  return r;
-}
-
-inline void __attribute__((always_inline)) pyyhi(char* suote) {
-  int pit = strlen(suote);
-  int id0 = kohdistin;
-  strcpy(tmpc, suote+pit-kohdistin);
-  edellinen_kohta(suote, &kohdistin);
-  strcpy(suote+pit-kohdistin, tmpc);
-  kohdistin = id0;
-}
-
-void kaunnista() {
-  SDL_Event tapaht;
-  int hiirix=0, hiiriy=0;
-  char* const suote = suoteol.teksti;
+void aja() {
   SDL_StartTextInput();
-  unsigned modkey = 0;
-  if(strlen(tmpc)) { //alussa komentoriviargumentit
-    strcpy(suote, tmpc); //pilko_sanoiksi käyttää tmpc-muuttujaa
-    komento(suote);
-    suote[0] = '\0';
+  while(1) {
+    while(SDL_PollEvent(&tapaht)) {
+      for(int i=0; i<TAULPIT(sid_tapaht); i++)
+	if( sid_tapaht[i].tyyppi == tapaht.type &&
+	    ( sid_tapaht[i].mod == -1 || sid_tapaht[i].mod == modkey_tuplana(modkey) ) ) {
+	  sid_tapaht[i].funktio(sid_tapaht[i].arg);
+	  break;
+	}
+    }
+    paivita_kuva(laitot);
+    laitot = 0;
+    SDL_Delay(uniaika);
   }
-  while(SDL_PollEvent(&tapaht)); //tyhjennetään
- TOISTOLAUSE:
-  while(SDL_PollEvent(&tapaht)) {
-    switch(tapaht.type) {
-    case SDL_QUIT:
-      if(apusuote) {free(apusuote); apusuote=NULL;}
-      return;
-    case SDL_TEXTINPUT:
-      if(modkey & (WIN|ALT|CTRL))
-	break;
-      if(suoteviesti) { //syötteen paikalla voi olla viestinä edellisen oikea vastaus
-	suote[0] = '\0';
-	suoteol.vari = apuvari;
-	suoteviesti = 0;
-      }
-      if(!kohdistin)
-	strcat(suote, tapaht.text.text);
-      else {
-	char* s = suote+strlen(suote)-kohdistin;
-	strcpy(tmpc, s); //loppuosa talteen
-	strcpy(s, tapaht.text.text); //syötetty teksti
-	strcat(suote, tmpc); //loppuosa perään
-      }
-      laita(suote);
-      break;
-    case SDL_KEYDOWN:
-      switch(tapaht.key.keysym.sym) {
+}
+
+void ikkunatapahtuma(Arg turha) {
+  if( tapaht.window.event == SDL_WINDOWEVENT_RESIZED )
+    paivita_ikkunan_koko();
+}
+
+void napp_alas(Arg turha) {
+  for(int i=0; i<TAULPIT(sid_napp_alas); i++)
+    if( sid_napp_alas[i].tyyppi == tapaht.key.keysym.sym &&
+	sid_napp_alas[i].mod    == modkey_tuplana(modkey) )
+      sid_napp_alas[i].funktio(sid_napp_alas[i].arg);
+  switch(tapaht.key.keysym.sym) {
 #define _MODKEYS_SWITCH_KEYDOWN
 #include "modkeys.h"
-      case SDLK_RETURN:
-      case SDLK_KP_ENTER:
-	if(modkey & VAIHTO) {
-	  edellinen_osatuksi();
-	  laita(kaunti);
-	  laita(tiedot);
-	  break;
-	}
-	ennen_komentoa();
-	komento(suote);
-	if(!suoteviesti)
-	  suote[0] = '\0';
-	laitot = kaikkilaitot;
-	break;
-      case SDLK_BACKSPACE:
-	pyyhi(suote);
-	laita(suote);
-	break;
-      case SDLK_DELETE:
-	if(seuraava_kohta(suote, &kohdistin))
-	  pyyhi(suote);
-	laita(suote);
-	break;
-      case SDLK_ESCAPE:
-	snsto->sij = snsto->pit;
-	tee_tiedot();
-	laita(tiedot);
-	kysymysol.teksti = NULL;
-	laita(kysymys);
-	break;
-      case SDLK_a:
-	if(!(modkey & ALT))
-	  break;
-      case SDLK_DOWN:
-	if(suoteviesti) {
-	  suoteviesti = 0;
-	  suoteol.vari = apuvari;
-	  laita(suote);
-	}
-	if(!kysynnat->pit)
-	  break;
-	if(!apusuote) { //ensimmäinen painallus
-	  if(!(apusuote = strdup(suote)))
-	    printf("Varoitus: apusyötettä ei alustettu\n");
-	  kysynnat->sij = kysynnat->pit-1; //kysynnat->sij on tavallisesti määrittelemätön
-	} else if(!kysynnat->sij)
-	  break;
-	else
-	  kysynnat->sij--;
-	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
-	laita(suote);
-	break;
-      case SDLK_i:
-	if(!(modkey & ALT))
-	  break;
-      case SDLK_UP:
-	if(suoteviesti) {
-	  suoteviesti = 0;
-	  suoteol.vari = apuvari;
-	  laita(suote);
-	}
-	if(!apusuote) //ollaan jo uudessa syötteessä
-	  break;
-	if(kysynnat->sij == kysynnat->pit-1) { //tullaan uuteen syötteeseen
-	  strcpy(suote, apusuote);
-	  free(apusuote);
-	  apusuote = NULL;
-	  laita(suote);
-	  break;
-	}
-	kysynnat->sij++;
-	if(kysynnat->sij >= kysynnat->pit)
-	  printf("Varoitus: kysyntöjen sijainti on %i ja pituus on %i\n", kysynnat->sij, kysynnat->pit);
-	strcpy(suote, LISTALLA(kysynnat,kysynta_s*,kysynnat->sij)->suote);
-	laita(suote);
-	break;
-      case SDLK_g:
-	if(!(modkey & ALT))
-	  break;
-      case SDLK_LEFT:
-	edellinen_kohta(suote, &kohdistin);
-	laita(suote);
-	break;
-      case SDLK_o:
-	if(!(modkey & ALT))
-	  break;
-      case SDLK_RIGHT:
-	seuraava_kohta(suote, &kohdistin);
-	laita(suote);
-	break;
-      case SDLK_HOME:
-	kohdistin = strlen(suote);
-	laita(suote);
-	break;
-      case SDLK_END:
-	kohdistin = 0;
-	laita(suote);
-	break;
-      case SDLK_PAUSE:
-	if(modkey & VAIHTO)
-	  asm("int $3"); //jäljityspisteansa
-	break;
-      }
-      break; //keydown
-    case SDL_KEYUP:
-      switch(tapaht.key.keysym.sym) {
+  }
+}
+
+void napp_ylos(Arg turha) {
+  switch(tapaht.key.keysym.sym) {
 #define _MODKEYS_SWITCH_KEYUP
 #include "modkeys.h"
-      }
-      break; //keyup 
-    case SDL_WINDOWEVENT:
-      switch(tapaht.window.event) {
-      case SDL_WINDOWEVENT_RESIZED:
-	ikkuna_w = tapaht.window.data1;
-	ikkuna_h = tapaht.window.data2;
-	aseta_vari(taustavari);
-	SDL_DestroyTexture(tausta);
-	tausta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w, ikkuna_h);
-	//SDL_RenderClear(rend);
-	laitot = kaikkilaitot;
-	break;
-      }
-      break;
-    case SDL_MOUSEMOTION:
-      hiirix = tapaht.motion.x;
-      hiiriy = tapaht.motion.y;
-      break;
-    case SDL_MOUSEWHEEL:
-      if(xy_alueella(hiirix, hiiriy, &viestiol.toteutuma)) {
-	rullaustapahtuma_lopusta(&viestiol, tapaht.wheel.y);
-	laita(viesti);
-	break;
-      }
-      break;
-    } //switch tapaht.type
-  } //while pollEvent
-  paivita(laitot);
-  SDL_Delay(uniaika);
-  goto TOISTOLAUSE;
-}
-
-void ennen_komentoa() {
-  kohdistin = 0;
-  if(apusuote) {
-    free(apusuote);
-    apusuote = NULL;
   }
-  if(suoteviesti) {
-    suoteol.teksti[0] = '\0';
-    suoteol.vari = apuvari;
-    suoteviesti = 0;
-  }
-  if(viestiol.lista)
-    viestiol.lista = tuhoa_lista2(viestiol.lista);
 }
 
-static inline int xy_alueella(int x, int y, SDL_Rect* alue) {
-  return (alue->x < x && alue->y < y && alue->w+alue->x > x && alue->h+alue->y > y);
+void lopeta(Arg turha) {
+  tuhoa_nakyma();
+  tuhoa_tama_lista2(&tiedostot);
+  for(int i=0; i<snsto.pit; i++)
+    tuhoa_tama_lista(&LISTALLA(&snsto,snsto_1*,i)->hetket);
+  tuhoa_tama_lista(&snsto);
+  listastolla(tuhoa_tama_lista2,historia,2);
+  tuhoa_tama_lista(historia+2);
+  tuhoa_tama_lista2(&tietolis);
+  free(kysymjarj);
+  exit(EXIT_SUCCESS);
 }
 
-/*rullaus >= 0*/
-static inline void rullaustapahtuma_lopusta(tekstiolio_s* o, int y) {
-  if((o->alku <= 0 && y > 0) ||	\
-     (o->rullaus <= 0 && y < 0))
+void pyyhi_syotetta_eteen(Arg turha) {
+  int pit = strlen(syotetxt);
+  char* p1 = syotetxt+pit-kohdistin;
+  kohdistin -= utf8_siirto_eteen(p1);
+  char* p2 = syotetxt+pit-kohdistin;
+  while(( *p1++ = *p2++ ));
+  LAITA(syote);
+}
+
+void pyyhi_syotetta_taakse(Arg turha) {
+  int pit = strlen(syotetxt);
+  char* p2 = syotetxt+pit-kohdistin;
+  char* p1 = p2 - utf8_siirto_taakse( syotetxt+pit-kohdistin, pit-kohdistin );
+  while(( *p1++ = *p2++ ));
+  LAITA(syote);
+}
+
+void jatka_syotetta(Arg arg_char_p) {
+  char* mjon = arg_char_p.v;
+  if( strlen(syotetxt)+strlen(mjon) >= maxpit_syote )
     return;
-  o->rullaus += y;
-  o->rullaus *= o->rullaus >= 0;
+  if(syoteviesti) { //syötteen paikalla voi olla viesti
+    syotetxt[0] = '\0';
+    syoteviesti = 0;
+    ASETA_ASIAN_VARIT(syote,ETUV,TAUSTV);
+  }
+  if(!kohdistin)
+    strcat(syotetxt,mjon);
+  else
+    liita_teksti( syotetxt+strlen(syotetxt)-kohdistin, mjon );
+  LAITA(syote);
+}
+
+void kasittele_syote(Arg syotearg) {
+  LAITA(syote);
+  LAITA(tieto);
+  LAITA(historia);
+  char* syote = syotearg.v-1;
+  kohdistin = 0;
+  while(*++syote<=' ');
+  char* seur = syote;
+  while(*seur && *seur != '\n')
+    seur++;
+  if(*seur == '\n') {
+    *seur = '\0';
+    seur++;
+  }
+  if(*syote == komentomerkki) {
+    komento((Arg){.v=syote+1});
+    knto_historiaan(syote);
+    ((char*)syotearg.v)[0] = '\0';
+  } else if(*syote == shellkomentomerkki) {
+    shellkomento((Arg){.v=syote+1});
+    knto_historiaan(syote);
+    ((char*)syotearg.v)[0] = '\0';
+  } else if(snsto.pit) {
+    if(kysymind < kysymjarjpit)
+      kasittele_yrite(!strcmp(LISTALLA( &snsto,snsto_1*,kysymjarj[kysymind] )->sana[!kumpi_kysym], syote));
+    kysymind++;
+    kasittele_kysymys();
+    tee_tiedot();
+  }
+  if(*seur)
+    kasittele_syote((Arg){.v=seur});
+}
+
+#define _LISTALLE(i,muoto,...)						\
+  {									\
+    sprintf(apuc, muoto, __VA_ARGS__);					\
+    *LISTALLA(&tietolis, char**, i) = strndup(apuc,tieto_nchar+1);	\
+    if(strlen(apuc) > tieto_nchar)					\
+      *LISTALLA(&tietolis, char**, i)[tieto_nchar] = '\0';		\
+  }
+void tee_tiedot() {
+  char apuc[256];
+  int osattuja = 0;
+  for(int i=0; i<snsto.pit; i++)
+    osattuja += laske_osaamiset(&LISTALLA(&snsto,snsto_1*,i)->hetket) >= osaamisraja;
+  tuhoa_tama_lista2(&tietolis);
+  jatka_listaa(&tietolis,3);
+  _LISTALLE(0, "Sijainti %i/%i", kysymind, kysymjarjpit);
+  _LISTALLE(1, "Osattuja %i/%i", osattuja, snsto.pit);
+  _LISTALLE(2, "Tiedosto: \"%s\"", "ei määritelty vielä");
+  LAITA(tieto);
+}
+#undef _LISTALLE
+
+void kohdistin_eteen(Arg maara) {
+  for( int pit=strlen(syotetxt); maara.i--; kohdistin-=utf8_siirto_eteen(syotetxt+pit-kohdistin) );
+  LAITA(syote);
+}
+
+void kohdistin_taakse(Arg maara) {
+  for( int pit=strlen(syotetxt); maara.i--; kohdistin+=utf8_siirto_taakse( syotetxt+pit-kohdistin, pit-kohdistin ) );
+  LAITA(syote);
+}
+
+void sigtrap(Arg turha) {
+  asm("int $3");
+}
+
+void komento(Arg syotearg) {
+  int pit;
+  sscanf(syotearg.v, "%*s%n", &pit);
+  char knto[pit+1];
+  memcpy(knto, syotearg.v, pit);
+  knto[pit] = 0;
+  pit = TAULPIT(knnot);
+  for( int i=0; i<pit; i++ )
+    if( !strcmp(knnot[i].nimi,knto) )
+      knnot[i].funkt(syotearg.v);
+}
+
+void shellkomento(Arg syotearg) {
+  char* syote = syotearg.v;
+  tuhoa_tama_lista2(&tietolis);
+  alusta_tama_lista(&tietolis,8,char**);
+  FILE *f = popen(syote,"r");
+  if(!f) {
+    perror("popen");
+    viestiksi("Ei avattu prosessia \n");
+  } else {
+    char sana[tieto_nchar];
+    int i=0;
+    while(!feof(f)) {
+      sana[i] = fgetc(f);
+      if( sana[i] != '\n' ) {
+	if( ++i < tieto_nchar )
+	  continue;
+	fseek(f,-1,SEEK_CUR);
+      }
+      sana[i] = '\0';
+      listalle_kopioiden_mjon(&tietolis,sana);
+      i=0;
+    }
+    pclose(f);
+  }
+  LAITA(tieto);
+}
+
+void komento_lue(char* syote) {
+  int luku;
+  sscanf(syote, "%*s%n", &luku);
+  syote += luku;
+  char sana[512];
+  while( sscanf(syote, "%511s%n", sana, &luku) == 1 ) {
+    lue_sanastoksi(sana);
+    syote += luku;
+  }
+  luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
+  kysymind = 0;
+  kasittele_kysymys(kysymind);
+}
+
+void komento_tulosta_historia(char* syote) {
+  const char* a = "\033[94m";
+  const char* b = "\033[95m";
+  for(int i=0; i<historia[2].pit; i++)
+    printf( "%s%s\t%s%s\n",
+	    a, *LISTALLA(historia+0,char**,i),
+	    b, *LISTALLA(historia+1,char**,i) );
+  puts("\033[0m");
+}
+
+void lue_sanastoksi(char* tnimi) {
+  unsigned char* tied = (unsigned char*)lue_tiedosto_merkkijonoksi(tnimi);
+  if(!tied)
+    return;
+  int i=-1;
+  /*Tiedosto on nyt luettu yhdeksi merkkijonoksi.
+    Tässä ei enää kopioida mitään,
+    vaan laitetaan viitteet kyseisen merkkijonon sananalkukohtiin
+    ja muutetaan sanojen erotinmerkit nollatavuiksi.*/
+  int joko0tai1 = 0;
+  while(1) {
+    while(tied[++i] && tied[i] <= ' ');
+    if(!tied[i])
+      return;
+    /*sanan alku löytyi ja laitetaan listalle*/
+    snsto_1* jasen = jatka_listaa(&snsto,!joko0tai1); // if(!joko0tai1) jatka_listaa(lista,1)
+    jasen->sana[joko0tai1] = (char*)tied+i;
+    alusta_tama_lista(&jasen->hetket,4,aika_t**);
+    joko0tai1 = (joko0tai1+1) % 2;
+    while(tied[++i] >= ' ');
+    if(!tied[i])
+      return;
+    tied[i] = '\0';
+  }
+}
+
+char* lue_tiedosto_merkkijonoksi(char* tnimi) {
+  int fd;
+  struct stat filestat;
+  char* tied = NULL;
+  if( (fd = open(tnimi,O_RDONLY))      < 0 ||
+      fstat(fd,&filestat)              < 0 ||
+      (tied = malloc(filestat.st_size+1)) == NULL ||
+      read(fd,tied,filestat.st_size)   < 0 )
+    perror("lue_tiedosto");
+  else
+    tied[filestat.st_size] = '\0';
+  if( close(fd) < 0 )
+    perror("lue_tiedosto, close");
+  return tied;
+}
+
+void luo_uusi_jarjestys(int** jarj, int* jarjpit) {
+  free(*jarj); *jarj = NULL;
+  lista jarjlis;
+  alusta_tama_lista(&jarjlis, 8, int);
+  for(int i=0; i<snsto.pit; i++)
+    if(laske_osaamiset(&LISTALLA(&snsto,snsto_1*,i)->hetket) < osaamisraja)
+      *(int*)jatka_listaa(&jarjlis,1) = i;
+  *jarj = jarjlis.taul; //listan kasamuistiosa sijoitetaan tähän, joten ei tarvitse vapauttaa
+  *jarjpit = jarjlis.pit;
+  //sekoittaminen puuttuu
+}
+
+int laske_osaamiset(lista* hetket) {
+  aika_t** taul = hetket->taul;
+  int osaamiset = 0;
+  for(int i=0; i<hetket->pit; i++)
+    if( *taul[i] & (aika_t)1<<(sizeof(aika_t)*8-1) )
+      osaamiset++;
+  return osaamiset;
+}
+
+int utf8_siirto_eteen( const char* restrict str ) {
+  if(!*str)
+    return 0;
+  int r = 1;
+  while( (*++str&0300) == 0200 )
+    r++;
+  return r;
+}
+
+int utf8_siirto_taakse( const char* restrict str, int rmax ) {
+  int r = 0;
+  if( r != rmax )
+    while( r++ != rmax && (*--str&0300) == 0200);
+  return r;
+}
+
+void liita_teksti( char* s, char* liitos ) {
+  char loppu[strlen(s)+1];
+  strcpy( loppu,  s );
+  strcpy( s, liitos );
+  strcat( s, loppu );
+}
+
+void knto_historiaan(char* knto) {
+  *(char**)jatka_listaa(historia+0, 1) = NULL;
+  listalle_kopioiden_mjon(historia+1, knto);
+  time( (time_t*)jatka_listaa(historia+2, 1) );
+  LAITA(historia);
+}
+
+void kasittele_yrite(int oikeinko) {
+  listalle_kopioiden_mjon( historia+0, kysymtxt );
+  listalle_kopioiden_mjon( historia+1, syotetxt );
+  /*historia+2 on lista hetkistä ja osaamisista*/
+  aika_t* ptr = jatka_listaa( historia+2, 1 );
+  time((time_t*)ptr);
+  *ptr |= (aika_t)oikeinko<<(sizeof(aika_t)*8-1);
+  *ptr |= (aika_t)kumpi_kysym<<(sizeof(aika_t)*8-2);
+  /*snsto_1.hetket viittaa samaan kuin historia+2*/
+  lista* snstohetk = &LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->hetket;
+  *(aika_t**)jatka_listaa(snstohetk,1) = ptr;
+  /*näkymän asiat*/
+  if(oikeinko)
+    ASETA_ASIAN_VARIT(syote,O_SYOTE1,O_SYOTE2);
+  else
+    ASETA_ASIAN_VARIT(syote,V_SYOTE1,V_SYOTE2);
+  syoteviesti = 1;
+  LAITA(historia);
+  LAITA(syote);
+}
+
+void viestiksi(char* syote) {
+  tuhoa_tama_lista2(&tietolis);
+  alusta_tama_lista(&tietolis,4,char**);
+  char sana[tieto_nchar+1];
+  int j=0, i=0;
+  while(1) { //tätä pitää tarkastella vielä
+    sana[j] = syote[i];
+    if(++j == tieto_nchar || sana[j] == '\n') {
+      sana[j] = '\0';
+      j = 0;
+      listalle_kopioiden_mjon(&tietolis,sana);
+    }
+    if(syote[++i])
+      continue;
+    break;
+  }
+  LAITA(tieto);
+}
+
+void kasittele_kysymys() {
+  LAITA(kysymys);
+  if( kysymind == kysymjarjpit ) {
+    *kysymtxt = '\0';
+    return;
+  } else if( kysymind > kysymjarjpit ) {
+    kysymind = 0;
+    luo_uusi_jarjestys(&kysymjarj,&kysymjarjpit);
+  }
+  if(kysymind >= kysymjarjpit)
+    return;
+  char* kopioitava = LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[kumpi_kysym];
+  int i;
+  for(i=0; (i<maxpit_syote-1) && kopioitava[i]; i++)
+    kysymtxt[i] = kopioitava[i];
+  kysymtxt[i] = '\0';
   return;
 }
 
 int main(int argc, char** argv) {
-  if (SDL_Init(SDL_INIT_VIDEO)) {
-    fprintf(stderr, "Virhe: Ei voi alustaa SDL-grafiikkaa: %s\n", SDL_GetError());
-    return 1;
-  }
-  if (TTF_Init()) {
-    fprintf(stderr, "Virhe: Ei voi alustaa SDL_ttf-fonttikirjastoa: %s\n", \
-	    TTF_GetError());
-    SDL_Quit();
-    return 1;
-  }
-  ikkuna = SDL_CreateWindow\
-    (ohjelman_nimi, ikkuna_x0, ikkuna_y0, ikkuna_w0, ikkuna_h0, SDL_WINDOW_RESIZABLE);
-  rend = SDL_CreateRenderer(ikkuna, -1, SDL_RENDERER_TARGETTEXTURE);
-  tausta = SDL_CreateTexture(rend, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, ikkuna_w, ikkuna_h);
-  tmpc = malloc(maxpit_suote);
-  tmpc[0] = '\0';
+  alusta_nakyma();
+  alusta_tama_lista(&snsto,11,snsto_1);
+  alusta_tama_lista(historia+0,11,char*);
+  alusta_tama_lista(historia+1,11,char*);
+  alusta_tama_lista(historia+2,11,aika_t);
+  alusta_tama_lista(&tiedostot, 1, char*);
+  alusta_tama_lista(&tietolis, 3, char*);
 
-  asetelma();
-  SDL_GetWindowSize(ikkuna,&ikkuna_w,&ikkuna_h);
-  aseta_sijainnit();
-  saada_kohdistin();
   /*luetaan mahdollinen aloituskomentotiedosto*/
-  tmpc[0] = '\0';
-  char* apuc=tmpc; FILE* f; char c;
+  globchar[0] = '\0';
+  char* globchar2 = globchar; FILE* f; char c;
   if( aloituskomentotiedosto && (f=fopen(aloituskomentotiedosto, "r")) ) {
     while( (c = fgetc(f)) != EOF )
-      *apuc++ = c;
+      *globchar2++ = c;
     fclose(f);
-  }
-  if(apuc != tmpc) {
-    if(*(apuc-1) == '\n')
-      *(apuc-1) = '\0';
-    else
-      *apuc = '\0';
   }
   /*luetaan komennot komentoriviltä*/
   for(int i=1; i<argc; i++) {
-    apuc = tmpc + strlen(tmpc);
-    sprintf(apuc, " %s", argv[i]);
+    int n;
+    sprintf(globchar2, " %s%n", argv[i],&n);
+    globchar2 += n;
   }
-  aseta_vari(taustavari);
-  SDL_RenderClear(rend);
-  SDL_RenderPresent(rend);
+  *globchar2 = '\0';
   
-  kaunnista();
+  for(int i=0; i<laitot_enum_pituus; i++)
+    laitot |= 1<<i;
+  while(SDL_PollEvent(&tapaht)); //tyhjennetään
+  paivita_ikkunan_koko();
+  if(strlen(globchar))
+    kasittele_syote((Arg){.v=globchar});
+  aja();
 
-  free(tmpc);
-  lopeta();
-  SDL_DestroyRenderer(rend);
-  SDL_DestroyWindow(ikkuna);
-  TTF_Quit();
-  SDL_Quit();
-  return 0;
+  puts("\033[1;33mVaroitus:\033[0m aja-funktio palasi, vaikka ei olisi pitänyt.");
+  return 2;
 }

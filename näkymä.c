@@ -2,7 +2,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "csanat2.h"
+#include "csanat.h"
 
 typedef struct {
   int fkoko;
