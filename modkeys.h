@@ -44,8 +44,10 @@ switch(0) { //auttaa automaattisisennystä
    _MODNAPPAIN(RVAIHTO);
  case SDLK_LALT:
    _MODNAPPAIN(LALT);
+#ifdef ALTGR_ON_RALT
  case SDLK_RALT:
    _MODNAPPAIN(RALT);
+#endif
  case SDLK_LCTRL:
    _MODNAPPAIN(LCTRL);
  case SDLK_RCTRL:
