@@ -64,6 +64,7 @@ void kohdistin_eteen(Arg maara);
 void kohdistin_taakse(Arg maara);
 void sigtrap(Arg turha);
 void kasittele_syote(Arg syote);
+void osatuksi(Arg suht_sij);
 void komento(Arg syote);
 void shellkomento(Arg syote);
 
@@ -104,6 +105,8 @@ Sidonta sid_tapaht[] = {
 Sidonta sid_napp_alas[] = {
   { KEY( RETURN ),    0,   kasittele_syote,       {.v=syotetxt} },
   { KEY( KP_ENTER ),  0,   kasittele_syote,       {.v=syotetxt} },
+  { KEY( RETURN ),    ALT, osatuksi,              {.i=-1}       },
+  { KEY( KP_ENTER ),  ALT, osatuksi,              {.i=-1}       },
   { KEY( BACKSPACE ), 0,   pyyhi_syotetta_taakse, {0}           },
   { KEY( DELETE ),    0,   pyyhi_syotetta_eteen,  {0}           },
   { KEY( g ),         ALT, kohdistin_taakse,      {.i=1}        },
@@ -235,6 +238,15 @@ void kasittele_syote(Arg syotearg) {
   }
   if(onkoseur)
     kasittele_syote((Arg){.v=seur});
+}
+
+void osatuksi(Arg suht_sij) {
+  if(!kysymind || !kysymjarjpit)
+    return;
+  aika_t *ptr = LISTALLA_LOPUSTA(historia+2,aika_t*,suht_sij.i);
+  *ptr |= (aika_t)1<<(sizeof(aika_t)*8-1);
+  tee_tiedot();
+  LAITA(historia);
 }
 
 #define _LISTALLE(i,muoto,...)						\
