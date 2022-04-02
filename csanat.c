@@ -390,6 +390,8 @@ char* lue_tiedosto_merkkijonoksi(char* tnimi) {
 }
 
 void sekoita(int* lis, int pit) {
+  if(!pit)
+    return;
   int *loppu = lis+pit;
   while(lis < loppu-1) {
     int sij = rand()%(loppu-lis);
