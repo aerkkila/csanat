@@ -217,6 +217,7 @@ void kasittele_syote(Arg syotearg) {
     *seur = '\0';
     seur++;
   }
+  int onkoseur = !!(*seur); //tallennetaan nyt, koska syötettä voidaan muokata oikeaksi vastaukseksi
   if(*syote == komentomerkki) {
     komento((Arg){.v=syote+1});
     knto_historiaan(syote);
@@ -227,12 +228,12 @@ void kasittele_syote(Arg syotearg) {
     ((char*)syotearg.v)[0] = '\0';
   } else if(snsto.pit) {
     if(kysymind < kysymjarjpit)
-      kasittele_yrite(!strcmp(LISTALLA( &snsto,snsto_1*,kysymjarj[kysymind] )->sana[!kumpi_kysym], syote));
+      kasittele_yrite(!strcmp(LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[!kumpi_kysym], syote));
     kysymind++;
     kasittele_kysymys();
     tee_tiedot();
   }
-  if(*seur)
+  if(onkoseur)
     kasittele_syote((Arg){.v=seur});
 }
 
@@ -450,8 +451,10 @@ void kasittele_yrite(int oikeinko) {
   /*näkymän asiat*/
   if(oikeinko)
     ASETA_ASIAN_VARIT(syote,O_SYOTE1,O_SYOTE2);
-  else
+  else {
     ASETA_ASIAN_VARIT(syote,V_SYOTE1,V_SYOTE2);
+    strcpy(syotetxt, LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[!kysymind]);
+  }
   syoteviesti = 1;
   LAITA(historia);
   LAITA(syote);
