@@ -241,7 +241,7 @@ void tuhoa_nakyma() {
 }
 
 void paivita_kuva(unsigned laitot) {
-  if(laitot) {
+  if(laitot | uusi_pohjat) {
     SDL_SetRenderTarget(rend,pohja);
     ASETA_VARI(varit[TAUSTV]);
     SDL_RenderClear(rend);
