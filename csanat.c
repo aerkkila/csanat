@@ -14,11 +14,11 @@
 #define TAULPIT(a) ( sizeof(a) / sizeof(*(a)) )
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
-/* Tässä hetket viittaa lukuihin kuin historia+2, jotka luodaan historia+2-listaan.
+/* Tässä hetket viittaa lukuihin, jotka luodaan historia+2-listaan.
    Listalla on (aika_t)aika, jossa merkitsevimmät bitit ovat (osattiin,kumpi_kysyttiin)*/
 typedef struct {
   char* sana[2];
-  //int id;
+  int id;
   //int tiedostonro;
   lista hetket;
 } snsto_1;
@@ -348,13 +348,14 @@ void komento_tulosta_historia(char* syote) {
 }
 
 void lue_sanastoksi(char* tnimi) {
+  static int id = -1; //tiedostosta luetut ovat negatiivisia
   unsigned char* tied = (unsigned char*)lue_tiedosto_merkkijonoksi(tnimi);
   if(!tied)
     return;
   int i=-1;
   /*Tiedosto on nyt luettu yhdeksi merkkijonoksi.
     Tässä ei enää kopioida mitään,
-    vaan laitetaan viitteet kyseisen merkkijonon sananalkukohtiin
+    vaan laitetaan viitteet kyseisen merkkijonon sanojen alkukohtiin
     ja muutetaan sanojen erotinmerkit nollatavuiksi.*/
   int joko0tai1 = 0;
   while(1) {
@@ -363,9 +364,13 @@ void lue_sanastoksi(char* tnimi) {
       return;
     /*sanan alku löytyi ja laitetaan listalle*/
     snsto_1* jasen = jatka_listaa(&snsto,!joko0tai1); // if(!joko0tai1) jatka_listaa(lista,1)
+    if(!joko0tai1) {
+      alusta_tama_lista(&jasen->hetket,4,aika_t**);
+      jasen->id = id--;
+    }
     jasen->sana[joko0tai1] = (char*)tied+i;
-    alusta_tama_lista(&jasen->hetket,4,aika_t**);
-    joko0tai1 = (joko0tai1+1) % 2;
+    joko0tai1 = !joko0tai1;
+
     while(tied[++i] >= ' ');
     if(!tied[i])
       return;
