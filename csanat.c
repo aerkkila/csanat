@@ -15,11 +15,12 @@
 #define LAITA(laitto) ( laitot |= (1<<laitto##_enum) )
 
 /* Tässä hetket viittaa lukuihin, jotka luodaan historia+2-listaan.
-   Listalla on (aika_t)aika, jossa merkitsevimmät bitit ovat (osattiin,kumpi_kysyttiin)*/
+   Listalla on (aika_t)aika, jossa merkitsevimmät bitit ovat (osattiin,kumpi_kysyttiin)
+   id:t ovat negatiivisia sanoille, joita ei ole tallennettu io_tiedot-tiedoston menetelmillä.*/
 typedef struct {
   char* sana[2];
   int id;
-  //int tiedostonro;
+  char* tiedosto;
   lista hetket;
 } snsto_1;
 
@@ -41,10 +42,7 @@ typedef struct {
   void (*funkt)(char*);
 } Komento;
 
-lista snsto;
-lista historia[3];
-lista tietolis;
-lista tiedostot;
+lista snsto, historia[3], tietolis, tiedostot;
 int *kysymjarj, kysymjarjpit;
 char globchar[maxpit_syote];
 char syotetxt[maxpit_syote];
@@ -162,13 +160,13 @@ void napp_ylos(Arg turha) {
 
 void lopeta(Arg turha) {
   tuhoa_nakyma();
-  tuhoa_tama_lista2(&tiedostot);
   for(int i=0; i<snsto.pit; i++)
     tuhoa_tama_lista(&LISTALLA(&snsto,snsto_1*,i)->hetket);
   tuhoa_tama_lista(&snsto);
   listastolla(tuhoa_tama_lista2,historia,2);
   tuhoa_tama_lista(historia+2);
   tuhoa_tama_lista2(&tietolis);
+  tuhoa_tama_lista2(&tiedostot);
   free(kysymjarj);
   exit(EXIT_SUCCESS);
 }
@@ -265,7 +263,7 @@ void tee_tiedot() {
   jatka_listaa(&tietolis,3);
   _LISTALLE(0, "Sijainti %i/%i", kysymind, kysymjarjpit);
   _LISTALLE(1, "Osattuja %i/%i", osattuja, snsto.pit);
-  _LISTALLE(2, "Tiedosto: \"%s\"", "ei määritelty vielä");
+  _LISTALLE(2, "Tiedosto: \"%s\"", LISTALLA(&snsto, snsto_1*, kysymjarj[kysymind])->tiedosto);
   LAITA(tieto);
 }
 #undef _LISTALLE
@@ -353,6 +351,8 @@ void lue_sanastoksi(char* tnimi) {
   if(!tied)
     return;
   int i=-1;
+  char** tiednimi = jatka_listaa(&tiedostot, 1);
+  *tiednimi = strdup(tnimi);
   /*Tiedosto on nyt luettu yhdeksi merkkijonoksi.
     Tässä ei enää kopioida mitään,
     vaan laitetaan viitteet kyseisen merkkijonon sanojen alkukohtiin
@@ -367,6 +367,7 @@ void lue_sanastoksi(char* tnimi) {
     if(!joko0tai1) {
       alusta_tama_lista(&jasen->hetket,4,aika_t**);
       jasen->id = id--;
+      jasen->tiedosto = *tiednimi;
     }
     jasen->sana[joko0tai1] = (char*)tied+i;
     joko0tai1 = !joko0tai1;
