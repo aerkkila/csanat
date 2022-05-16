@@ -375,6 +375,11 @@ void lue_sanastoksi(char* tnimi) {
     while(tied[++i] >= ' ');
     if(!tied[i])
       return;
+    if(joko0tai1 && tied[i] != '\n')
+      /*Tällöin kyse on lisämääritteestä. Tämä ohjelma ei vielä käsittele niitä.*/
+      while(tied[++i] && tied[i] != '\n');
+    if(!tied[i])
+      return;
     tied[i] = '\0';
   }
 }
