@@ -21,7 +21,6 @@ typedef struct {
   int patka;
   int tilaa;
   int koko;
-  int sij;
   void* taul;
 } lista;
 

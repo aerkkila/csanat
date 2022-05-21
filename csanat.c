@@ -69,6 +69,7 @@ void shellkomento(Arg syote);
 /*Nämä funktiot lisätään knnot-taulukkoon, KNTO-makrolla.*/
 void komento_lue(char*);
 void komento_tulosta_historia(char*);
+void komento_tulosta_sanasto(char*);
 
 void lue_sanastoksi(char* tnimi);
 char* lue_tiedosto_merkkijonoksi(char* tnimi);
@@ -116,6 +117,7 @@ Sidonta sid_napp_alas[] = {
 Komento knnot[] = {
   { KNTO(lue) },
   { KNTO(tulosta_historia) },
+  { KNTO(tulosta_sanasto) },
 };
 
 void aja() {
@@ -345,6 +347,16 @@ void komento_tulosta_historia(char* syote) {
   puts("\033[0m");
 }
 
+void komento_tulosta_sanasto(char* syote) {
+  const char* a = "\033[94m";
+  const char* b = "\033[95m";
+  for(int i=0; i<snsto.pit; i++)
+    printf("%s%s\t%s%s\n",
+	   a, LISTALLA(&snsto,snsto_1*,i)->sana[0],
+	   b, LISTALLA(&snsto,snsto_1*,i)->sana[1]);
+  puts("\033[0m");
+}
+
 void lue_sanastoksi(char* tnimi) {
   static int id = -1; //tiedostosta luetut ovat negatiivisia
   unsigned char* tied = (unsigned char*)lue_tiedosto_merkkijonoksi(tnimi);
@@ -373,11 +385,6 @@ void lue_sanastoksi(char* tnimi) {
     joko0tai1 = !joko0tai1;
 
     while(tied[++i] >= ' ');
-    if(!tied[i])
-      return;
-    if(joko0tai1 && tied[i] != '\n')
-      /*Tällöin kyse on lisämääritteestä. Tämä ohjelma ei vielä käsittele niitä.*/
-      while(tied[++i] && tied[i] != '\n');
     if(!tied[i])
       return;
     tied[i] = '\0';
@@ -478,7 +485,7 @@ void kasittele_yrite(int oikeinko) {
     ASETA_ASIAN_VARIT(syote,O_SYOTE1,O_SYOTE2);
   else {
     ASETA_ASIAN_VARIT(syote,V_SYOTE1,V_SYOTE2);
-    strcpy(syotetxt, LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[!kysymind]);
+    strcpy(syotetxt, LISTALLA(&snsto,snsto_1*,kysymjarj[kysymind])->sana[!kumpi_kysym]);
   }
   syoteviesti = 1;
   LAITA(historia);
