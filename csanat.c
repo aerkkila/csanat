@@ -18,7 +18,7 @@
    Listalla on (aika_t)aika, jossa merkitsevimmät bitit ovat (osattiin,kumpi_kysyttiin)
    id:t ovat negatiivisia sanoille, joita ei ole tallennettu io_tiedot-tiedoston menetelmillä.*/
 typedef struct {
-  char* sana[2];
+  char* sana[3];
   int id;
   char* tiedosto;
   lista hetket;
@@ -250,12 +250,15 @@ void osatuksi(Arg suht_sij) {
 }
 
 #define _LISTALLE(i,muoto,...)						\
-  {									\
-    sprintf(apuc, muoto, __VA_ARGS__);					\
-    *LISTALLA(&tietolis, char**, i) = strndup(apuc,tieto_nchar+1);	\
-    if(strlen(apuc) > tieto_nchar)					\
-      *LISTALLA(&tietolis, char**, i)[tieto_nchar] = '\0';		\
-  }
+  do									\
+    {									\
+      sprintf(apuc, muoto, __VA_ARGS__);				\
+      *LISTALLA(&tietolis, char**, i) = strndup(apuc,tieto_nchar+1);	\
+      if(strlen(apuc) > tieto_nchar)					\
+	*LISTALLA(&tietolis, char**, i)[tieto_nchar] = '\0';		\
+    }									\
+  while(0)
+
 void tee_tiedot() {
   char apuc[256];
   int osattuja = 0;
@@ -265,7 +268,10 @@ void tee_tiedot() {
   jatka_listaa(&tietolis,3);
   _LISTALLE(0, "Sijainti %i/%i", kysymind, kysymjarjpit);
   _LISTALLE(1, "Osattuja %i/%i", osattuja, snsto.pit);
-  _LISTALLE(2, "Tiedosto: \"%s\"", LISTALLA(&snsto, snsto_1*, kysymjarj[kysymind])->tiedosto);
+  if(kysymind<kysymjarjpit)
+    _LISTALLE(2, "Tiedosto: \"%s\"", LISTALLA(&snsto, snsto_1*, kysymjarj[kysymind])->tiedosto);
+  else
+    _LISTALLE(2, "%s", "");
   LAITA(tieto);
 }
 #undef _LISTALLE
@@ -350,10 +356,12 @@ void komento_tulosta_historia(char* syote) {
 void komento_tulosta_sanasto(char* syote) {
   const char* a = "\033[94m";
   const char* b = "\033[95m";
+  const char* c = "\033[96m";
   for(int i=0; i<snsto.pit; i++)
-    printf("%s%s\t%s%s\n",
+    printf("%s%s\t%s%s\t%s%s\n",
 	   a, LISTALLA(&snsto,snsto_1*,i)->sana[0],
-	   b, LISTALLA(&snsto,snsto_1*,i)->sana[1]);
+	   b, LISTALLA(&snsto,snsto_1*,i)->sana[1],
+	   c, LISTALLA(&snsto,snsto_1*,i)->sana[2]);
   puts("\033[0m");
 }
 
@@ -369,24 +377,32 @@ void lue_sanastoksi(char* tnimi) {
     Tässä ei enää kopioida mitään,
     vaan laitetaan viitteet kyseisen merkkijonon sanojen alkukohtiin
     ja muutetaan sanojen erotinmerkit nollatavuiksi.*/
-  int joko0tai1 = 0;
+  int luku012 = 0;
   while(1) {
     while(tied[++i] && tied[i] <= ' ');
     if(!tied[i])
       return;
+    if(luku012==2 && tied[i-1]=='\n') {
+      ((snsto_1*)jatka_listaa(&snsto,0))->sana[2] = NULL;
+      luku012 = 0;
+    }
     /*sanan alku löytyi ja laitetaan listalle*/
-    snsto_1* jasen = jatka_listaa(&snsto,!joko0tai1); // if(!joko0tai1) jatka_listaa(lista,1)
-    if(!joko0tai1) {
+    snsto_1* jasen = jatka_listaa(&snsto,!luku012);
+    if(!luku012) {
       alusta_tama_lista(&jasen->hetket,4,aika_t**);
       jasen->id = id--;
       jasen->tiedosto = *tiednimi;
     }
-    jasen->sana[joko0tai1] = (char*)tied+i;
-    joko0tai1 = !joko0tai1;
+    jasen->sana[luku012] = (char*)tied+i;
+    luku012 = (luku012 + 1) % 3;
 
     while(tied[++i] >= ' ');
     if(!tied[i])
       return;
+    if(luku012==2 && tied[i]=='\n') {
+      jasen->sana[2] = NULL;
+      luku012 = 0;
+    }
     tied[i] = '\0';
   }
 }
