@@ -160,8 +160,8 @@ static void laita_historia(piirtoarg turha) {
     laita_listan_jasen( &histrol, *LISTALLA(historia+1,char**,j), 1 );
   laita_listan_jasen( &histrol, NULL, 0 );
   
+  histrol.alue.w += histrol.alue.x-alue.x;
   histrol.alue.x = alue.x;
-  histrol.alue.w += alue.w;
   histrol.alue.h = alue.h > histrol.alue.h ? alue.h : histrol.alue.h;
 }
 
