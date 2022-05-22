@@ -1,4 +1,4 @@
-int ikk_x=SDL_WINDOWPOS_UNDEFINED, ikk_y=SDL_WINDOWPOS_UNDEFINED, ikk_w=600, ikk_h=400;
+int ikk_x=SDL_WINDOWPOS_UNDEFINED, ikk_y=SDL_WINDOWPOS_UNDEFINED, ikk_w=800, ikk_h=400;
 
 /*muotoa [v/o]_*[1/2] olevat nimet tarkoittavat väärin/oikein_*tekstin/taustan väri*/
 #define _TAUSTA 0,0,0,255

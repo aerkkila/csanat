@@ -70,6 +70,7 @@ void shellkomento(Arg syote);
 void komento_lue(char*);
 void komento_tulosta_historia(char*);
 void komento_tulosta_sanasto(char*);
+void komento_uudelleen(char*);
 
 void lue_sanastoksi(char* tnimi);
 char* lue_tiedosto_merkkijonoksi(char* tnimi);
@@ -118,6 +119,7 @@ Komento knnot[] = {
   { KNTO(lue) },
   { KNTO(tulosta_historia) },
   { KNTO(tulosta_sanasto) },
+  { KNTO(uudelleen) },
 };
 
 void aja() {
@@ -363,6 +365,16 @@ void komento_tulosta_sanasto(char* syote) {
 	   b, LISTALLA(&snsto,snsto_1*,i)->sana[1],
 	   c, LISTALLA(&snsto,snsto_1*,i)->sana[2]);
   puts("\033[0m");
+}
+
+void komento_uudelleen(char* syote) {
+  for(int i=0; i<snsto.pit; i++)
+    tuhoa_tama_lista(&LISTALLA(&snsto,snsto_1*,i)->hetket);
+  listastolla(tuhoa_tama_lista2,historia,2);
+  tuhoa_tama_lista(historia+2);
+  kysymjarjpit = -1;
+  kasittele_kysymys();
+  tee_tiedot();
 }
 
 void lue_sanastoksi(char* tnimi) {
